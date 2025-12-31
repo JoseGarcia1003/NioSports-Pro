@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NioSports Pro - Tendencias NBA</title>
+    
+    <!-- FAVICON - Logo NioSports -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2300c8ff'/%3E%3Cstop offset='50%25' style='stop-color:%23ff3366'/%3E%3Cstop offset='100%25' style='stop-color:%23ff6b35'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%231a1a2e'/%3E%3Ccircle cx='32' cy='32' r='28' fill='none' stroke='url(%23g1)' stroke-width='3'/%3E%3Cpath d='M32 12c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20zm0 36c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16z' fill='%23ff6b35'/%3E%3Cpath d='M32 18c-7.7 0-14 6.3-14 14h4c0-5.5 4.5-10 10-10V18z' fill='%2300c8ff'/%3E%3Cpath d='M32 18v4c5.5 0 10 4.5 10 10h4c0-7.7-6.3-14-14-14z' fill='%23ff3366'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-family='Arial Black' font-size='14' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK -->
@@ -13,7 +17,7 @@
         * { font-family: 'Rajdhani', sans-serif; }
         .font-orbitron { font-family: 'Orbitron', sans-serif; }
         .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .gradient-text { background: linear-gradient(135deg, #00c8ff 0%, #ff3366 50%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gradient-text { background: linear-gradient(135deg, #00c8ff 0%, #ff3366 50%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .slide-in { animation: slideIn 0.4s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .h2h-card { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%); }
@@ -27,11 +31,137 @@
         .firebase-connected { background: #22c55e; color: white; }
         .firebase-disconnected { background: #ef4444; color: white; }
         .firebase-loading { background: #f59e0b; color: white; }
+        
+        /* LOADING SPINNER */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 15, 35, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid #00c8ff;
+            border-right: 4px solid #ff3366;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            margin-top: 20px;
+            color: white;
+            font-size: 18px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* NOTIFICACIONES */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            z-index: 10000;
+            animation: slideInRight 0.4s ease, fadeOut 0.4s ease 4.6s forwards;
+            max-width: 350px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+        .notification.success { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .notification.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .notification.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .notification.value { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(100%); }
+        }
+        
+        /* LOGO ANIMATION */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        .logo-icon {
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        /* PICKS CARDS */
+        .pick-card {
+            transition: all 0.3s ease;
+        }
+        .pick-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .win-badge { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .loss-badge { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .pending-badge { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        
+        /* BEST PICKS HIGHLIGHT */
+        .best-pick {
+            position: relative;
+            overflow: hidden;
+        }
+        .best-pick::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Cargando NioSports Pro...</div>
+    </div>
+    
+    <!-- NOTIFICATIONS CONTAINER -->
+    <div id="notificationContainer"></div>
+    
     <div id="firebaseStatus" class="firebase-status firebase-loading">🔄 Conectando...</div>
     <div id="app"></div>
+    
     <script>
 // ═══════════════════════════════════════════════════════════════
 // FIREBASE CONFIGURATION
@@ -51,45 +181,105 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
 // ═══════════════════════════════════════════════════════════════
-// TEAM STATS - TENDENCIAS NBA 2024-25
+// LOGO SVG
 // ═══════════════════════════════════════════════════════════════
-const TEAM_STATS = {
-    "Nuggets": { fullHome: 126.1, fullAway: 125.5, full: 125.8, q1Home: 32.9, q1Away: 30.5, q1: 31.7, halfHome: 65.7, halfAway: 59.8, half: 62.4 },
-    "Thunder": { fullHome: 121.8, fullAway: 120.8, full: 121.3, q1Home: 30.0, q1Away: 31.4, q1: 30.8, halfHome: 60.8, halfAway: 59.3, half: 60.0 },
-    "Rockets": { fullHome: 121.2, fullAway: 120.1, full: 120.5, q1Home: 29.6, q1Away: 30.6, q1: 30.3, halfHome: 61.0, halfAway: 58.1, half: 59.3 },
-    "Knicks": { fullHome: 123.1, fullAway: 117.1, full: 120.4, q1Home: 32.0, q1Away: 28.2, q1: 30.2, halfHome: 62.6, halfAway: 58.0, half: 60.8 },
-    "Cavaliers": { fullHome: 118.1, fullAway: 123.2, full: 120.2, q1Home: 29.0, q1Away: 32.6, q1: 30.4, halfHome: 54.7, halfAway: 61.3, half: 57.4 },
-    "Spurs": { fullHome: 120.4, fullAway: 119.8, full: 120.1, q1Home: 30.2, q1Away: 31.2, q1: 30.7, halfHome: 60.7, halfAway: 59.5, half: 60.1 },
-    "Jazz": { fullHome: 126.4, fullAway: 110.7, full: 119.9, q1Home: 34.2, q1Away: 23.9, q1: 30.0, halfHome: 64.1, halfAway: 49.2, half: 57.3 },
-    "Bulls": { fullHome: 114.8, fullAway: 123.8, full: 119.7, q1Home: 30.7, q1Away: 29.1, q1: 29.8, halfHome: 59.2, halfAway: 59.2, half: 59.2 },
-    "Heat": { fullHome: 119.1, fullAway: 119.3, full: 119.2, q1Home: 28.9, q1Away: 34.0, q1: 31.5, halfHome: 62.1, halfAway: 65.5, half: 63.7 },
-    "Pistons": { fullHome: 119.5, fullAway: 118.9, full: 119.2, q1Home: 29.6, q1Away: 30.8, q1: 30.2, halfHome: 59.4, halfAway: 60.9, half: 60.2 },
-    "Timberwolves": { fullHome: 115.9, fullAway: 123.0, full: 119.1, q1Home: 29.5, q1Away: 28.5, q1: 29.1, halfHome: 61.4, halfAway: 56.4, half: 58.8 },
-    "Hawks": { fullHome: 116.8, fullAway: 120.5, full: 118.8, q1Home: 31.4, q1Away: 29.5, q1: 30.4, halfHome: 58.0, halfAway: 59.3, half: 58.8 },
-    "Magic": { fullHome: 115.9, fullAway: 118.3, full: 117.2, q1Home: 29.9, q1Away: 31.3, q1: 30.6, halfHome: 58.2, halfAway: 62.8, half: 60.3 },
-    "Trail Blazers": { fullHome: 117.2, fullAway: 117.0, full: 117.1, q1Home: 27.8, q1Away: 29.6, q1: 28.8, halfHome: 57.9, halfAway: 60.1, half: 59.3 },
-    "Lakers": { fullHome: 121.1, fullAway: 114.0, full: 116.9, q1Home: 31.8, q1Away: 28.5, q1: 29.8, halfHome: 63.5, halfAway: 57.8, half: 60.4 },
-    "76ers": { fullHome: 115.0, fullAway: 119.0, full: 116.6, q1Home: 30.5, q1Away: 32.0, q1: 31.1, halfHome: 60.2, halfAway: 64.6, half: 62.0 },
-    "Celtics": { fullHome: 118.6, fullAway: 113.2, full: 116.0, q1Home: 29.8, q1Away: 31.3, q1: 30.5, halfHome: 61.4, halfAway: 59.4, half: 60.4 },
-    "Pelicans": { fullHome: 119.9, fullAway: 109.5, full: 115.5, q1Home: 30.1, q1Away: 24.9, q1: 27.9, halfHome: 58.8, halfAway: 52.5, half: 56.0 },
-    "Hornets": { fullHome: 116.1, fullAway: 114.8, full: 115.4, q1Home: 32.1, q1Away: 28.3, q1: 30.2, halfHome: 59.8, halfAway: 57.2, half: 58.5 },
-    "Grizzlies": { fullHome: 117.2, fullAway: 113.1, full: 115.0, q1Home: 28.9, q1Away: 28.2, q1: 28.5, halfHome: 59.7, halfAway: 52.7, half: 56.2 },
-    "Suns": { fullHome: 116.4, fullAway: 113.2, full: 114.9, q1Home: 28.1, q1Away: 30.8, q1: 29.4, halfHome: 57.7, halfAway: 59.1, half: 58.3 },
-    "Warriors": { fullHome: 118.3, fullAway: 111.5, full: 114.5, q1Home: 27.6, q1Away: 25.8, q1: 26.6, halfHome: 57.2, halfAway: 51.6, half: 54.0 },
-    "Mavericks": { fullHome: 114.6, fullAway: 112.6, full: 113.7, q1Home: 28.9, q1Away: 28.3, q1: 28.6, halfHome: 53.3, halfAway: 54.0, half: 53.6 },
-    "Raptors": { fullHome: 113.0, fullAway: 113.8, full: 113.4, q1Home: 28.6, q1Away: 29.2, q1: 28.9, halfHome: 57.9, halfAway: 57.3, half: 57.6 },
-    "Bucks": { fullHome: 117.1, fullAway: 108.4, full: 113.0, q1Home: 28.3, q1Away: 28.9, q1: 28.6, halfHome: 57.3, halfAway: 55.4, half: 56.4 },
-    "Wizards": { fullHome: 115.3, fullAway: 110.6, full: 112.6, q1Home: 30.2, q1Away: 28.9, q1: 29.5, halfHome: 60.5, halfAway: 54.8, half: 57.4 },
-    "Kings": { fullHome: 110.4, fullAway: 113.4, full: 112.0, q1Home: 27.7, q1Away: 29.1, q1: 28.4, halfHome: 53.0, halfAway: 60.2, half: 57.1 },
-    "Clippers": { fullHome: 112.8, fullAway: 109.9, full: 111.2, q1Home: 30.5, q1Away: 29.5, q1: 30.0, halfHome: 60.7, halfAway: 54.9, half: 57.3 },
-    "Nets": { fullHome: 108.7, fullAway: 109.9, full: 109.3, q1Home: 28.7, q1Away: 27.7, q1: 28.2, halfHome: 54.9, halfAway: 57.5, half: 56.1 },
-    "Pacers": { fullHome: 112.7, fullAway: 105.1, full: 109.2, q1Home: 28.3, q1Away: 26.8, q1: 27.6, halfHome: 56.3, halfAway: 52.4, half: 54.4 }
-};
+const LOGO_SVG = `
+<svg class="logo-icon" width="50" height="50" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#00c8ff"/>
+            <stop offset="50%" style="stop-color:#ff3366"/>
+            <stop offset="100%" style="stop-color:#ff6b35"/>
+        </linearGradient>
+    </defs>
+    <circle cx="32" cy="32" r="30" fill="#1a1a2e"/>
+    <circle cx="32" cy="32" r="28" fill="none" stroke="url(#logoGrad)" stroke-width="3"/>
+    <path d="M32 12c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20zm0 36c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16z" fill="#ff6b35"/>
+    <path d="M32 18c-7.7 0-14 6.3-14 14h4c0-5.5 4.5-10 10-10V18z" fill="#00c8ff"/>
+    <path d="M32 18v4c5.5 0 10 4.5 10 10h4c0-7.7-6.3-14-14-14z" fill="#ff3366"/>
+    <text x="32" y="38" text-anchor="middle" font-family="Arial Black" font-size="14" font-weight="bold" fill="white">N</text>
+</svg>`;
+
+// ═══════════════════════════════════════════════════════════════
+// TEAM STATS - CARGA DINÁMICA DESDE API
+// ═══════════════════════════════════════════════════════════════
+const NBA_STATS_API = 'https://nba-stats-api.joseluisgarciafonseca.workers.dev/';
+let TEAM_STATS = {};
+let statsLastUpdated = null;
+let statsSource = 'Cargando...';
+let apiConnected = false;
+
+// Cargar estadísticas desde la API
+async function loadTeamStatsFromAPI() {
+    try {
+        showLoading('Cargando estadísticas NBA...');
+        const response = await fetch(NBA_STATS_API);
+        const data = await response.json();
+        
+        if (data.teams && Object.keys(data.teams).length > 0) {
+            TEAM_STATS = data.teams;
+            statsLastUpdated = data.lastUpdated;
+            statsSource = data.source || 'TeamRankings.com';
+            apiConnected = true;
+            
+            // Mostrar si los datos vinieron del caché
+            if (data.cached) {
+                console.log('📊 Stats cargadas desde caché (' + data.cacheAge + ')');
+            } else {
+                console.log('📊 Stats actualizadas desde TeamRankings');
+            }
+            
+            showNotification('📊 Estadísticas NBA actualizadas', 'success');
+        } else {
+            throw new Error('No se recibieron datos de equipos');
+        }
+    } catch (error) {
+        console.error('Error cargando stats:', error);
+        apiConnected = false;
+        showNotification('⚠️ Error cargando stats: usando datos de respaldo', 'warning');
+        
+        // Datos de respaldo en caso de error
+        TEAM_STATS = {
+            "Nuggets": { fullHome: 126.1, fullAway: 125.5, full: 125.8, q1Home: 32.9, q1Away: 30.5, q1: 31.7, halfHome: 65.7, halfAway: 59.8, half: 62.4 },
+            "Thunder": { fullHome: 121.8, fullAway: 120.8, full: 121.3, q1Home: 30.0, q1Away: 31.4, q1: 30.8, halfHome: 60.8, halfAway: 59.3, half: 60.0 },
+            "Rockets": { fullHome: 121.2, fullAway: 120.1, full: 120.5, q1Home: 29.6, q1Away: 30.6, q1: 30.3, halfHome: 61.0, halfAway: 58.1, half: 59.3 },
+            "Knicks": { fullHome: 123.1, fullAway: 117.1, full: 120.4, q1Home: 32.0, q1Away: 28.2, q1: 30.2, halfHome: 62.6, halfAway: 58.0, half: 60.8 },
+            "Cavaliers": { fullHome: 118.1, fullAway: 123.2, full: 120.2, q1Home: 29.0, q1Away: 32.6, q1: 30.4, halfHome: 54.7, halfAway: 61.3, half: 57.4 },
+            "Spurs": { fullHome: 120.4, fullAway: 119.8, full: 120.1, q1Home: 30.2, q1Away: 31.2, q1: 30.7, halfHome: 60.7, halfAway: 59.5, half: 60.1 },
+            "Jazz": { fullHome: 126.4, fullAway: 110.7, full: 119.9, q1Home: 34.2, q1Away: 23.9, q1: 30.0, halfHome: 64.1, halfAway: 49.2, half: 57.3 },
+            "Bulls": { fullHome: 114.8, fullAway: 123.8, full: 119.7, q1Home: 30.7, q1Away: 29.1, q1: 29.8, halfHome: 59.2, halfAway: 59.2, half: 59.2 },
+            "Heat": { fullHome: 119.1, fullAway: 119.3, full: 119.2, q1Home: 28.9, q1Away: 34.0, q1: 31.5, halfHome: 62.1, halfAway: 65.5, half: 63.7 },
+            "Pistons": { fullHome: 119.5, fullAway: 118.9, full: 119.2, q1Home: 29.6, q1Away: 30.8, q1: 30.2, halfHome: 59.4, halfAway: 60.9, half: 60.2 },
+            "Timberwolves": { fullHome: 115.9, fullAway: 123.0, full: 119.1, q1Home: 29.5, q1Away: 28.5, q1: 29.1, halfHome: 61.4, halfAway: 56.4, half: 58.8 },
+            "Hawks": { fullHome: 116.8, fullAway: 120.5, full: 118.8, q1Home: 31.4, q1Away: 29.5, q1: 30.4, halfHome: 58.0, halfAway: 59.3, half: 58.8 },
+            "Magic": { fullHome: 115.9, fullAway: 118.3, full: 117.2, q1Home: 29.9, q1Away: 31.3, q1: 30.6, halfHome: 58.2, halfAway: 62.8, half: 60.3 },
+            "Trail Blazers": { fullHome: 117.2, fullAway: 117.0, full: 117.1, q1Home: 27.8, q1Away: 29.6, q1: 28.8, halfHome: 57.9, halfAway: 60.1, half: 59.3 },
+            "Lakers": { fullHome: 121.1, fullAway: 114.0, full: 116.9, q1Home: 31.8, q1Away: 28.5, q1: 29.8, halfHome: 63.5, halfAway: 57.8, half: 60.4 },
+            "76ers": { fullHome: 115.0, fullAway: 119.0, full: 116.6, q1Home: 30.5, q1Away: 32.0, q1: 31.1, halfHome: 60.2, halfAway: 64.6, half: 62.0 },
+            "Celtics": { fullHome: 118.6, fullAway: 113.2, full: 116.0, q1Home: 29.8, q1Away: 31.3, q1: 30.5, halfHome: 61.4, halfAway: 59.4, half: 60.4 },
+            "Pelicans": { fullHome: 119.9, fullAway: 109.5, full: 115.5, q1Home: 30.1, q1Away: 24.9, q1: 27.9, halfHome: 58.8, halfAway: 52.5, half: 56.0 },
+            "Hornets": { fullHome: 116.1, fullAway: 114.8, full: 115.4, q1Home: 32.1, q1Away: 28.3, q1: 30.2, halfHome: 59.8, halfAway: 57.2, half: 58.5 },
+            "Grizzlies": { fullHome: 117.2, fullAway: 113.1, full: 115.0, q1Home: 28.9, q1Away: 28.2, q1: 28.5, halfHome: 59.7, halfAway: 52.7, half: 56.2 },
+            "Suns": { fullHome: 116.4, fullAway: 113.2, full: 114.9, q1Home: 28.1, q1Away: 30.8, q1: 29.4, halfHome: 57.7, halfAway: 59.1, half: 58.3 },
+            "Warriors": { fullHome: 118.3, fullAway: 111.5, full: 114.5, q1Home: 27.6, q1Away: 25.8, q1: 26.6, halfHome: 57.2, halfAway: 51.6, half: 54.0 },
+            "Mavericks": { fullHome: 114.6, fullAway: 112.6, full: 113.7, q1Home: 28.9, q1Away: 28.3, q1: 28.6, halfHome: 53.3, halfAway: 54.0, half: 53.6 },
+            "Raptors": { fullHome: 113.0, fullAway: 113.8, full: 113.4, q1Home: 28.6, q1Away: 29.2, q1: 28.9, halfHome: 57.9, halfAway: 57.3, half: 57.6 },
+            "Bucks": { fullHome: 117.1, fullAway: 108.4, full: 113.0, q1Home: 28.3, q1Away: 28.9, q1: 28.6, halfHome: 57.3, halfAway: 55.4, half: 56.4 },
+            "Wizards": { fullHome: 115.3, fullAway: 110.6, full: 112.6, q1Home: 30.2, q1Away: 28.9, q1: 29.5, halfHome: 60.5, halfAway: 54.8, half: 57.4 },
+            "Kings": { fullHome: 110.4, fullAway: 113.4, full: 112.0, q1Home: 27.7, q1Away: 29.1, q1: 28.4, halfHome: 53.0, halfAway: 60.2, half: 57.1 },
+            "Clippers": { fullHome: 112.8, fullAway: 109.9, full: 111.2, q1Home: 30.5, q1Away: 29.5, q1: 30.0, halfHome: 60.7, halfAway: 54.9, half: 57.3 },
+            "Nets": { fullHome: 108.7, fullAway: 109.9, full: 109.3, q1Home: 28.7, q1Away: 27.7, q1: 28.2, halfHome: 54.9, halfAway: 57.5, half: 56.1 },
+            "Pacers": { fullHome: 112.7, fullAway: 105.1, full: 109.2, q1Home: 28.3, q1Away: 26.8, q1: 27.6, halfHome: 56.3, halfAway: 52.4, half: 54.4 }
+        };
+        statsSource = 'Datos de respaldo (offline)';
+    }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // VARIABLES DE ESTADO
 // ═══════════════════════════════════════════════════════════════
 let H2H_DATABASE = {};
+let PICKS_DATABASE = {};
 let currentView = 'home';
 let localTeam = '', visitingTeam = '';
 let lineQ1 = '', lineHalf = '', lineFull = '';
@@ -97,6 +287,35 @@ let typeQ1 = 'OVER', typeHalf = 'OVER', typeFull = 'OVER';
 let ingestTeam1 = '', ingestTeam2 = '', ingestLocalTeam = '', ingestDate = '';
 let ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
 let firebaseConnected = false;
+let isLoading = true;
+
+// ═══════════════════════════════════════════════════════════════
+// LOADING & NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════
+function showLoading(text = 'Cargando...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const loadingText = overlay.querySelector('.loading-text');
+    loadingText.textContent = text;
+    overlay.classList.remove('hidden');
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('hidden');
+    isLoading = false;
+}
+
+function showNotification(message, type = 'info') {
+    const container = document.getElementById('notificationContainer');
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = message;
+    container.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
 
 // ═══════════════════════════════════════════════════════════════
 // FIREBASE DATABASE FUNCTIONS
@@ -124,27 +343,61 @@ database.ref('.info/connected').on('value', (snap) => {
 
 // Cargar datos de Firebase al iniciar
 function loadH2HFromFirebase() {
+    showLoading('Cargando datos H2H...');
     database.ref('h2h_games').on('value', (snapshot) => {
         if (snapshot.exists()) {
             H2H_DATABASE = snapshot.val();
         } else {
             H2H_DATABASE = {};
         }
-        render();
+        loadPicksFromFirebase();
     }, (error) => {
         console.error('Error cargando datos:', error);
         updateFirebaseStatus('disconnected');
+        hideLoading();
     });
 }
 
-// Guardar en Firebase
+// Cargar picks de Firebase
+function loadPicksFromFirebase() {
+    showLoading('Cargando historial de picks...');
+    database.ref('picks').on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            PICKS_DATABASE = snapshot.val();
+        } else {
+            PICKS_DATABASE = {};
+        }
+        hideLoading();
+        render();
+        checkForValuePicks();
+    }, (error) => {
+        console.error('Error cargando picks:', error);
+        hideLoading();
+        render();
+    });
+}
+
+// Guardar H2H en Firebase
 function saveH2HToFirebase() {
+    showLoading('Guardando en Firebase...');
     database.ref('h2h_games').set(H2H_DATABASE)
-        .then(() => console.log('✅ Guardado en Firebase'))
+        .then(() => {
+            console.log('✅ H2H Guardado en Firebase');
+            hideLoading();
+            showNotification('✅ Partido guardado correctamente', 'success');
+        })
         .catch((error) => {
             console.error('Error guardando:', error);
-            alert('Error guardando en Firebase: ' + error.message);
+            hideLoading();
+            showNotification('❌ Error guardando: ' + error.message, 'warning');
         });
+}
+
+// Guardar picks en Firebase
+function savePicksToFirebase() {
+    database.ref('picks').set(PICKS_DATABASE)
+        .then(() => console.log('✅ Picks guardados'))
+        .catch((error) => console.error('Error guardando picks:', error));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -195,6 +448,260 @@ function getH2HData(team1, team2) {
         games: proc,
         totalGames: games.length
     };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PICKS TRACKING SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function addPick(pickData) {
+    const pickId = Date.now().toString();
+    PICKS_DATABASE[pickId] = {
+        ...pickData,
+        id: pickId,
+        createdAt: new Date().toISOString(),
+        status: 'pending' // pending, win, loss
+    };
+    savePicksToFirebase();
+    showNotification('📝 Pick registrado correctamente', 'success');
+    render();
+}
+
+function updatePickResult(pickId, result) {
+    if (PICKS_DATABASE[pickId]) {
+        PICKS_DATABASE[pickId].status = result;
+        PICKS_DATABASE[pickId].resolvedAt = new Date().toISOString();
+        savePicksToFirebase();
+        showNotification(result === 'win' ? '✅ ¡Pick ganado!' : '❌ Pick perdido', result === 'win' ? 'success' : 'warning');
+        render();
+    }
+}
+
+function deletePick(pickId) {
+    if (PICKS_DATABASE[pickId]) {
+        delete PICKS_DATABASE[pickId];
+        savePicksToFirebase();
+        showNotification('🗑️ Pick eliminado', 'info');
+        render();
+    }
+}
+
+function getPicksStats() {
+    const picks = Object.values(PICKS_DATABASE);
+    const total = picks.length;
+    const wins = picks.filter(p => p.status === 'win').length;
+    const losses = picks.filter(p => p.status === 'loss').length;
+    const pending = picks.filter(p => p.status === 'pending').length;
+    const resolved = wins + losses;
+    const winRate = resolved > 0 ? ((wins / resolved) * 100).toFixed(1) : 0;
+    
+    // Stats por tipo de apuesta
+    const byType = {};
+    picks.forEach(p => {
+        const key = `${p.period}_${p.betType}`;
+        if (!byType[key]) byType[key] = { wins: 0, losses: 0, total: 0, profit: 0 };
+        byType[key].total++;
+        if (p.status === 'win') {
+            byType[key].wins++;
+            byType[key].profit += p.odds ? (parseFloat(p.odds) - 1) : 0;
+        }
+        if (p.status === 'loss') {
+            byType[key].losses++;
+            byType[key].profit -= 1;
+        }
+    });
+    
+    // Stats por período (1Q, 1H, FULL)
+    const byPeriod = { '1Q': { wins: 0, losses: 0, total: 0, profit: 0 }, '1H': { wins: 0, losses: 0, total: 0, profit: 0 }, 'FULL': { wins: 0, losses: 0, total: 0, profit: 0 } };
+    picks.forEach(p => {
+        if (byPeriod[p.period]) {
+            byPeriod[p.period].total++;
+            if (p.status === 'win') {
+                byPeriod[p.period].wins++;
+                byPeriod[p.period].profit += p.odds ? (parseFloat(p.odds) - 1) : 0;
+            }
+            if (p.status === 'loss') {
+                byPeriod[p.period].losses++;
+                byPeriod[p.period].profit -= 1;
+            }
+        }
+    });
+    
+    // Stats por equipo
+    const byTeam = {};
+    picks.forEach(p => {
+        [p.localTeam, p.awayTeam].forEach(team => {
+            if (!byTeam[team]) byTeam[team] = { wins: 0, losses: 0, total: 0 };
+            byTeam[team].total++;
+            if (p.status === 'win') byTeam[team].wins++;
+            if (p.status === 'loss') byTeam[team].losses++;
+        });
+    });
+    
+    // Profit/Loss calculation
+    let profit = 0;
+    let totalStaked = 0;
+    picks.forEach(p => {
+        if (p.status === 'win' && p.odds) {
+            profit += (parseFloat(p.odds) - 1);
+            totalStaked += 1;
+        } else if (p.status === 'loss') {
+            profit -= 1;
+            totalStaked += 1;
+        }
+    });
+    
+    // ROI calculation
+    const roi = totalStaked > 0 ? ((profit / totalStaked) * 100).toFixed(1) : 0;
+    
+    // Racha actual (streak)
+    const sortedPicks = picks
+        .filter(p => p.status !== 'pending')
+        .sort((a, b) => new Date(b.resolvedAt || b.createdAt) - new Date(a.resolvedAt || a.createdAt));
+    
+    let streak = 0;
+    let streakType = null;
+    for (const pick of sortedPicks) {
+        if (streakType === null) {
+            streakType = pick.status;
+            streak = 1;
+        } else if (pick.status === streakType) {
+            streak++;
+        } else {
+            break;
+        }
+    }
+    
+    // Mejor y peor racha histórica
+    let currentStreak = 0;
+    let currentType = null;
+    let bestWinStreak = 0;
+    let worstLossStreak = 0;
+    
+    const chronologicalPicks = [...sortedPicks].reverse();
+    chronologicalPicks.forEach(p => {
+        if (currentType === p.status) {
+            currentStreak++;
+        } else {
+            currentType = p.status;
+            currentStreak = 1;
+        }
+        if (p.status === 'win' && currentStreak > bestWinStreak) bestWinStreak = currentStreak;
+        if (p.status === 'loss' && currentStreak > worstLossStreak) worstLossStreak = currentStreak;
+    });
+    
+    return { 
+        total, wins, losses, pending, winRate, byType, byTeam, byPeriod,
+        profit: profit.toFixed(2), 
+        roi,
+        streak: { count: streak, type: streakType },
+        bestWinStreak,
+        worstLossStreak
+    };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BEST PICKS ALGORITHM
+// ═══════════════════════════════════════════════════════════════
+function getBestPicks() {
+    const teams = getTeams();
+    const bestPicks = [];
+    
+    // Analizar todos los matchups posibles
+    teams.forEach(local => {
+        teams.forEach(away => {
+            if (local === away) return;
+            
+            const lD = TEAM_STATS[local];
+            const vD = TEAM_STATS[away];
+            
+            if (!lD || !vD) return;
+            
+            // Calcular tendencias
+            const trends = {
+                q1: lD.q1Home + vD.q1Away,
+                half: lD.halfHome + vD.halfAway,
+                full: lD.fullHome + vD.fullAway
+            };
+            
+            // H2H data
+            const h2h = getH2HData(local, away);
+            
+            // Analizar cada período
+            ['q1', 'half', 'full'].forEach(period => {
+                const trend = trends[period];
+                const periodLabel = period === 'q1' ? '1Q' : period === 'half' ? '1H' : 'FULL';
+                
+                // Líneas sugeridas basadas en tendencia
+                const suggestedLine = Math.round(trend * 2) / 2;
+                
+                // Calcular probabilidad OVER
+                const probOver = calcProb(trend.toString(), suggestedLine.toString(), 'OVER');
+                
+                if (probOver && probOver >= 60) {
+                    let confidence = probOver;
+                    let reason = `Tendencia: ${trend.toFixed(1)}`;
+                    
+                    // Bonus por H2H
+                    if (h2h && h2h.games.length >= 3) {
+                        const h2hAvg = period === 'q1' 
+                            ? h2h.avgQ1.team1 + h2h.avgQ1.team2
+                            : period === 'half'
+                            ? h2h.avgHalf.team1 + h2h.avgHalf.team2
+                            : h2h.avgPts.team1 + h2h.avgPts.team2;
+                        
+                        if (h2hAvg > suggestedLine) {
+                            confidence += 5;
+                            reason += ` | H2H: ${h2hAvg.toFixed(1)}`;
+                        }
+                    }
+                    
+                    bestPicks.push({
+                        local,
+                        away,
+                        period: periodLabel,
+                        betType: 'OVER',
+                        line: suggestedLine,
+                        trend: trend.toFixed(1),
+                        confidence: Math.min(confidence, 95),
+                        reason,
+                        h2hGames: h2h ? h2h.games.length : 0
+                    });
+                }
+            });
+        });
+    });
+    
+    // Ordenar por confianza y retornar top 5
+    return bestPicks.sort((a, b) => b.confidence - a.confidence).slice(0, 5);
+}
+
+function checkForValuePicks() {
+    if (!localTeam || !visitingTeam) return;
+    
+    const lD = TEAM_STATS[localTeam];
+    const vD = TEAM_STATS[visitingTeam];
+    
+    if (!lD || !vD) return;
+    
+    const trends = {
+        q1: (lD.q1Home + vD.q1Away).toFixed(1),
+        half: (lD.halfHome + vD.halfAway).toFixed(1),
+        full: (lD.fullHome + vD.fullAway).toFixed(1)
+    };
+    
+    // Verificar si hay valores altos
+    [
+        { period: '1Q', trend: trends.q1, line: lineQ1, type: typeQ1 },
+        { period: '1H', trend: trends.half, line: lineHalf, type: typeHalf },
+        { period: 'FULL', trend: trends.full, line: lineFull, type: typeFull }
+    ].forEach(({ period, trend, line, type }) => {
+        if (line) {
+            const prob = calcProb(trend, line, type);
+            if (prob && prob >= 70) {
+                showNotification(`🔥 VALOR ALTO en ${period}: ${prob}% ${type} ${line}`, 'value');
+            }
+        }
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -264,6 +771,8 @@ function render() {
     if (currentView === 'home') app.innerHTML = renderHome();
     else if (currentView === 'tendencia') app.innerHTML = renderTendencia();
     else if (currentView === 'ingesta') app.innerHTML = renderIngesta();
+    else if (currentView === 'picks') app.innerHTML = renderPicks();
+    else if (currentView === 'bestPicks') app.innerHTML = renderBestPicks();
     attachEvents();
 }
 
@@ -272,6 +781,7 @@ function renderHome() {
     const top5 = [...teams].sort((a,b) => (TEAM_STATS[b]?.full||0) - (TEAM_STATS[a]?.full||0)).slice(0,5);
     const h2hC = Object.keys(H2H_DATABASE).length;
     const totalG = Object.values(H2H_DATABASE).reduce((s,a) => s + (Array.isArray(a) ? a.length : 0), 0);
+    const picksStats = getPicksStats();
     
     let topH = top5.map((t,i) => `
         <div class="flex justify-between items-center bg-white/5 rounded-lg p-3 mb-2">
@@ -285,18 +795,31 @@ function renderHome() {
     
     return `
         <div class="p-4 max-w-4xl mx-auto">
-            <div class="rounded-lg p-3 mb-6 bg-green-500/20 border border-green-500/30">
+            <div class="rounded-lg p-3 mb-6 ${apiConnected ? 'bg-green-500/20 border border-green-500/30' : 'bg-yellow-500/20 border border-yellow-500/30'}">
                 <div class="flex flex-col items-center text-center">
-                    <span class="font-semibold text-sm text-green-400">📊 Sistema Pro - Tendencias NBA 2025-2026</span>
-                    <span class="text-xs text-gray-400 mt-1">Fuente: TeamRankings.com</span>
+                    <span class="font-semibold text-sm ${apiConnected ? 'text-green-400' : 'text-yellow-400'}">
+                        ${apiConnected ? '🔄 Datos en TIEMPO REAL' : '⚠️ Usando datos de respaldo'}
+                    </span>
+                    <span class="text-xs text-gray-400 mt-1">
+                        Fuente: ${statsSource}
+                        ${statsLastUpdated ? ' • Actualizado: ' + new Date(statsLastUpdated).toLocaleString('es-ES', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) : ''}
+                    </span>
                 </div>
             </div>
             
+            <!-- LOGO -->
             <div class="text-center mb-8">
-                <h1 class="text-4xl md:text-5xl font-black text-white mb-2 font-orbitron">🏀 NIOSPORTS PRO</h1>
-                <h2 class="text-2xl font-bold gradient-text font-orbitron">TENDENCIA DE PUNTOS</h2>
+                <div class="logo-container mb-4">
+                    ${LOGO_SVG}
+                    <div>
+                        <h1 class="text-4xl md:text-5xl font-black text-white font-orbitron">NIOSPORTS</h1>
+                        <h2 class="text-xl font-bold gradient-text font-orbitron">PRO</h2>
+                    </div>
+                </div>
+                <p class="text-gray-400 text-sm">Tu herramienta profesional de análisis NBA</p>
             </div>
             
+            <!-- BOTONES PRINCIPALES -->
             <button onclick="navigateTo('tendencia')" class="w-full bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-2xl hover:scale-[1.02] transition mb-4">
                 <div class="flex flex-col items-center">
                     <div class="text-5xl mb-3">📈</div>
@@ -304,6 +827,20 @@ function renderHome() {
                     <p class="text-yellow-200 text-xs mt-2">1Q • 1H • Full Game</p>
                 </div>
             </button>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button onclick="navigateTo('bestPicks')" class="bg-gradient-to-br from-yellow-500 to-orange-600 p-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition">
+                    <div class="text-3xl mb-2">🔥</div>
+                    <h3 class="text-lg font-bold text-white">Mejores Picks</h3>
+                    <p class="text-yellow-100 text-xs">Algoritmo sugiere</p>
+                </button>
+                
+                <button onclick="navigateTo('picks')" class="bg-gradient-to-br from-pink-500 to-rose-600 p-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition">
+                    <div class="text-3xl mb-2">📊</div>
+                    <h3 class="text-lg font-bold text-white">Mis Picks</h3>
+                    <p class="text-pink-100 text-xs">Historial completo</p>
+                </button>
+            </div>
             
             <button onclick="navigateTo('ingesta')" class="w-full bg-gradient-to-br from-purple-600 to-indigo-700 p-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition mb-6 border-2 border-purple-400/50">
                 <div class="flex items-center justify-center gap-4">
@@ -314,6 +851,79 @@ function renderHome() {
                     </div>
                 </div>
             </button>
+            
+            <!-- MI RÉCORD PERSONAL - Movido abajo -->
+            <div class="bg-gradient-to-br from-purple-600/30 to-pink-600/30 rounded-2xl p-5 mb-6 border border-purple-500/50">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-bold text-white">🏆 Mi Récord Personal</h3>
+                    <button onclick="navigateTo('picks')" class="text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg">Ver todo</button>
+                </div>
+                
+                <!-- Fila principal: Win Rate, Ganados, Perdidos, Pendientes -->
+                <div class="grid grid-cols-4 gap-3 text-center">
+                    <div class="bg-white/10 rounded-xl p-3">
+                        <p class="text-3xl font-black ${parseFloat(picksStats.winRate) >= 55 ? 'text-green-400' : parseFloat(picksStats.winRate) >= 45 ? 'text-yellow-400' : 'text-red-400'}">${picksStats.winRate}%</p>
+                        <p class="text-gray-400 text-xs">Efectividad</p>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-3">
+                        <p class="text-3xl font-black text-green-400">${picksStats.wins}</p>
+                        <p class="text-gray-400 text-xs">Ganados</p>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-3">
+                        <p class="text-3xl font-black text-red-400">${picksStats.losses}</p>
+                        <p class="text-gray-400 text-xs">Perdidos</p>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-3">
+                        <p class="text-3xl font-black text-yellow-400">${picksStats.pending}</p>
+                        <p class="text-gray-400 text-xs">Pendientes</p>
+                    </div>
+                </div>
+                
+                <!-- Fila secundaria: Profit, ROI, Racha -->
+                <div class="grid grid-cols-3 gap-3 text-center mt-3">
+                    <div class="bg-black/20 rounded-xl p-3">
+                        <p class="text-2xl font-black ${parseFloat(picksStats.profit) >= 0 ? 'text-green-400' : 'text-red-400'}">${parseFloat(picksStats.profit) > 0 ? '+' : ''}${picksStats.profit}</p>
+                        <p class="text-gray-400 text-xs">${parseFloat(picksStats.profit) >= 0 ? '📈' : '📉'} Profit (u)</p>
+                    </div>
+                    <div class="bg-black/20 rounded-xl p-3">
+                        <p class="text-2xl font-black ${parseFloat(picksStats.roi) >= 0 ? 'text-cyan-400' : 'text-red-400'}">${parseFloat(picksStats.roi) > 0 ? '+' : ''}${picksStats.roi}%</p>
+                        <p class="text-gray-400 text-xs">💰 ROI</p>
+                    </div>
+                    <div class="bg-black/20 rounded-xl p-3">
+                        ${picksStats.streak.count > 0 ? `
+                            <p class="text-2xl font-black ${picksStats.streak.type === 'win' ? 'text-green-400' : 'text-red-400'}">${picksStats.streak.count}${picksStats.streak.type === 'win' ? 'W' : 'L'}</p>
+                            <p class="text-gray-400 text-xs">${picksStats.streak.type === 'win' ? '🔥' : '❄️'} Racha</p>
+                        ` : `
+                            <p class="text-2xl font-black text-gray-500">-</p>
+                            <p class="text-gray-400 text-xs">🎯 Racha</p>
+                        `}
+                    </div>
+                </div>
+                
+                <!-- Desglose por período -->
+                ${picksStats.total > 0 ? `
+                <div class="mt-4 pt-3 border-t border-white/10">
+                    <p class="text-xs text-gray-500 mb-2 text-center">📊 Por Período</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-yellow-500/10 rounded-lg p-2 text-center">
+                            <p class="text-yellow-400 font-bold text-sm">1Q</p>
+                            <p class="text-white text-xs">${picksStats.byPeriod['1Q'].wins}W-${picksStats.byPeriod['1Q'].losses}L</p>
+                            <p class="text-xs ${picksStats.byPeriod['1Q'].profit >= 0 ? 'text-green-400' : 'text-red-400'}">${picksStats.byPeriod['1Q'].profit >= 0 ? '+' : ''}${picksStats.byPeriod['1Q'].profit.toFixed(2)}u</p>
+                        </div>
+                        <div class="bg-pink-500/10 rounded-lg p-2 text-center">
+                            <p class="text-pink-400 font-bold text-sm">1H</p>
+                            <p class="text-white text-xs">${picksStats.byPeriod['1H'].wins}W-${picksStats.byPeriod['1H'].losses}L</p>
+                            <p class="text-xs ${picksStats.byPeriod['1H'].profit >= 0 ? 'text-green-400' : 'text-red-400'}">${picksStats.byPeriod['1H'].profit >= 0 ? '+' : ''}${picksStats.byPeriod['1H'].profit.toFixed(2)}u</p>
+                        </div>
+                        <div class="bg-green-500/10 rounded-lg p-2 text-center">
+                            <p class="text-green-400 font-bold text-sm">FULL</p>
+                            <p class="text-white text-xs">${picksStats.byPeriod['FULL'].wins}W-${picksStats.byPeriod['FULL'].losses}L</p>
+                            <p class="text-xs ${picksStats.byPeriod['FULL'].profit >= 0 ? 'text-green-400' : 'text-red-400'}">${picksStats.byPeriod['FULL'].profit >= 0 ? '+' : ''}${picksStats.byPeriod['FULL'].profit.toFixed(2)}u</p>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+            </div>
             
             <div class="glass rounded-xl p-4 mb-6">
                 <h3 class="text-lg font-bold text-white mb-3">📊 Base de Datos H2H <span class="text-green-400 text-sm">(Firebase)</span></h3>
@@ -360,7 +970,10 @@ function renderTendencia() {
         <div class="p-4 max-w-4xl mx-auto">
             <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
             <div class="text-center mb-6">
-                <h1 class="text-3xl font-bold text-white font-orbitron">📈 TENDENCIA + H2H</h1>
+                <div class="logo-container justify-center mb-2">
+                    ${LOGO_SVG}
+                    <h1 class="text-3xl font-bold text-white font-orbitron">TENDENCIA + H2H</h1>
+                </div>
             </div>
             
             <div class="grid grid-cols-2 gap-4 mb-6">
@@ -408,6 +1021,31 @@ function renderTendencia() {
                     ${renderCalc('Q1', '1Q', trends.q1, pQ1, typeQ1, lineQ1)}
                     ${renderCalc('Half', '1H', trends.half, pHalf, typeHalf, lineHalf)}
                     ${renderCalc('Full', 'FULL', trends.full, pFull, typeFull, lineFull)}
+                </div>
+            </div>
+            
+            <!-- BOTÓN REGISTRAR PICK -->
+            <div class="mt-6 bg-gradient-to-br from-pink-600 to-rose-700 rounded-2xl p-5">
+                <h3 class="text-lg font-bold text-white mb-4 text-center">📝 Registrar Pick</h3>
+                <div class="grid grid-cols-3 gap-3">
+                    ${lineQ1 && pQ1 ? `
+                        <button onclick="registerPick('1Q', '${typeQ1}', '${lineQ1}', ${pQ1})" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm">
+                            <div class="font-bold">1Q ${typeQ1}</div>
+                            <div class="text-xs">${lineQ1} (${pQ1}%)</div>
+                        </button>
+                    ` : '<div></div>'}
+                    ${lineHalf && pHalf ? `
+                        <button onclick="registerPick('1H', '${typeHalf}', '${lineHalf}', ${pHalf})" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm">
+                            <div class="font-bold">1H ${typeHalf}</div>
+                            <div class="text-xs">${lineHalf} (${pHalf}%)</div>
+                        </button>
+                    ` : '<div></div>'}
+                    ${lineFull && pFull ? `
+                        <button onclick="registerPick('FULL', '${typeFull}', '${lineFull}', ${pFull})" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm">
+                            <div class="font-bold">FULL ${typeFull}</div>
+                            <div class="text-xs">${lineFull} (${pFull}%)</div>
+                        </button>
+                    ` : '<div></div>'}
                 </div>
             </div>
         `;
@@ -521,6 +1159,258 @@ function renderCalc(id, label, trend, prob, type, line) {
     `;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// PICKS VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderPicks() {
+    const stats = getPicksStats();
+    const picks = Object.values(PICKS_DATABASE).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // Stats por tipo
+    let typeStatsHtml = '';
+    Object.entries(stats.byType).forEach(([key, data]) => {
+        const [period, betType] = key.split('_');
+        const winRate = data.wins + data.losses > 0 ? ((data.wins / (data.wins + data.losses)) * 100).toFixed(0) : 0;
+        typeStatsHtml += `
+            <div class="bg-white/5 rounded-lg p-2 text-center">
+                <p class="text-xs text-gray-400">${period} ${betType}</p>
+                <p class="text-lg font-bold ${winRate >= 55 ? 'text-green-400' : winRate >= 45 ? 'text-yellow-400' : 'text-red-400'}">${winRate}%</p>
+                <p class="text-xs text-gray-500">${data.wins}W-${data.losses}L</p>
+            </div>
+        `;
+    });
+    
+    // Picks list
+    let picksHtml = picks.length === 0 ? '<p class="text-center text-gray-400 py-10">No hay picks registrados aún</p>' : '';
+    picks.forEach(pick => {
+        const statusClass = pick.status === 'win' ? 'win-badge' : pick.status === 'loss' ? 'loss-badge' : 'pending-badge';
+        const statusIcon = pick.status === 'win' ? '✅' : pick.status === 'loss' ? '❌' : '⏳';
+        const date = new Date(pick.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+        
+        picksHtml += `
+            <div class="pick-card bg-white/5 rounded-xl p-4 mb-3 border border-white/10">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-white font-bold">${pick.localTeam} vs ${pick.awayTeam}</p>
+                        <p class="text-gray-400 text-sm">${pick.period} ${pick.betType} ${pick.line}</p>
+                    </div>
+                    <span class="${statusClass} px-3 py-1 rounded-full text-white text-sm font-bold">${statusIcon}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <div class="flex gap-4">
+                        <span class="text-gray-500">${date}</span>
+                        ${pick.odds ? `<span class="text-yellow-400">@${pick.odds}</span>` : ''}
+                        <span class="text-purple-400">${pick.probability}% prob</span>
+                    </div>
+                    <div class="flex gap-2">
+                        ${pick.status === 'pending' ? `
+                            <button onclick="updatePickResult('${pick.id}', 'win')" class="text-green-400 hover:text-green-300 text-lg">✓</button>
+                            <button onclick="updatePickResult('${pick.id}', 'loss')" class="text-red-400 hover:text-red-300 text-lg">✗</button>
+                        ` : ''}
+                        <button onclick="deletePick('${pick.id}')" class="text-gray-500 hover:text-red-400 text-lg">🗑️</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    return `
+        <div class="p-4 max-w-4xl mx-auto">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
+            
+            <div class="text-center mb-6">
+                <div class="logo-container justify-center mb-2">
+                    ${LOGO_SVG}
+                    <h1 class="text-3xl font-bold text-white font-orbitron">MIS PICKS</h1>
+                </div>
+            </div>
+            
+            <!-- RESUMEN PRINCIPAL -->
+            <div class="bg-gradient-to-br from-purple-600/30 to-pink-600/30 rounded-2xl p-5 mb-6 border border-purple-500/50">
+                <!-- Fila 1: Efectividad, Ganados, Perdidos -->
+                <div class="grid grid-cols-3 gap-3 text-center mb-4">
+                    <div class="bg-white/10 rounded-xl p-4">
+                        <p class="text-5xl font-black ${parseFloat(stats.winRate) >= 55 ? 'text-green-400' : parseFloat(stats.winRate) >= 45 ? 'text-yellow-400' : 'text-red-400'}">${stats.winRate}%</p>
+                        <p class="text-gray-400 text-sm">Efectividad</p>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-4">
+                        <p class="text-5xl font-black text-green-400">${stats.wins}<span class="text-lg text-gray-500">/${stats.wins + stats.losses}</span></p>
+                        <p class="text-gray-400 text-sm">Ganados</p>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-4">
+                        <p class="text-5xl font-black text-red-400">${stats.losses}<span class="text-lg text-gray-500">/${stats.wins + stats.losses}</span></p>
+                        <p class="text-gray-400 text-sm">Perdidos</p>
+                    </div>
+                </div>
+                
+                <!-- Fila 2: Profit, ROI, Racha, Pendientes -->
+                <div class="grid grid-cols-4 gap-3 text-center mb-4">
+                    <div class="bg-black/20 rounded-xl p-3">
+                        <p class="text-2xl font-black ${parseFloat(stats.profit) >= 0 ? 'text-green-400' : 'text-red-400'}">${parseFloat(stats.profit) > 0 ? '+' : ''}${stats.profit}u</p>
+                        <p class="text-gray-400 text-xs">${parseFloat(stats.profit) >= 0 ? '📈' : '📉'} Profit</p>
+                    </div>
+                    <div class="bg-black/20 rounded-xl p-3">
+                        <p class="text-2xl font-black ${parseFloat(stats.roi) >= 0 ? 'text-cyan-400' : 'text-red-400'}">${parseFloat(stats.roi) > 0 ? '+' : ''}${stats.roi}%</p>
+                        <p class="text-gray-400 text-xs">💰 ROI</p>
+                    </div>
+                    <div class="bg-black/20 rounded-xl p-3">
+                        ${stats.streak.count > 0 ? `
+                            <p class="text-2xl font-black ${stats.streak.type === 'win' ? 'text-green-400' : 'text-red-400'}">${stats.streak.count}${stats.streak.type === 'win' ? 'W' : 'L'}</p>
+                            <p class="text-gray-400 text-xs">${stats.streak.type === 'win' ? '🔥' : '❄️'} Racha Actual</p>
+                        ` : `
+                            <p class="text-2xl font-black text-gray-500">-</p>
+                            <p class="text-gray-400 text-xs">🎯 Racha</p>
+                        `}
+                    </div>
+                    <div class="bg-black/20 rounded-xl p-3">
+                        <p class="text-2xl font-black text-yellow-400">${stats.pending}</p>
+                        <p class="text-gray-400 text-xs">⏳ Pendientes</p>
+                    </div>
+                </div>
+                
+                <!-- Rachas históricas -->
+                ${stats.bestWinStreak > 0 || stats.worstLossStreak > 0 ? `
+                <div class="grid grid-cols-2 gap-3 text-center mb-4">
+                    <div class="bg-green-500/10 rounded-lg p-2 border border-green-500/20">
+                        <span class="text-green-400 text-sm">🏆 Mejor racha: <strong>${stats.bestWinStreak}W</strong></span>
+                    </div>
+                    <div class="bg-red-500/10 rounded-lg p-2 border border-red-500/20">
+                        <span class="text-red-400 text-sm">💀 Peor racha: <strong>${stats.worstLossStreak}L</strong></span>
+                    </div>
+                </div>
+                ` : ''}
+                
+                <!-- Desglose por período -->
+                <div class="border-t border-white/10 pt-4">
+                    <h4 class="text-sm font-bold text-gray-400 mb-3">📊 Rendimiento por Período</h4>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-yellow-500/10 rounded-xl p-3 text-center border border-yellow-500/20">
+                            <p class="text-yellow-400 font-bold text-lg">1Q</p>
+                            <p class="text-white font-bold">${stats.byPeriod['1Q'].wins}W - ${stats.byPeriod['1Q'].losses}L</p>
+                            <p class="text-sm ${stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses > 0 ? (stats.byPeriod['1Q'].wins / (stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses) * 100 >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-500'}">${stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses > 0 ? ((stats.byPeriod['1Q'].wins / (stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses)) * 100).toFixed(0) : 0}%</p>
+                            <p class="text-xs ${stats.byPeriod['1Q'].profit >= 0 ? 'text-green-400' : 'text-red-400'} mt-1">${stats.byPeriod['1Q'].profit >= 0 ? '+' : ''}${stats.byPeriod['1Q'].profit.toFixed(2)}u</p>
+                        </div>
+                        <div class="bg-pink-500/10 rounded-xl p-3 text-center border border-pink-500/20">
+                            <p class="text-pink-400 font-bold text-lg">1H</p>
+                            <p class="text-white font-bold">${stats.byPeriod['1H'].wins}W - ${stats.byPeriod['1H'].losses}L</p>
+                            <p class="text-sm ${stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses > 0 ? (stats.byPeriod['1H'].wins / (stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses) * 100 >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-500'}">${stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses > 0 ? ((stats.byPeriod['1H'].wins / (stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses)) * 100).toFixed(0) : 0}%</p>
+                            <p class="text-xs ${stats.byPeriod['1H'].profit >= 0 ? 'text-green-400' : 'text-red-400'} mt-1">${stats.byPeriod['1H'].profit >= 0 ? '+' : ''}${stats.byPeriod['1H'].profit.toFixed(2)}u</p>
+                        </div>
+                        <div class="bg-green-500/10 rounded-xl p-3 text-center border border-green-500/20">
+                            <p class="text-green-400 font-bold text-lg">FULL</p>
+                            <p class="text-white font-bold">${stats.byPeriod['FULL'].wins}W - ${stats.byPeriod['FULL'].losses}L</p>
+                            <p class="text-sm ${stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses > 0 ? (stats.byPeriod['FULL'].wins / (stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses) * 100 >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-500'}">${stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses > 0 ? ((stats.byPeriod['FULL'].wins / (stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses)) * 100).toFixed(0) : 0}%</p>
+                            <p class="text-xs ${stats.byPeriod['FULL'].profit >= 0 ? 'text-green-400' : 'text-red-400'} mt-1">${stats.byPeriod['FULL'].profit >= 0 ? '+' : ''}${stats.byPeriod['FULL'].profit.toFixed(2)}u</p>
+                        </div>
+                    </div>
+                </div>
+                
+                ${typeStatsHtml ? `
+                <div class="border-t border-white/10 pt-4 mt-4">
+                    <h4 class="text-sm font-bold text-gray-400 mb-3">🎯 Por Tipo (Over/Under)</h4>
+                    <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
+                        ${typeStatsHtml}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+            
+            <!-- LISTA DE PICKS -->
+            <div class="glass rounded-xl p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white">📋 Historial de Picks</h3>
+                    <span class="text-sm text-gray-400">${stats.total} total</span>
+                </div>
+                <div class="max-h-96 overflow-y-auto">
+                    ${picksHtml}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BEST PICKS VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderBestPicks() {
+    const bestPicks = getBestPicks();
+    
+    let picksHtml = bestPicks.length === 0 ? '<p class="text-center text-gray-400 py-10">No hay picks sugeridos en este momento</p>' : '';
+    
+    bestPicks.forEach((pick, index) => {
+        picksHtml += `
+            <div class="best-pick bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl p-4 mb-3 border ${index === 0 ? 'border-yellow-500' : 'border-purple-500/30'}">
+                ${index === 0 ? '<div class="text-yellow-400 text-xs font-bold mb-2">🥇 MEJOR PICK DEL DÍA</div>' : ''}
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <p class="text-white font-bold text-lg">${pick.local} vs ${pick.away}</p>
+                        <p class="text-purple-300">${pick.period} ${pick.betType} ${pick.line}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-3xl font-black ${pick.confidence >= 70 ? 'text-green-400' : 'text-yellow-400'}">${pick.confidence}%</p>
+                        <p class="text-xs text-gray-400">confianza</p>
+                    </div>
+                </div>
+                <div class="bg-black/20 rounded-lg p-3 mb-3">
+                    <p class="text-gray-300 text-sm">${pick.reason}</p>
+                    ${pick.h2hGames > 0 ? `<p class="text-purple-400 text-xs mt-1">📊 ${pick.h2hGames} partidos H2H analizados</p>` : ''}
+                </div>
+                <button onclick="selectBestPick('${pick.local}', '${pick.away}')" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-sm font-bold">
+                    📈 Analizar este matchup
+                </button>
+            </div>
+        `;
+    });
+    
+    return `
+        <div class="p-4 max-w-4xl mx-auto">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
+            
+            <div class="text-center mb-6">
+                <div class="logo-container justify-center mb-2">
+                    ${LOGO_SVG}
+                    <h1 class="text-3xl font-bold text-white font-orbitron">🔥 MEJORES PICKS</h1>
+                </div>
+                <p class="text-gray-400 text-sm">Algoritmo basado en tendencias + H2H</p>
+            </div>
+            
+            <div class="glass rounded-xl p-4">
+                ${picksHtml}
+            </div>
+            
+            <div class="mt-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                <p class="text-yellow-400 text-sm">⚠️ <strong>Disclaimer:</strong> Estas sugerencias son basadas en análisis estadístico. Siempre haz tu propia investigación y apuesta responsablemente.</p>
+            </div>
+        </div>
+    `;
+}
+
+function selectBestPick(local, away) {
+    localTeam = local;
+    visitingTeam = away;
+    navigateTo('tendencia');
+}
+
+function registerPick(period, betType, line, probability) {
+    const oddsInput = prompt('Ingresa la cuota (ej: 1.85):');
+    if (oddsInput === null) return;
+    
+    const odds = parseFloat(oddsInput) || null;
+    
+    addPick({
+        localTeam,
+        awayTeam: visitingTeam,
+        period,
+        betType,
+        line,
+        probability,
+        odds
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INGESTA VIEW
+// ═══════════════════════════════════════════════════════════════
 function renderIngesta() {
     const teams = getTeams();
     const existH2H = ingestTeam1 && ingestTeam2 ? getH2HData(ingestTeam1, ingestTeam2) : null;
@@ -536,7 +1426,10 @@ function renderIngesta() {
         <div class="p-4 max-w-4xl mx-auto">
             <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
             <div class="text-center mb-6">
-                <h1 class="text-3xl font-bold text-white font-orbitron">📝 INGESTA DE DATOS H2H</h1>
+                <div class="logo-container justify-center mb-2">
+                    ${LOGO_SVG}
+                    <h1 class="text-3xl font-bold text-white font-orbitron">INGESTA H2H</h1>
+                </div>
                 <p class="text-green-400 text-sm mt-2">☁️ Los datos se guardan en Firebase automáticamente</p>
             </div>
             
@@ -780,7 +1673,7 @@ function updateScore(field, value) {
 
 function saveGame() {
     if (!firebaseConnected) {
-        alert('⚠️ No hay conexión con Firebase. Verifica tu internet.');
+        showNotification('⚠️ No hay conexión con Firebase', 'warning');
         return;
     }
     
@@ -791,18 +1684,18 @@ function saveGame() {
         if (inp) ingestScores[id] = inp.value;
     });
     if (!ingestTeam1 || !ingestTeam2 || !ingestLocalTeam || !ingestDate) {
-        alert('Completa todos los campos');
+        showNotification('⚠️ Completa todos los campos', 'warning');
         return;
     }
     const s = getScores();
     const lT = s.lQ1+s.lQ2+s.lQ3+s.lQ4+s.lOT1+s.lOT2+s.lOT3;
     const aT = s.aQ1+s.aQ2+s.aQ3+s.aQ4+s.aOT1+s.aOT2+s.aOT3;
     if (lT === 0 || aT === 0) {
-        alert('Ingresa los puntos');
+        showNotification('⚠️ Ingresa los puntos', 'warning');
         return;
     }
     if (lT === aT) {
-        alert('⚠️ Empate. Ingresa Overtime.');
+        showNotification('⚠️ Empate. Ingresa Overtime', 'warning');
         return;
     }
     const away = ingestLocalTeam === ingestTeam1 ? ingestTeam2 : ingestTeam1;
@@ -829,7 +1722,6 @@ function saveGame() {
     ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
     ingestDate = '';
     ingestLocalTeam = '';
-    alert('✅ ¡Guardado en Firebase!');
     render();
 }
 
@@ -840,8 +1732,16 @@ function deleteGame(t1, t2, i) {
 }
 
 function attachEvents() {
-    document.getElementById('localSelect')?.addEventListener('change', e => { localTeam = e.target.value; render(); });
-    document.getElementById('visitingSelect')?.addEventListener('change', e => { visitingTeam = e.target.value; render(); });
+    document.getElementById('localSelect')?.addEventListener('change', e => { 
+        localTeam = e.target.value; 
+        render(); 
+        setTimeout(checkForValuePicks, 100);
+    });
+    document.getElementById('visitingSelect')?.addEventListener('change', e => { 
+        visitingTeam = e.target.value; 
+        render(); 
+        setTimeout(checkForValuePicks, 100);
+    });
     document.getElementById('ingestTeam1')?.addEventListener('change', e => { ingestTeam1 = e.target.value; ingestLocalTeam = ''; render(); });
     document.getElementById('ingestTeam2')?.addEventListener('change', e => { ingestTeam2 = e.target.value; ingestLocalTeam = ''; render(); });
     document.getElementById('ingestDate')?.addEventListener('change', e => { ingestDate = e.target.value; });
@@ -853,6 +1753,7 @@ function setType(p, v) {
     if (p === 'Half') typeHalf = v;
     if (p === 'Full') typeFull = v;
     render();
+    setTimeout(checkForValuePicks, 100);
 }
 
 function updateLine(p, v) {
@@ -860,12 +1761,16 @@ function updateLine(p, v) {
     if (p === 'Half') lineHalf = v;
     if (p === 'Full') lineFull = v;
     render();
+    setTimeout(checkForValuePicks, 100);
 }
 
 // ═══════════════════════════════════════════════════════════════
 // INICIALIZAR
 // ═══════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Primero cargar estadísticas desde API
+    await loadTeamStatsFromAPI();
+    // Luego cargar datos de Firebase
     loadH2HFromFirebase();
 });
     </script>
