@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NioSports Pro - Tendencias NBA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <style>
+        * { font-family: 'Rajdhani', sans-serif; }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .gradient-text { background: linear-gradient(135deg, #00c8ff 0%, #ff3366 50%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .slide-in { animation: slideIn 0.4s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .h2h-card { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%); }
+        .score-input { background: #1a1a2e; border: 2px solid #4a4a6a; }
+        .score-input:focus { border-color: #00c8ff; outline: none; }
+        .ot-input { border-color: #eab308 !important; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .firebase-status { position: fixed; bottom: 10px; left: 10px; padding: 5px 10px; border-radius: 20px; font-size: 11px; z-index: 1000; }
+        .firebase-connected { background: #22c55e; color: white; }
+        .firebase-disconnected { background: #ef4444; color: white; }
+        .firebase-loading { background: #f59e0b; color: white; }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div id="firebaseStatus" class="firebase-status firebase-loading">🔄 Conectando...</div>
+    <div id="app"></div>
+    <script>
+// ═══════════════════════════════════════════════════════════════
+// FIREBASE CONFIGURATION
+// ═══════════════════════════════════════════════════════════════
+const firebaseConfig = {
+    apiKey: "AIzaSyCpddyEiWIE6VBe5u8JRPYBHlnYRMgljCs",
+    authDomain: "niosports-pro.firebaseapp.com",
+    databaseURL: "https://niosports-pro-default-rtdb.firebaseio.com",
+    projectId: "niosports-pro",
+    storageBucket: "niosports-pro.firebasestorage.app",
+    messagingSenderId: "669355459084",
+    appId: "1:669355459084:web:6c11965f3940bae9c8a429"
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// ═══════════════════════════════════════════════════════════════
+// TEAM STATS - TENDENCIAS NBA 2024-25
+// ═══════════════════════════════════════════════════════════════
+const TEAM_STATS = {
+    "Nuggets": { fullHome: 126.1, fullAway: 125.5, full: 125.8, q1Home: 32.9, q1Away: 30.5, q1: 31.7, halfHome: 65.7, halfAway: 59.8, half: 62.4 },
+    "Thunder": { fullHome: 121.8, fullAway: 120.8, full: 121.3, q1Home: 30.0, q1Away: 31.4, q1: 30.8, halfHome: 60.8, halfAway: 59.3, half: 60.0 },
+    "Rockets": { fullHome: 121.2, fullAway: 120.1, full: 120.5, q1Home: 29.6, q1Away: 30.6, q1: 30.3, halfHome: 61.0, halfAway: 58.1, half: 59.3 },
+    "Knicks": { fullHome: 123.1, fullAway: 117.1, full: 120.4, q1Home: 32.0, q1Away: 28.2, q1: 30.2, halfHome: 62.6, halfAway: 58.0, half: 60.8 },
+    "Cavaliers": { fullHome: 118.1, fullAway: 123.2, full: 120.2, q1Home: 29.0, q1Away: 32.6, q1: 30.4, halfHome: 54.7, halfAway: 61.3, half: 57.4 },
+    "Spurs": { fullHome: 120.4, fullAway: 119.8, full: 120.1, q1Home: 30.2, q1Away: 31.2, q1: 30.7, halfHome: 60.7, halfAway: 59.5, half: 60.1 },
+    "Jazz": { fullHome: 126.4, fullAway: 110.7, full: 119.9, q1Home: 34.2, q1Away: 23.9, q1: 30.0, halfHome: 64.1, halfAway: 49.2, half: 57.3 },
+    "Bulls": { fullHome: 114.8, fullAway: 123.8, full: 119.7, q1Home: 30.7, q1Away: 29.1, q1: 29.8, halfHome: 59.2, halfAway: 59.2, half: 59.2 },
+    "Heat": { fullHome: 119.1, fullAway: 119.3, full: 119.2, q1Home: 28.9, q1Away: 34.0, q1: 31.5, halfHome: 62.1, halfAway: 65.5, half: 63.7 },
+    "Pistons": { fullHome: 119.5, fullAway: 118.9, full: 119.2, q1Home: 29.6, q1Away: 30.8, q1: 30.2, halfHome: 59.4, halfAway: 60.9, half: 60.2 },
+    "Timberwolves": { fullHome: 115.9, fullAway: 123.0, full: 119.1, q1Home: 29.5, q1Away: 28.5, q1: 29.1, halfHome: 61.4, halfAway: 56.4, half: 58.8 },
+    "Hawks": { fullHome: 116.8, fullAway: 120.5, full: 118.8, q1Home: 31.4, q1Away: 29.5, q1: 30.4, halfHome: 58.0, halfAway: 59.3, half: 58.8 },
+    "Magic": { fullHome: 115.9, fullAway: 118.3, full: 117.2, q1Home: 29.9, q1Away: 31.3, q1: 30.6, halfHome: 58.2, halfAway: 62.8, half: 60.3 },
+    "Trail Blazers": { fullHome: 117.2, fullAway: 117.0, full: 117.1, q1Home: 27.8, q1Away: 29.6, q1: 28.8, halfHome: 57.9, halfAway: 60.1, half: 59.3 },
+    "Lakers": { fullHome: 121.1, fullAway: 114.0, full: 116.9, q1Home: 31.8, q1Away: 28.5, q1: 29.8, halfHome: 63.5, halfAway: 57.8, half: 60.4 },
+    "76ers": { fullHome: 115.0, fullAway: 119.0, full: 116.6, q1Home: 30.5, q1Away: 32.0, q1: 31.1, halfHome: 60.2, halfAway: 64.6, half: 62.0 },
+    "Celtics": { fullHome: 118.6, fullAway: 113.2, full: 116.0, q1Home: 29.8, q1Away: 31.3, q1: 30.5, halfHome: 61.4, halfAway: 59.4, half: 60.4 },
+    "Pelicans": { fullHome: 119.9, fullAway: 109.5, full: 115.5, q1Home: 30.1, q1Away: 24.9, q1: 27.9, halfHome: 58.8, halfAway: 52.5, half: 56.0 },
+    "Hornets": { fullHome: 116.1, fullAway: 114.8, full: 115.4, q1Home: 32.1, q1Away: 28.3, q1: 30.2, halfHome: 59.8, halfAway: 57.2, half: 58.5 },
+    "Grizzlies": { fullHome: 117.2, fullAway: 113.1, full: 115.0, q1Home: 28.9, q1Away: 28.2, q1: 28.5, halfHome: 59.7, halfAway: 52.7, half: 56.2 },
+    "Suns": { fullHome: 116.4, fullAway: 113.2, full: 114.9, q1Home: 28.1, q1Away: 30.8, q1: 29.4, halfHome: 57.7, halfAway: 59.1, half: 58.3 },
+    "Warriors": { fullHome: 118.3, fullAway: 111.5, full: 114.5, q1Home: 27.6, q1Away: 25.8, q1: 26.6, halfHome: 57.2, halfAway: 51.6, half: 54.0 },
+    "Mavericks": { fullHome: 114.6, fullAway: 112.6, full: 113.7, q1Home: 28.9, q1Away: 28.3, q1: 28.6, halfHome: 53.3, halfAway: 54.0, half: 53.6 },
+    "Raptors": { fullHome: 113.0, fullAway: 113.8, full: 113.4, q1Home: 28.6, q1Away: 29.2, q1: 28.9, halfHome: 57.9, halfAway: 57.3, half: 57.6 },
+    "Bucks": { fullHome: 117.1, fullAway: 108.4, full: 113.0, q1Home: 28.3, q1Away: 28.9, q1: 28.6, halfHome: 57.3, halfAway: 55.4, half: 56.4 },
+    "Wizards": { fullHome: 115.3, fullAway: 110.6, full: 112.6, q1Home: 30.2, q1Away: 28.9, q1: 29.5, halfHome: 60.5, halfAway: 54.8, half: 57.4 },
+    "Kings": { fullHome: 110.4, fullAway: 113.4, full: 112.0, q1Home: 27.7, q1Away: 29.1, q1: 28.4, halfHome: 53.0, halfAway: 60.2, half: 57.1 },
+    "Clippers": { fullHome: 112.8, fullAway: 109.9, full: 111.2, q1Home: 30.5, q1Away: 29.5, q1: 30.0, halfHome: 60.7, halfAway: 54.9, half: 57.3 },
+    "Nets": { fullHome: 108.7, fullAway: 109.9, full: 109.3, q1Home: 28.7, q1Away: 27.7, q1: 28.2, halfHome: 54.9, halfAway: 57.5, half: 56.1 },
+    "Pacers": { fullHome: 112.7, fullAway: 105.1, full: 109.2, q1Home: 28.3, q1Away: 26.8, q1: 27.6, halfHome: 56.3, halfAway: 52.4, half: 54.4 }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// VARIABLES DE ESTADO
+// ═══════════════════════════════════════════════════════════════
+let H2H_DATABASE = {};
+let currentView = 'home';
+let localTeam = '', visitingTeam = '';
+let lineQ1 = '', lineHalf = '', lineFull = '';
+let typeQ1 = 'OVER', typeHalf = 'OVER', typeFull = 'OVER';
+let ingestTeam1 = '', ingestTeam2 = '', ingestLocalTeam = '', ingestDate = '';
+let ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
+let firebaseConnected = false;
+
+// ═══════════════════════════════════════════════════════════════
+// FIREBASE DATABASE FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+function updateFirebaseStatus(status) {
+    const el = document.getElementById('firebaseStatus');
+    if (status === 'connected') {
+        el.textContent = '🟢 Firebase Conectado';
+        el.className = 'firebase-status firebase-connected';
+        firebaseConnected = true;
+    } else if (status === 'disconnected') {
+        el.textContent = '🔴 Sin Conexión';
+        el.className = 'firebase-status firebase-disconnected';
+        firebaseConnected = false;
+    } else {
+        el.textContent = '🔄 Conectando...';
+        el.className = 'firebase-status firebase-loading';
+    }
+}
+
+// Listener de conexión
+database.ref('.info/connected').on('value', (snap) => {
+    updateFirebaseStatus(snap.val() ? 'connected' : 'disconnected');
+});
+
+// Cargar datos de Firebase al iniciar
+function loadH2HFromFirebase() {
+    database.ref('h2h_games').on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            H2H_DATABASE = snapshot.val();
+        } else {
+            H2H_DATABASE = {};
+        }
+        render();
+    }, (error) => {
+        console.error('Error cargando datos:', error);
+        updateFirebaseStatus('disconnected');
+    });
+}
+
+// Guardar en Firebase
+function saveH2HToFirebase() {
+    database.ref('h2h_games').set(H2H_DATABASE)
+        .then(() => console.log('✅ Guardado en Firebase'))
+        .catch((error) => {
+            console.error('Error guardando:', error);
+            alert('Error guardando en Firebase: ' + error.message);
+        });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FUNCIONES H2H DATABASE
+// ═══════════════════════════════════════════════════════════════
+function getH2HKey(t1, t2) { return [t1, t2].sort().join('_'); }
+
+function addH2HGame(t1, t2, data) { 
+    const k = getH2HKey(t1, t2); 
+    if (!H2H_DATABASE[k]) H2H_DATABASE[k] = []; 
+    H2H_DATABASE[k].unshift(data); 
+    saveH2HToFirebase();
+}
+
+function deleteH2HGame(t1, t2, idx) { 
+    const k = getH2HKey(t1, t2); 
+    if (H2H_DATABASE[k]) { 
+        H2H_DATABASE[k].splice(idx, 1); 
+        if (H2H_DATABASE[k].length === 0) delete H2H_DATABASE[k]; 
+        saveH2HToFirebase();
+    } 
+}
+
+function getH2HData(team1, team2) {
+    const k = getH2HKey(team1, team2), games = H2H_DATABASE[k] || [];
+    if (games.length === 0) return null;
+    let t1W = 0, t2W = 0, t1Pts = 0, t2Pts = 0;
+    const proc = games.slice(0, 10).map(g => {
+        const isT1L = g.localTeam === team1;
+        const t1Q1 = isT1L ? g.localQ1 : g.awayQ1, t1Q2 = isT1L ? g.localQ2 : g.awayQ2;
+        const t1Q3 = isT1L ? g.localQ3 : g.awayQ3, t1Q4 = isT1L ? g.localQ4 : g.awayQ4;
+        const t2Q1 = isT1L ? g.awayQ1 : g.localQ1, t2Q2 = isT1L ? g.awayQ2 : g.localQ2;
+        const t2Q3 = isT1L ? g.awayQ3 : g.localQ3, t2Q4 = isT1L ? g.awayQ4 : g.localQ4;
+        const t1OT = isT1L ? ((g.localOT1||0)+(g.localOT2||0)+(g.localOT3||0)) : ((g.awayOT1||0)+(g.awayOT2||0)+(g.awayOT3||0));
+        const t2OT = isT1L ? ((g.awayOT1||0)+(g.awayOT2||0)+(g.awayOT3||0)) : ((g.localOT1||0)+(g.localOT2||0)+(g.localOT3||0));
+        const t1T = t1Q1+t1Q2+t1Q3+t1Q4+t1OT, t2T = t2Q1+t2Q2+t2Q3+t2Q4+t2OT;
+        t1Pts += t1T; t2Pts += t2T;
+        if (t1T > t2T) t1W++; else t2W++;
+        return { date: g.date, localTeam: g.localTeam, awayTeam: g.awayTeam, t1Q1, t1Q2, t1Q3, t1Q4, t2Q1, t2Q2, t2Q3, t2Q4, t1Half: t1Q1+t1Q2, t2Half: t2Q1+t2Q2, t1Total: t1T, t2Total: t2T, totalPts: t1T+t2T, winner: t1T>t2T ? team1 : team2, overtimes: g.overtimes||0 };
+    });
+    const n = proc.length;
+    return {
+        team1, team2,
+        record: { team1Wins: t1W, team2Wins: t2W },
+        avgPts: { team1: n ? t1Pts/n : 0, team2: n ? t2Pts/n : 0 },
+        avgQ1: { team1: n ? proc.reduce((s,g) => s+g.t1Q1, 0)/n : 0, team2: n ? proc.reduce((s,g) => s+g.t2Q1, 0)/n : 0 },
+        avgHalf: { team1: n ? proc.reduce((s,g) => s+g.t1Half, 0)/n : 0, team2: n ? proc.reduce((s,g) => s+g.t2Half, 0)/n : 0 },
+        games: proc,
+        totalGames: games.length
+    };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FUNCIONES UTILIDADES
+// ═══════════════════════════════════════════════════════════════
+function getTeams() { return Object.keys(TEAM_STATS).sort(); }
+
+function calcProb(trend, line, type) {
+    if (!trend || trend === '-' || !line) return null;
+    const diff = parseFloat(trend) - parseFloat(line);
+    const std = parseFloat(trend) < 40 ? 5.5 : parseFloat(trend) < 80 ? 8.5 : 12.5;
+    const z = diff / std;
+    const cdf = x => {
+        const t = 1 / (1 + 0.2316419 * Math.abs(x));
+        const d = 0.3989423 * Math.exp(-x * x / 2);
+        const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+        return x > 0 ? 1 - p : p;
+    };
+    return Math.round((type === 'OVER' ? cdf(z) : 1 - cdf(z)) * 100);
+}
+
+function probColor(p) {
+    if (!p) return 'bg-gray-500';
+    if (p >= 65) return 'bg-green-600 text-white';
+    if (p >= 55) return 'bg-green-500 text-white';
+    if (p >= 45) return 'bg-yellow-500 text-gray-900';
+    return 'bg-red-600 text-white';
+}
+
+function probRec(p) {
+    if (!p) return '';
+    if (p >= 65) return '✅ VALOR ALTO';
+    if (p >= 55) return '⚠️ VALOR MEDIO';
+    if (p >= 45) return '⚡ NEUTRAL';
+    return '❌ SIN VALOR';
+}
+
+function getScores() {
+    return {
+        lQ1: parseInt(ingestScores.localQ1) || 0, lQ2: parseInt(ingestScores.localQ2) || 0,
+        lQ3: parseInt(ingestScores.localQ3) || 0, lQ4: parseInt(ingestScores.localQ4) || 0,
+        aQ1: parseInt(ingestScores.awayQ1) || 0, aQ2: parseInt(ingestScores.awayQ2) || 0,
+        aQ3: parseInt(ingestScores.awayQ3) || 0, aQ4: parseInt(ingestScores.awayQ4) || 0,
+        lOT1: parseInt(ingestScores.localOT1) || 0, aOT1: parseInt(ingestScores.awayOT1) || 0,
+        lOT2: parseInt(ingestScores.localOT2) || 0, aOT2: parseInt(ingestScores.awayOT2) || 0,
+        lOT3: parseInt(ingestScores.localOT3) || 0, aOT3: parseInt(ingestScores.awayOT3) || 0
+    };
+}
+
+function checkOT() {
+    const s = getScores();
+    const lReg = s.lQ1+s.lQ2+s.lQ3+s.lQ4, aReg = s.aQ1+s.aQ2+s.aQ3+s.aQ4;
+    const filled = s.lQ1>0 && s.lQ2>0 && s.lQ3>0 && s.lQ4>0 && s.aQ1>0 && s.aQ2>0 && s.aQ3>0 && s.aQ4>0;
+    const need1 = filled && lReg === aReg;
+    const lA1 = lReg+s.lOT1, aA1 = aReg+s.aOT1;
+    const need2 = need1 && s.lOT1>0 && s.aOT1>0 && lA1 === aA1;
+    const lA2 = lA1+s.lOT2, aA2 = aA1+s.aOT2;
+    const need3 = need2 && s.lOT2>0 && s.aOT2>0 && lA2 === aA2;
+    return { needOT1: need1, needOT2: need2, needOT3: need3 };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER PRINCIPAL
+// ═══════════════════════════════════════════════════════════════
+function render() {
+    const app = document.getElementById('app');
+    if (currentView === 'home') app.innerHTML = renderHome();
+    else if (currentView === 'tendencia') app.innerHTML = renderTendencia();
+    else if (currentView === 'ingesta') app.innerHTML = renderIngesta();
+    attachEvents();
+}
+
+function renderHome() {
+    const teams = getTeams();
+    const top5 = [...teams].sort((a,b) => (TEAM_STATS[b]?.full||0) - (TEAM_STATS[a]?.full||0)).slice(0,5);
+    const h2hC = Object.keys(H2H_DATABASE).length;
+    const totalG = Object.values(H2H_DATABASE).reduce((s,a) => s + (Array.isArray(a) ? a.length : 0), 0);
+    
+    let topH = top5.map((t,i) => `
+        <div class="flex justify-between items-center bg-white/5 rounded-lg p-3 mb-2">
+            <span class="text-white font-semibold">${i+1}. ${t}</span>
+            <div class="text-right">
+                <span class="text-yellow-400 font-bold text-lg">${TEAM_STATS[t]?.full?.toFixed(1)}</span>
+                <span class="text-gray-500 text-xs ml-2">(H:${TEAM_STATS[t]?.fullHome} / A:${TEAM_STATS[t]?.fullAway})</span>
+            </div>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="p-4 max-w-4xl mx-auto">
+            <div class="rounded-lg p-3 mb-6 bg-green-500/20 border border-green-500/30">
+                <div class="flex flex-col items-center text-center">
+                    <span class="font-semibold text-sm text-green-400">📊 Sistema Pro - Tendencias NBA 2025-2026</span>
+                    <span class="text-xs text-gray-400 mt-1">Fuente: TeamRankings.com</span>
+                </div>
+            </div>
+            
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-black text-white mb-2 font-orbitron">🏀 NIOSPORTS PRO</h1>
+                <h2 class="text-2xl font-bold gradient-text font-orbitron">TENDENCIA DE PUNTOS</h2>
+            </div>
+            
+            <button onclick="navigateTo('tendencia')" class="w-full bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-2xl hover:scale-[1.02] transition mb-4">
+                <div class="flex flex-col items-center">
+                    <div class="text-5xl mb-3">📈</div>
+                    <h3 class="text-xl font-bold text-white mb-1">Tendencia + H2H</h3>
+                    <p class="text-yellow-200 text-xs mt-2">1Q • 1H • Full Game</p>
+                </div>
+            </button>
+            
+            <button onclick="navigateTo('ingesta')" class="w-full bg-gradient-to-br from-purple-600 to-indigo-700 p-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition mb-6 border-2 border-purple-400/50">
+                <div class="flex items-center justify-center gap-4">
+                    <div class="text-4xl">📝</div>
+                    <div class="text-left">
+                        <h3 class="text-xl font-bold text-white">Ingesta de Datos H2H</h3>
+                        <p class="text-purple-200 text-sm">Agregar partidos manualmente</p>
+                    </div>
+                </div>
+            </button>
+            
+            <div class="glass rounded-xl p-4 mb-6">
+                <h3 class="text-lg font-bold text-white mb-3">📊 Base de Datos H2H <span class="text-green-400 text-sm">(Firebase)</span></h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-purple-500/20 rounded-lg p-3 text-center">
+                        <p class="text-3xl font-black text-purple-400">${h2hC}</p>
+                        <p class="text-gray-400 text-sm">Matchups</p>
+                    </div>
+                    <div class="bg-green-500/20 rounded-lg p-3 text-center">
+                        <p class="text-3xl font-black text-green-400">${totalG}</p>
+                        <p class="text-gray-400 text-sm">Partidos</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass rounded-xl p-4">
+                <h3 class="text-lg font-bold text-white mb-3">🔥 Top 5 Equipos PPG 2024-25</h3>
+                ${topH}
+            </div>
+        </div>
+    `;
+}
+
+function renderTendencia() {
+    const teams = getTeams();
+    const lD = localTeam ? TEAM_STATS[localTeam] : null;
+    const vD = visitingTeam ? TEAM_STATS[visitingTeam] : null;
+    let trends = { q1: '-', half: '-', full: '-' };
+    if (lD && vD) {
+        trends = {
+            q1: (lD.q1Home + vD.q1Away).toFixed(1),
+            half: (lD.halfHome + vD.halfAway).toFixed(1),
+            full: (lD.fullHome + vD.fullAway).toFixed(1)
+        };
+    }
+    const pQ1 = calcProb(trends.q1, lineQ1, typeQ1);
+    const pHalf = calcProb(trends.half, lineHalf, typeHalf);
+    const pFull = calcProb(trends.full, lineFull, typeFull);
+    
+    let opts = '<option value="">Seleccionar...</option>';
+    teams.forEach(t => { opts += `<option value="${t}">${t}</option>`; });
+    
+    let html = `
+        <div class="p-4 max-w-4xl mx-auto">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-white font-orbitron">📈 TENDENCIA + H2H</h1>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-cyan-600 to-blue-700 p-4 rounded-xl">
+                    <h2 class="text-lg font-bold text-white mb-2 text-center">🏠 LOCAL</h2>
+                    <select id="localSelect" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">
+                        ${opts.replace(`value="${localTeam}"`, `value="${localTeam}" selected`)}
+                    </select>
+                    ${lD ? `<div class="mt-2 text-white text-xs text-center">1Q: ${lD.q1Home} | 1H: ${lD.halfHome} | Full: ${lD.fullHome}</div>` : ''}
+                </div>
+                <div class="bg-gradient-to-br from-orange-600 to-red-700 p-4 rounded-xl">
+                    <h2 class="text-lg font-bold text-white mb-2 text-center">✈️ VISITANTE</h2>
+                    <select id="visitingSelect" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">
+                        ${opts.replace(`value="${visitingTeam}"`, `value="${visitingTeam}" selected`)}
+                    </select>
+                    ${vD ? `<div class="mt-2 text-white text-xs text-center">1Q: ${vD.q1Away} | 1H: ${vD.halfAway} | Full: ${vD.fullAway}</div>` : ''}
+                </div>
+            </div>
+    `;
+    
+    if (localTeam && visitingTeam) {
+        html += `
+            <div class="bg-white rounded-2xl p-5 shadow-xl mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-2 text-center">📈 TENDENCIA TEMPORADA 2024-25</h2>
+                <p class="text-center text-gray-500 text-sm mb-4">${localTeam} (HOME) + ${visitingTeam} (AWAY)</p>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl p-4 text-center">
+                        <p class="text-sm font-bold text-white/90">1Q</p>
+                        <p class="text-4xl font-black text-white">${trends.q1}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl p-4 text-center">
+                        <p class="text-sm font-bold text-white/90">1H</p>
+                        <p class="text-4xl font-black text-white">${trends.half}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 text-center">
+                        <p class="text-sm font-bold text-white/90">FULL</p>
+                        <p class="text-4xl font-black text-white">${trends.full}</p>
+                    </div>
+                </div>
+            </div>
+            ${renderH2HSection()}
+            <div class="bg-gradient-to-br from-purple-700 to-indigo-800 rounded-2xl p-5 shadow-xl mt-6">
+                <h2 class="text-xl font-bold text-white mb-4 text-center">🎯 CALCULADORA</h2>
+                <div class="grid grid-cols-3 gap-4">
+                    ${renderCalc('Q1', '1Q', trends.q1, pQ1, typeQ1, lineQ1)}
+                    ${renderCalc('Half', '1H', trends.half, pHalf, typeHalf, lineHalf)}
+                    ${renderCalc('Full', 'FULL', trends.full, pFull, typeFull, lineFull)}
+                </div>
+            </div>
+        `;
+    } else {
+        html += `<div class="glass rounded-xl p-10 text-center"><p class="text-white font-bold text-xl">👆 Selecciona dos equipos</p></div>`;
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function renderH2HSection() {
+    const h2h = getH2HData(localTeam, visitingTeam);
+    if (!h2h) {
+        return `
+            <div class="h2h-card rounded-2xl p-5 shadow-2xl mt-6 border border-yellow-500/30">
+                <div class="text-center py-6">
+                    <div class="text-5xl mb-4">📝</div>
+                    <p class="text-yellow-400 font-bold">No hay datos H2H para ${localTeam} vs ${visitingTeam}</p>
+                    <button onclick="goToIngestWithTeams()" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg">➕ Agregar Partidos</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    const t1W = h2h.record.team1Wins, t2W = h2h.record.team2Wins;
+    let gh = h2h.games.map((g,i) => `
+        <div class="grid grid-cols-5 gap-2 text-sm py-2 ${i%2===0?'bg-white/5':''} rounded">
+            <span class="text-gray-300 text-xs">${g.date}${g.overtimes>0?` <span class="text-yellow-400">(${g.overtimes}OT)</span>`:''}</span>
+            <span class="text-center text-yellow-400 font-bold">${g.t1Q1+g.t2Q1}</span>
+            <span class="text-center text-pink-400 font-bold">${g.t1Half+g.t2Half}</span>
+            <span class="text-center text-green-400 font-bold">${g.totalPts}</span>
+            <span class="text-center font-bold ${g.winner===localTeam?'text-cyan-400':'text-orange-400'}">${g.winner}</span>
+        </div>
+    `).join('');
+    
+    return `
+        <div class="h2h-card rounded-2xl p-5 shadow-2xl slide-in border border-purple-500/30 mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">⚔️ H2H - Últimos ${h2h.games.length} Partidos</h2>
+                <span class="text-xs px-3 py-1 rounded bg-green-500/20 text-green-300">☁️ Firebase</span>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-3 mb-5">
+                <div class="bg-white/10 rounded-xl p-4 text-center ${t1W>t2W?'border-2 border-green-500/50':''}">
+                    <p class="text-white font-bold text-sm">${localTeam}</p>
+                    <p class="text-4xl font-black ${t1W>t2W?'text-green-400':'text-white'}">${t1W}</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-4 text-center flex flex-col justify-center">
+                    <p class="text-yellow-400 font-bold">VS</p>
+                    <p class="text-gray-300">${t1W}-${t2W}</p>
+                </div>
+                <div class="bg-white/10 rounded-xl p-4 text-center ${t2W>t1W?'border-2 border-green-500/50':''}">
+                    <p class="text-white font-bold text-sm">${visitingTeam}</p>
+                    <p class="text-4xl font-black ${t2W>t1W?'text-green-400':'text-white'}">${t2W}</p>
+                </div>
+            </div>
+            
+            <div class="bg-purple-900/50 rounded-xl p-4 mb-5">
+                <h3 class="text-white font-bold text-center mb-3">📊 PROMEDIOS H2H</h3>
+                <div class="grid grid-cols-3 gap-2 text-center text-sm">
+                    <div class="bg-white/5 rounded-lg p-2">
+                        <p class="text-gray-400 text-xs">1er Cuarto</p>
+                        <p class="text-yellow-400 font-bold">${(h2h.avgQ1.team1+h2h.avgQ1.team2).toFixed(1)}</p>
+                    </div>
+                    <div class="bg-white/5 rounded-lg p-2">
+                        <p class="text-gray-400 text-xs">1er Tiempo</p>
+                        <p class="text-pink-400 font-bold">${(h2h.avgHalf.team1+h2h.avgHalf.team2).toFixed(1)}</p>
+                    </div>
+                    <div class="bg-white/5 rounded-lg p-2">
+                        <p class="text-gray-400 text-xs">Full Game</p>
+                        <p class="text-green-400 font-bold">${(h2h.avgPts.team1+h2h.avgPts.team2).toFixed(1)}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-center mt-3">
+                    <p class="text-cyan-400 font-bold">${localTeam}: ${h2h.avgPts.team1.toFixed(1)} PPG</p>
+                    <p class="text-orange-400 font-bold">${visitingTeam}: ${h2h.avgPts.team2.toFixed(1)} PPG</p>
+                </div>
+            </div>
+            
+            <div class="bg-black/30 rounded-xl p-4">
+                <h3 class="text-white font-bold text-sm mb-3">📋 HISTORIAL</h3>
+                <div class="space-y-1 max-h-64 overflow-y-auto">
+                    <div class="grid grid-cols-5 gap-2 text-xs text-gray-500 font-bold pb-2 border-b border-white/10">
+                        <span>FECHA</span><span class="text-center">1Q</span><span class="text-center">1H</span><span class="text-center">FULL</span><span class="text-center">GANÓ</span>
+                    </div>
+                    ${gh}
+                </div>
+            </div>
+            
+            <button onclick="goToIngestWithTeams()" class="w-full mt-4 bg-purple-600/50 hover:bg-purple-600 text-white py-2 rounded-lg text-sm">➕ Agregar más partidos</button>
+        </div>
+    `;
+}
+
+function renderCalc(id, label, trend, prob, type, line) {
+    let ph = '';
+    if (prob) {
+        ph = `<div class="mt-2 p-2 rounded text-center ${probColor(prob)}"><p class="text-xl font-black">${prob}%</p><p class="text-xs">${probRec(prob)}</p></div>`;
+    }
+    return `
+        <div class="bg-white rounded-xl p-3">
+            <p class="text-sm font-black text-center text-gray-800">${label}: ${trend}</p>
+            <div class="flex gap-1 my-2">
+                <button onclick="setType('${id}','OVER')" class="flex-1 py-1 text-xs rounded font-bold ${type==='OVER'?'bg-green-600 text-white':'bg-gray-200'}">O</button>
+                <button onclick="setType('${id}','UNDER')" class="flex-1 py-1 text-xs rounded font-bold ${type==='UNDER'?'bg-red-600 text-white':'bg-gray-200'}">U</button>
+            </div>
+            <input type="number" step="0.5" value="${line}" placeholder="Línea" class="w-full p-2 border rounded text-center text-sm font-bold" onchange="updateLine('${id}',this.value)">
+            ${ph}
+        </div>
+    `;
+}
+
+function renderIngesta() {
+    const teams = getTeams();
+    const existH2H = ingestTeam1 && ingestTeam2 ? getH2HData(ingestTeam1, ingestTeam2) : null;
+    
+    let o1 = '<option value="">Seleccionar...</option>';
+    let o2 = '<option value="">Seleccionar...</option>';
+    teams.forEach(t => {
+        o1 += `<option value="${t}"${t===ingestTeam1?' selected':''}>${t}</option>`;
+        if (t !== ingestTeam1) o2 += `<option value="${t}"${t===ingestTeam2?' selected':''}>${t}</option>`;
+    });
+    
+    let html = `
+        <div class="p-4 max-w-4xl mx-auto">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-white font-orbitron">📝 INGESTA DE DATOS H2H</h1>
+                <p class="text-green-400 text-sm mt-2">☁️ Los datos se guardan en Firebase automáticamente</p>
+            </div>
+            
+            <div class="glass rounded-xl p-5 mb-6">
+                <h2 class="text-lg font-bold text-white mb-4">1️⃣ Seleccionar Equipos</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-gray-400 text-sm mb-1 block">Equipo 1</label>
+                        <select id="ingestTeam1" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">${o1}</select>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm mb-1 block">Equipo 2</label>
+                        <select id="ingestTeam2" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">${o2}</select>
+                    </div>
+                </div>
+            </div>
+    `;
+    
+    if (ingestTeam1 && ingestTeam2) {
+        html += `
+            <div class="glass rounded-xl p-5 mb-6">
+                <h2 class="text-lg font-bold text-white mb-4">2️⃣ Fecha y Localía</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-gray-400 text-sm mb-1 block">Fecha del Partido</label>
+                        <input type="date" id="ingestDate" value="${ingestDate}" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm mb-1 block">¿Quién es LOCAL? 🏠</label>
+                        <select id="ingestLocal" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">
+                            <option value="">Seleccionar...</option>
+                            <option value="${ingestTeam1}"${ingestLocalTeam===ingestTeam1?' selected':''}>${ingestTeam1}</option>
+                            <option value="${ingestTeam2}"${ingestLocalTeam===ingestTeam2?' selected':''}>${ingestTeam2}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        if (ingestLocalTeam && ingestDate) {
+            html += `
+                <div class="bg-slate-800 rounded-2xl p-5 mb-6 border border-slate-600">
+                    <h2 class="text-lg font-bold text-white mb-4 text-center">3️⃣ Puntos por Cuarto</h2>
+                    <div class="score-grid">${renderScoreInputs()}</div>
+                    ${renderTotals()}
+                </div>
+                <button onclick="saveGame()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 rounded-xl text-xl hover:scale-[1.02] transition mb-6">💾 GUARDAR EN FIREBASE</button>
+            `;
+        }
+        
+        if (existH2H) {
+            let gh = existH2H.games.map((g,i) => `
+                <div class="bg-slate-800/50 rounded-lg p-3 flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-400 text-xs">${g.date}${g.overtimes>0?` <span class="text-yellow-400">(${g.overtimes}OT)</span>`:''}</p>
+                        <p class="text-white font-bold">${g.localTeam} ${g.t1Total}-${g.t2Total} ${g.awayTeam}</p>
+                        <p class="text-gray-500 text-xs">1H: ${g.t1Half}-${g.t2Half} | Total: ${g.totalPts}</p>
+                    </div>
+                    <button onclick="deleteGame('${ingestTeam1}','${ingestTeam2}',${i})" class="text-red-400 hover:text-red-300 text-xl">🗑️</button>
+                </div>
+            `).join('');
+            
+            html += `
+                <div class="glass rounded-xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-white">📋 Historial ${ingestTeam1} vs ${ingestTeam2}</h2>
+                        <span class="text-sm text-purple-400">${existH2H.totalGames} partidos</span>
+                    </div>
+                    <div class="bg-purple-900/30 rounded-lg p-3 mb-4">
+                        <div class="grid grid-cols-3 gap-2 text-center text-sm">
+                            <div><p class="text-gray-400">Prom 1Q</p><p class="text-white font-bold">${(existH2H.avgQ1.team1+existH2H.avgQ1.team2).toFixed(1)}</p></div>
+                            <div><p class="text-gray-400">Prom 1H</p><p class="text-white font-bold">${(existH2H.avgHalf.team1+existH2H.avgHalf.team2).toFixed(1)}</p></div>
+                            <div><p class="text-gray-400">Prom Full</p><p class="text-white font-bold">${(existH2H.avgPts.team1+existH2H.avgPts.team2).toFixed(1)}</p></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 max-h-64 overflow-y-auto">${gh}</div>
+                </div>
+            `;
+        } else if (ingestTeam1 && ingestTeam2) {
+            html += `<div class="glass rounded-xl p-5 text-center"><p class="text-gray-400">No hay partidos registrados</p></div>`;
+        }
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function renderScoreInputs() {
+    const away = ingestLocalTeam === ingestTeam1 ? ingestTeam2 : ingestTeam1;
+    const ot = checkOT();
+    let cols = 5;
+    if (ot.needOT1) cols++;
+    if (ot.needOT2) cols++;
+    if (ot.needOT3) cols++;
+    
+    const gs = `display:grid;grid-template-columns:80px repeat(${cols-1},minmax(50px,1fr));gap:0.4rem;`;
+    
+    let h = `<div style="${gs}" class="mb-3 text-center items-center">
+        <div class="text-gray-500 text-xs font-bold">EQUIPO</div>
+        <div class="text-gray-400 text-xs font-bold">1° C</div>
+        <div class="text-gray-400 text-xs font-bold">2° C</div>
+        <div class="text-gray-400 text-xs font-bold">3° C</div>
+        <div class="text-gray-400 text-xs font-bold">4° C</div>`;
+    if (ot.needOT1) h += `<div class="text-yellow-400 text-xs font-bold animate-pulse">OT1</div>`;
+    if (ot.needOT2) h += `<div class="text-orange-400 text-xs font-bold animate-pulse">OT2</div>`;
+    if (ot.needOT3) h += `<div class="text-red-400 text-xs font-bold animate-pulse">OT3</div>`;
+    h += '</div>';
+    
+    let lr = `<div style="${gs}" class="mb-3 items-center">
+        <div class="text-cyan-400 font-bold text-xs truncate">🏠 ${ingestLocalTeam}</div>
+        <input type="number" id="localQ1" value="${ingestScores.localQ1}" placeholder="0" class="score-input p-2 rounded-lg text-white text-center text-lg font-bold w-full" oninput="updateScore('localQ1',this.value)">
+        <input type="number" id="localQ2" value="${ingestScores.localQ2}" placeholder="0" class="score-input p-2 rounded-lg text-white text-center text-lg font-bold w-full" oninput="updateScore('localQ2',this.value)">
+        <input type="number" id="localQ3" value="${ingestScores.localQ3}" placeholder="0" class="score-input p-2 rounded-lg text-white text-center text-lg font-bold w-full" oninput="updateScore('localQ3',this.value)">
+        <input type="number" id="localQ4" value="${ingestScores.localQ4}" placeholder="0" class="score-input p-2 rounded-lg text-white text-center text-lg font-bold w-full" oninput="updateScore('localQ4',this.value)">`;
+    if (ot.needOT1) lr += `<input type="number" id="localOT1" value="${ingestScores.localOT1}" placeholder="0" class="score-input ot-input p-2 rounded-lg text-yellow-400 text-center text-lg font-bold w-full" oninput="updateScore('localOT1',this.value)">`;
+    if (ot.needOT2) lr += `<input type="number" id="localOT2" value="${ingestScores.localOT2}" placeholder="0" class="score-input p-2 rounded-lg text-orange-400 text-center text-lg font-bold border-orange-500 w-full" oninput="updateScore('localOT2',this.value)">`;
+    if (ot.needOT3) lr += `<input type="number" id="localOT3" value="${ingestScores.localOT3}" placeholder="0" class="score-input p-2 rounded-lg text-red-400 text-center text-lg font-bold border-red-500 w-full" oninput="updateScore('localOT3',this.value)">`;
+    lr += '</div>';
+    
+    let ar = `<div style="${gs}" class="mb-4 items-center">
+        <div class="text-orange-400 font-bold text-xs truncate">✈️ ${away}</div>
+        <input type="number" id="awayQ1" value="${ingestScores.awayQ1}" placeholder="0" class="score-input p-2 rounded-lg text-white text-center text-lg font-bold w-full" oninput="updateScore('awayQ1',this.value)">
+        <input type="number" id="awayQ2" value="${ingestScores.awayQ2}" placeholder="0" class="score-input p-2 rounded-lg text-white text-center text-lg font-bold w-full" oninput="updateScore('awayQ2',this.value)">
+        <input type="number" id="awayQ3" value="${ingestScores.awayQ3}" placeholder="0" class="score-input p-2 rounded-lg text-white text-center text-lg font-bold w-full" oninput="updateScore('awayQ3',this.value)">
+        <input type="number" id="awayQ4" value="${ingestScores.awayQ4}" placeholder="0" class="score-input p-2 rounded-lg text-white text-center text-lg font-bold w-full" oninput="updateScore('awayQ4',this.value)">`;
+    if (ot.needOT1) ar += `<input type="number" id="awayOT1" value="${ingestScores.awayOT1}" placeholder="0" class="score-input ot-input p-2 rounded-lg text-yellow-400 text-center text-lg font-bold w-full" oninput="updateScore('awayOT1',this.value)">`;
+    if (ot.needOT2) ar += `<input type="number" id="awayOT2" value="${ingestScores.awayOT2}" placeholder="0" class="score-input p-2 rounded-lg text-orange-400 text-center text-lg font-bold border-orange-500 w-full" oninput="updateScore('awayOT2',this.value)">`;
+    if (ot.needOT3) ar += `<input type="number" id="awayOT3" value="${ingestScores.awayOT3}" placeholder="0" class="score-input p-2 rounded-lg text-red-400 text-center text-lg font-bold border-red-500 w-full" oninput="updateScore('awayOT3',this.value)">`;
+    ar += '</div>';
+    
+    let warn = '';
+    if (ot.needOT1) warn = '<div class="text-yellow-400 text-center text-sm mb-3 animate-pulse">⚠️ EMPATE DETECTADO - Ingresa puntos del Overtime</div>';
+    
+    return h + lr + ar + warn;
+}
+
+function renderTotals() {
+    const s = getScores();
+    const away = ingestLocalTeam === ingestTeam1 ? ingestTeam2 : ingestTeam1;
+    const lH = s.lQ1+s.lQ2, aH = s.aQ1+s.aQ2;
+    const lT = s.lQ1+s.lQ2+s.lQ3+s.lQ4+s.lOT1+s.lOT2+s.lOT3;
+    const aT = s.aQ1+s.aQ2+s.aQ3+s.aQ4+s.aOT1+s.aOT2+s.aOT3;
+    const hadOT = s.lOT1>0 || s.aOT1>0;
+    let win = 'Empate', wc = 'text-gray-400';
+    if (lT > aT) { win = ingestLocalTeam; wc = 'text-cyan-400'; }
+    else if (aT > lT) { win = away; wc = 'text-orange-400'; }
+    
+    return `
+        <div class="border-t border-slate-600 pt-4 mt-4">
+            <h3 class="text-white font-bold text-center mb-3">📊 TOTALES CALCULADOS</h3>
+            <div id="totalsDisplay" class="grid grid-cols-3 gap-4">
+                <div class="bg-yellow-500/20 rounded-lg p-3 text-center">
+                    <p class="text-gray-400 text-xs">1er Tiempo</p>
+                    <p class="text-cyan-400 font-bold">${ingestLocalTeam}: ${lH}</p>
+                    <p class="text-orange-400 font-bold">${away}: ${aH}</p>
+                    <p class="text-yellow-400 font-black text-xl mt-1">Total: ${lH+aH}</p>
+                </div>
+                <div class="bg-purple-500/20 rounded-lg p-3 text-center">
+                    <p class="text-gray-400 text-xs">Tiempo Completo${hadOT?' + OT':''}</p>
+                    <p class="text-cyan-400 font-bold">${ingestLocalTeam}: ${lT}</p>
+                    <p class="text-orange-400 font-bold">${away}: ${aT}</p>
+                    <p class="text-purple-400 font-black text-xl mt-1">Total: ${lT+aT}</p>
+                </div>
+                <div class="bg-green-500/20 rounded-lg p-3 text-center">
+                    <p class="text-gray-400 text-xs">Ganador${hadOT?' (OT)':''}</p>
+                    <p class="text-3xl font-black ${wc}">${win}</p>
+                    <p class="text-white font-bold">${lT}-${aT}</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAVEGACIÓN Y EVENTOS
+// ═══════════════════════════════════════════════════════════════
+function navigateTo(v) {
+    currentView = v;
+    if (v === 'home') {
+        localTeam = visitingTeam = '';
+        lineQ1 = lineHalf = lineFull = '';
+    }
+    if (v === 'ingesta' && !ingestTeam1) {
+        ingestTeam1 = ingestTeam2 = ingestLocalTeam = ingestDate = '';
+        ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
+    }
+    render();
+}
+
+function goToIngestWithTeams() {
+    ingestTeam1 = localTeam;
+    ingestTeam2 = visitingTeam;
+    ingestLocalTeam = ingestDate = '';
+    ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
+    navigateTo('ingesta');
+}
+
+function updateScore(field, value) {
+    ingestScores[field] = value;
+    const ot = checkOT();
+    const ot1E = document.getElementById('localOT1');
+    const ot2E = document.getElementById('localOT2');
+    if ((ot.needOT1 && !ot1E) || (!ot.needOT1 && ot1E) || (ot.needOT2 && !ot2E) || (!ot.needOT2 && ot2E && ot.needOT1)) {
+        const scrollY = window.scrollY;
+        render();
+        window.scrollTo(0, scrollY);
+        return;
+    }
+    const td = document.getElementById('totalsDisplay');
+    if (td) {
+        const s = getScores();
+        const away = ingestLocalTeam === ingestTeam1 ? ingestTeam2 : ingestTeam1;
+        const lH = s.lQ1+s.lQ2, aH = s.aQ1+s.aQ2;
+        const lT = s.lQ1+s.lQ2+s.lQ3+s.lQ4+s.lOT1+s.lOT2+s.lOT3;
+        const aT = s.aQ1+s.aQ2+s.aQ3+s.aQ4+s.aOT1+s.aOT2+s.aOT3;
+        const hadOT = s.lOT1>0 || s.aOT1>0;
+        let win = 'Empate', wc = 'text-gray-400';
+        if (lT > aT) { win = ingestLocalTeam; wc = 'text-cyan-400'; }
+        else if (aT > lT) { win = away; wc = 'text-orange-400'; }
+        td.innerHTML = `
+            <div class="bg-yellow-500/20 rounded-lg p-3 text-center">
+                <p class="text-gray-400 text-xs">1er Tiempo</p>
+                <p class="text-cyan-400 font-bold">${ingestLocalTeam}: ${lH}</p>
+                <p class="text-orange-400 font-bold">${away}: ${aH}</p>
+                <p class="text-yellow-400 font-black text-xl mt-1">Total: ${lH+aH}</p>
+            </div>
+            <div class="bg-purple-500/20 rounded-lg p-3 text-center">
+                <p class="text-gray-400 text-xs">Tiempo Completo${hadOT?' + OT':''}</p>
+                <p class="text-cyan-400 font-bold">${ingestLocalTeam}: ${lT}</p>
+                <p class="text-orange-400 font-bold">${away}: ${aT}</p>
+                <p class="text-purple-400 font-black text-xl mt-1">Total: ${lT+aT}</p>
+            </div>
+            <div class="bg-green-500/20 rounded-lg p-3 text-center">
+                <p class="text-gray-400 text-xs">Ganador${hadOT?' (OT)':''}</p>
+                <p class="text-3xl font-black ${wc}">${win}</p>
+                <p class="text-white font-bold">${lT}-${aT}</p>
+            </div>
+        `;
+    }
+}
+
+function saveGame() {
+    if (!firebaseConnected) {
+        alert('⚠️ No hay conexión con Firebase. Verifica tu internet.');
+        return;
+    }
+    
+    const di = document.getElementById('ingestDate');
+    if (di) ingestDate = di.value;
+    ['localQ1','localQ2','localQ3','localQ4','awayQ1','awayQ2','awayQ3','awayQ4','localOT1','awayOT1','localOT2','awayOT2','localOT3','awayOT3'].forEach(id => {
+        const inp = document.getElementById(id);
+        if (inp) ingestScores[id] = inp.value;
+    });
+    if (!ingestTeam1 || !ingestTeam2 || !ingestLocalTeam || !ingestDate) {
+        alert('Completa todos los campos');
+        return;
+    }
+    const s = getScores();
+    const lT = s.lQ1+s.lQ2+s.lQ3+s.lQ4+s.lOT1+s.lOT2+s.lOT3;
+    const aT = s.aQ1+s.aQ2+s.aQ3+s.aQ4+s.aOT1+s.aOT2+s.aOT3;
+    if (lT === 0 || aT === 0) {
+        alert('Ingresa los puntos');
+        return;
+    }
+    if (lT === aT) {
+        alert('⚠️ Empate. Ingresa Overtime.');
+        return;
+    }
+    const away = ingestLocalTeam === ingestTeam1 ? ingestTeam2 : ingestTeam1;
+    const [y,m,d] = ingestDate.split('-');
+    const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const df = ms[parseInt(m)-1] + ' ' + parseInt(d) + ', ' + y;
+    let ots = 0;
+    if (s.lOT1>0 || s.aOT1>0) ots = 1;
+    if (s.lOT2>0 || s.aOT2>0) ots = 2;
+    if (s.lOT3>0 || s.aOT3>0) ots = 3;
+    
+    addH2HGame(ingestTeam1, ingestTeam2, {
+        date: df,
+        localTeam: ingestLocalTeam,
+        awayTeam: away,
+        localQ1: s.lQ1, localQ2: s.lQ2, localQ3: s.lQ3, localQ4: s.lQ4,
+        awayQ1: s.aQ1, awayQ2: s.aQ2, awayQ3: s.aQ3, awayQ4: s.aQ4,
+        localOT1: s.lOT1, awayOT1: s.aOT1,
+        localOT2: s.lOT2, awayOT2: s.aOT2,
+        localOT3: s.lOT3, awayOT3: s.aOT3,
+        overtimes: ots
+    });
+    
+    ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
+    ingestDate = '';
+    ingestLocalTeam = '';
+    alert('✅ ¡Guardado en Firebase!');
+    render();
+}
+
+function deleteGame(t1, t2, i) {
+    if (confirm('¿Eliminar este partido de Firebase?')) {
+        deleteH2HGame(t1, t2, i);
+    }
+}
+
+function attachEvents() {
+    document.getElementById('localSelect')?.addEventListener('change', e => { localTeam = e.target.value; render(); });
+    document.getElementById('visitingSelect')?.addEventListener('change', e => { visitingTeam = e.target.value; render(); });
+    document.getElementById('ingestTeam1')?.addEventListener('change', e => { ingestTeam1 = e.target.value; ingestLocalTeam = ''; render(); });
+    document.getElementById('ingestTeam2')?.addEventListener('change', e => { ingestTeam2 = e.target.value; ingestLocalTeam = ''; render(); });
+    document.getElementById('ingestDate')?.addEventListener('change', e => { ingestDate = e.target.value; });
+    document.getElementById('ingestLocal')?.addEventListener('change', e => { ingestLocalTeam = e.target.value; render(); });
+}
+
+function setType(p, v) {
+    if (p === 'Q1') typeQ1 = v;
+    if (p === 'Half') typeHalf = v;
+    if (p === 'Full') typeFull = v;
+    render();
+}
+
+function updateLine(p, v) {
+    if (p === 'Q1') lineQ1 = v;
+    if (p === 'Half') lineHalf = v;
+    if (p === 'Full') lineFull = v;
+    render();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INICIALIZAR
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    loadH2HFromFirebase();
+});
+    </script>
+</body>
+</html>
