@@ -724,11 +724,14 @@ function calcProb(trend, line, type) {
     const diff = trendNum - lineNum;
     
     // Desviación estándar calibrada por período (basado en análisis de varianza NBA)
-    // 1Q: ~5-6 pts, 1H: ~8-9 pts, Full: ~11-13 pts
+    // Los umbrales se basan en rangos típicos de cada período:
+    // 1Q: ~25-35 puntos combinados → tendencia < 50
+    // 1H: ~50-70 puntos combinados → tendencia 50-140
+    // FULL: ~200-250 puntos combinados → tendencia >= 140
     let std;
-    if (trendNum < 40) std = 5.8;      // 1Q
-    else if (trendNum < 80) std = 8.5;  // 1H
-    else std = 12.0;                     // Full
+    if (trendNum < 50) std = 5.8;        // 1Q (~5-6 pts desv. típica)
+    else if (trendNum < 140) std = 8.5;   // 1H (~8-9 pts desv. típica)
+    else std = 12.0;                       // Full (~11-13 pts desv. típica)
     
     const z = diff / std;
     
