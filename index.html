@@ -284,6 +284,8 @@ let currentView = 'home';
 let localTeam = '', visitingTeam = '';
 let lineQ1 = '', lineHalf = '', lineFull = '';
 let typeQ1 = 'OVER', typeHalf = 'OVER', typeFull = 'OVER';
+// NUEVO: Variables para cuotas (odds decimales)
+let oddsQ1 = '', oddsHalf = '', oddsFull = '';
 let ingestTeam1 = '', ingestTeam2 = '', ingestLocalTeam = '', ingestDate = '';
 let ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
 let firebaseConnected = false;
@@ -709,34 +711,164 @@ function checkForValuePicks() {
 // ═══════════════════════════════════════════════════════════════
 function getTeams() { return Object.keys(TEAM_STATS).sort(); }
 
+// ═══════════════════════════════════════════════════════════════
+// SISTEMA PROFESIONAL DE EXPECTED VALUE (EV)
+// Basado en metodología de Sharp Bettors profesionales
+// ═══════════════════════════════════════════════════════════════
+
+// Calcular probabilidad usando distribución normal mejorada
 function calcProb(trend, line, type) {
     if (!trend || trend === '-' || !line) return null;
-    const diff = parseFloat(trend) - parseFloat(line);
-    const std = parseFloat(trend) < 40 ? 5.5 : parseFloat(trend) < 80 ? 8.5 : 12.5;
+    const trendNum = parseFloat(trend);
+    const lineNum = parseFloat(line);
+    const diff = trendNum - lineNum;
+    
+    // Desviación estándar calibrada por período (basado en análisis de varianza NBA)
+    // 1Q: ~5-6 pts, 1H: ~8-9 pts, Full: ~11-13 pts
+    let std;
+    if (trendNum < 40) std = 5.8;      // 1Q
+    else if (trendNum < 80) std = 8.5;  // 1H
+    else std = 12.0;                     // Full
+    
     const z = diff / std;
+    
+    // CDF de distribución normal estándar (aproximación de alta precisión)
     const cdf = x => {
         const t = 1 / (1 + 0.2316419 * Math.abs(x));
         const d = 0.3989423 * Math.exp(-x * x / 2);
         const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
         return x > 0 ? 1 - p : p;
     };
-    return Math.round((type === 'OVER' ? cdf(z) : 1 - cdf(z)) * 100);
+    
+    let prob = type === 'OVER' ? cdf(z) : 1 - cdf(z);
+    
+    // Aplicar regresión a la media (los extremos tienden a normalizarse)
+    // Esto evita sobreconfianza en probabilidades extremas
+    const regressionFactor = 0.92; // Factor conservador
+    prob = prob * regressionFactor + 0.5 * (1 - regressionFactor);
+    
+    return Math.round(prob * 100);
 }
 
-function probColor(p) {
-    if (!p) return 'bg-gray-500';
-    if (p >= 65) return 'bg-green-600 text-white';
-    if (p >= 55) return 'bg-green-500 text-white';
-    if (p >= 45) return 'bg-yellow-500 text-gray-900';
-    return 'bg-red-600 text-white';
+// Calcular Expected Value (EV) - LA MÉTRICA MÁS IMPORTANTE
+function calcEV(prob, odds) {
+    if (!prob || !odds) return null;
+    const p = prob / 100;
+    const oddsNum = parseFloat(odds);
+    if (oddsNum <= 1) return null;
+    
+    // EV = (Prob × Ganancia) - (1-Prob × Pérdida)
+    // Ganancia si ganas = (odds - 1) por unidad
+    // Pérdida si pierdes = 1 unidad
+    const ev = (p * (oddsNum - 1)) - ((1 - p) * 1);
+    return (ev * 100).toFixed(1); // Retorna como porcentaje
 }
 
-function probRec(p) {
-    if (!p) return '';
-    if (p >= 65) return '✅ VALOR ALTO';
-    if (p >= 55) return '⚠️ VALOR MEDIO';
-    if (p >= 45) return '⚡ NEUTRAL';
-    return '❌ SIN VALOR';
+// Calcular Edge (Ventaja sobre la casa)
+function calcEdge(prob, odds) {
+    if (!prob || !odds) return null;
+    const oddsNum = parseFloat(odds);
+    if (oddsNum <= 1) return null;
+    
+    // Probabilidad implícita de la casa (sin vig)
+    const impliedProb = 1 / oddsNum;
+    const ourProb = prob / 100;
+    
+    // Edge = Nuestra probabilidad - Probabilidad implícita
+    const edge = (ourProb - impliedProb) * 100;
+    return edge.toFixed(1);
+}
+
+// Calcular Cuota Justa (Fair Odds)
+function calcFairOdds(prob) {
+    if (!prob || prob <= 0 || prob >= 100) return null;
+    // Cuota Justa = 1 / Probabilidad
+    return (100 / prob).toFixed(2);
+}
+
+// Calcular Kelly Criterion (% óptimo de bankroll a apostar)
+function calcKelly(prob, odds) {
+    if (!prob || !odds) return null;
+    const p = prob / 100;
+    const oddsNum = parseFloat(odds);
+    if (oddsNum <= 1) return null;
+    
+    // Kelly = (p × (odds - 1) - (1-p)) / (odds - 1)
+    // Simplificado: Kelly = (p × odds - 1) / (odds - 1)
+    const kelly = ((p * oddsNum) - 1) / (oddsNum - 1);
+    
+    // Kelly fraccionario (más conservador, usar 25% del Kelly completo)
+    const fractionalKelly = kelly * 0.25;
+    
+    if (fractionalKelly <= 0) return 0;
+    return (fractionalKelly * 100).toFixed(1);
+}
+
+// Análisis completo de una apuesta
+function analyzebet(trend, line, type, odds) {
+    const prob = calcProb(trend, line, type);
+    if (!prob) return null;
+    
+    const fairOdds = calcFairOdds(prob);
+    const ev = odds ? calcEV(prob, odds) : null;
+    const edge = odds ? calcEdge(prob, odds) : null;
+    const kelly = odds ? calcKelly(prob, odds) : null;
+    
+    return { prob, fairOdds, ev, edge, kelly };
+}
+
+// Color basado en EV (no solo probabilidad)
+function evColor(ev, prob) {
+    if (ev === null) {
+        // Sin cuota ingresada, usar probabilidad
+        if (!prob) return 'bg-gray-600';
+        if (prob >= 65) return 'bg-blue-600';
+        if (prob >= 55) return 'bg-blue-500';
+        if (prob >= 45) return 'bg-gray-500';
+        return 'bg-gray-600';
+    }
+    
+    const evNum = parseFloat(ev);
+    if (evNum >= 15) return 'bg-gradient-to-r from-emerald-500 to-green-600'; // Elite
+    if (evNum >= 7) return 'bg-gradient-to-r from-green-500 to-emerald-600';  // Alto Valor
+    if (evNum >= 3) return 'bg-gradient-to-r from-lime-500 to-green-500';     // Valor
+    if (evNum >= 0) return 'bg-gradient-to-r from-yellow-500 to-amber-500';   // Marginal
+    return 'bg-gradient-to-r from-red-500 to-rose-600';                       // Sin Valor
+}
+
+// Veredicto profesional basado en EV
+function evVerdict(ev, prob, edge) {
+    if (ev === null) {
+        // Sin cuota, dar indicación basada en probabilidad
+        if (!prob) return { icon: '❓', text: 'Ingresa línea', class: 'text-gray-400' };
+        if (prob >= 65) return { icon: '📊', text: 'PROB. ALTA', class: 'text-blue-400' };
+        if (prob >= 55) return { icon: '📈', text: 'PROB. MEDIA', class: 'text-blue-300' };
+        if (prob >= 45) return { icon: '⚖️', text: 'NEUTRAL', class: 'text-gray-300' };
+        return { icon: '📉', text: 'PROB. BAJA', class: 'text-gray-400' };
+    }
+    
+    const evNum = parseFloat(ev);
+    const edgeNum = parseFloat(edge);
+    
+    if (evNum >= 15) return { icon: '🔥', text: 'ELITE VALUE', class: 'text-emerald-400', stars: '★★★★★' };
+    if (evNum >= 10) return { icon: '💎', text: 'ALTO VALOR', class: 'text-green-400', stars: '★★★★☆' };
+    if (evNum >= 7) return { icon: '✅', text: 'MUY BUENO', class: 'text-green-300', stars: '★★★★☆' };
+    if (evNum >= 5) return { icon: '✅', text: 'BUEN VALOR', class: 'text-lime-400', stars: '★★★☆☆' };
+    if (evNum >= 3) return { icon: '👍', text: 'VALOR', class: 'text-lime-300', stars: '★★★☆☆' };
+    if (evNum >= 0) return { icon: '⚠️', text: 'MARGINAL', class: 'text-yellow-400', stars: '★★☆☆☆' };
+    if (evNum >= -3) return { icon: '⛔', text: 'SIN VALOR', class: 'text-orange-400', stars: '★☆☆☆☆' };
+    return { icon: '🚫', text: 'NO APOSTAR', class: 'text-red-400', stars: '☆☆☆☆☆' };
+}
+
+// Recomendación de stake basada en Kelly
+function stakeRec(kelly) {
+    if (!kelly || kelly <= 0) return { text: 'No apostar', class: 'text-red-400' };
+    const k = parseFloat(kelly);
+    if (k >= 5) return { text: '3-5% bankroll', class: 'text-green-400' };
+    if (k >= 3) return { text: '2-3% bankroll', class: 'text-lime-400' };
+    if (k >= 1.5) return { text: '1-2% bankroll', class: 'text-yellow-400' };
+    if (k >= 0.5) return { text: '0.5-1% bankroll', class: 'text-orange-400' };
+    return { text: 'Mínimo', class: 'text-gray-400' };
 }
 
 function getScores() {
@@ -1028,11 +1160,31 @@ function renderTendencia() {
             </div>
             ${renderH2HSection()}
             <div class="bg-gradient-to-br from-purple-700 to-indigo-800 rounded-2xl p-5 shadow-xl mt-6">
-                <h2 class="text-xl font-bold text-white mb-4 text-center">🎯 CALCULADORA</h2>
+                <h2 class="text-xl font-bold text-white mb-4 text-center">🎯 CALCULADORA PRO - Expected Value</h2>
                 <div class="grid grid-cols-3 gap-4">
-                    ${renderCalc('Q1', '1Q', trends.q1, pQ1, typeQ1, lineQ1)}
-                    ${renderCalc('Half', '1H', trends.half, pHalf, typeHalf, lineHalf)}
-                    ${renderCalc('Full', 'FULL', trends.full, pFull, typeFull, lineFull)}
+                    ${renderCalc('Q1', '1Q', trends.q1, pQ1, typeQ1, lineQ1, oddsQ1)}
+                    ${renderCalc('Half', '1H', trends.half, pHalf, typeHalf, lineHalf, oddsHalf)}
+                    ${renderCalc('Full', 'FULL', trends.full, pFull, typeFull, lineFull, oddsFull)}
+                </div>
+                
+                <!-- Leyenda EV -->
+                <div class="mt-4 bg-white/10 rounded-xl p-4">
+                    <details class="text-white">
+                        <summary class="font-bold cursor-pointer text-sm">📖 ¿Cómo interpretar? (clic para expandir)</summary>
+                        <div class="mt-3 text-xs space-y-2 text-gray-300">
+                            <p><strong class="text-white">📊 Prob. Ganar:</strong> Probabilidad estadística de que el pick gane</p>
+                            <p><strong class="text-white">💰 Cuota Justa:</strong> La cuota mínima que deberías aceptar. Si la casa ofrece más = valor</p>
+                            <p><strong class="text-white">📈 Expected Value (EV):</strong> Ganancia esperada por cada $100 apostados. EV +5% = ganas $5 por cada $100 a largo plazo</p>
+                            <p><strong class="text-white">⚡ Edge:</strong> Tu ventaja sobre la casa. Edge +10% = 10% más probabilidad de lo que la casa cree</p>
+                            <div class="mt-2 pt-2 border-t border-white/20">
+                                <p class="text-yellow-300 font-bold">🎯 REGLA DE ORO:</p>
+                                <p>• EV ≥ +3% = ✅ APOSTAR</p>
+                                <p>• EV ≥ +7% = 💎 ALTO VALOR</p>
+                                <p>• EV ≥ +15% = 🔥 ELITE (raro)</p>
+                                <p>• EV < 0% = ❌ NO APOSTAR</p>
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </div>
             
@@ -1040,24 +1192,39 @@ function renderTendencia() {
             <div class="mt-6 bg-gradient-to-br from-pink-600 to-rose-700 rounded-2xl p-5">
                 <h3 class="text-lg font-bold text-white mb-4 text-center">📝 Registrar Pick</h3>
                 <div class="grid grid-cols-3 gap-3">
-                    ${lineQ1 && pQ1 ? `
-                        <button onclick="registerPick('1Q', '${typeQ1}', '${lineQ1}', ${pQ1})" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm">
+                    ${lineQ1 && pQ1 ? (() => {
+                        const evQ1 = oddsQ1 ? calcEV(pQ1, oddsQ1) : null;
+                        const verdictQ1 = evVerdict(evQ1, pQ1, null);
+                        return `
+                        <button onclick="registerPick('1Q', '${typeQ1}', '${lineQ1}', ${pQ1}, '${oddsQ1 || ''}')" 
+                            class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm ${evQ1 && parseFloat(evQ1) >= 3 ? 'ring-2 ring-green-400' : ''}">
                             <div class="font-bold">1Q ${typeQ1}</div>
                             <div class="text-xs">${lineQ1} (${pQ1}%)</div>
-                        </button>
-                    ` : '<div></div>'}
-                    ${lineHalf && pHalf ? `
-                        <button onclick="registerPick('1H', '${typeHalf}', '${lineHalf}', ${pHalf})" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm">
+                            ${evQ1 ? `<div class="text-xs mt-1 ${parseFloat(evQ1) >= 0 ? 'text-green-300' : 'text-red-300'}">EV: ${parseFloat(evQ1) >= 0 ? '+' : ''}${evQ1}%</div>` : ''}
+                        </button>`;
+                    })() : '<div></div>'}
+                    ${lineHalf && pHalf ? (() => {
+                        const evHalf = oddsHalf ? calcEV(pHalf, oddsHalf) : null;
+                        const verdictHalf = evVerdict(evHalf, pHalf, null);
+                        return `
+                        <button onclick="registerPick('1H', '${typeHalf}', '${lineHalf}', ${pHalf}, '${oddsHalf || ''}')" 
+                            class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm ${evHalf && parseFloat(evHalf) >= 3 ? 'ring-2 ring-green-400' : ''}">
                             <div class="font-bold">1H ${typeHalf}</div>
                             <div class="text-xs">${lineHalf} (${pHalf}%)</div>
-                        </button>
-                    ` : '<div></div>'}
-                    ${lineFull && pFull ? `
-                        <button onclick="registerPick('FULL', '${typeFull}', '${lineFull}', ${pFull})" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm">
+                            ${evHalf ? `<div class="text-xs mt-1 ${parseFloat(evHalf) >= 0 ? 'text-green-300' : 'text-red-300'}">EV: ${parseFloat(evHalf) >= 0 ? '+' : ''}${evHalf}%</div>` : ''}
+                        </button>`;
+                    })() : '<div></div>'}
+                    ${lineFull && pFull ? (() => {
+                        const evFull = oddsFull ? calcEV(pFull, oddsFull) : null;
+                        const verdictFull = evVerdict(evFull, pFull, null);
+                        return `
+                        <button onclick="registerPick('FULL', '${typeFull}', '${lineFull}', ${pFull}, '${oddsFull || ''}')" 
+                            class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm ${evFull && parseFloat(evFull) >= 3 ? 'ring-2 ring-green-400' : ''}">
                             <div class="font-bold">FULL ${typeFull}</div>
                             <div class="text-xs">${lineFull} (${pFull}%)</div>
-                        </button>
-                    ` : '<div></div>'}
+                            ${evFull ? `<div class="text-xs mt-1 ${parseFloat(evFull) >= 0 ? 'text-green-300' : 'text-red-300'}">EV: ${parseFloat(evFull) >= 0 ? '+' : ''}${evFull}%</div>` : ''}
+                        </button>`;
+                    })() : '<div></div>'}
                 </div>
             </div>
         `;
@@ -1153,20 +1320,90 @@ function renderH2HSection() {
     `;
 }
 
-function renderCalc(id, label, trend, prob, type, line) {
-    let ph = '';
-    if (prob) {
-        ph = `<div class="mt-2 p-2 rounded text-center ${probColor(prob)}"><p class="text-xl font-black">${prob}%</p><p class="text-xs">${probRec(prob)}</p></div>`;
-    }
-    return `
-        <div class="bg-white rounded-xl p-3">
-            <p class="text-sm font-black text-center text-gray-800">${label}: ${trend}</p>
-            <div class="flex gap-1 my-2">
-                <button onclick="setType('${id}','OVER')" class="flex-1 py-1 text-xs rounded font-bold ${type==='OVER'?'bg-green-600 text-white':'bg-gray-200'}">O</button>
-                <button onclick="setType('${id}','UNDER')" class="flex-1 py-1 text-xs rounded font-bold ${type==='UNDER'?'bg-red-600 text-white':'bg-gray-200'}">U</button>
+function renderCalc(id, label, trend, prob, type, line, odds) {
+    const analysis = analyzebet(trend, line, type, odds);
+    const verdict = analysis ? evVerdict(analysis.ev, analysis.prob, analysis.edge) : evVerdict(null, prob, null);
+    const stake = analysis && analysis.kelly ? stakeRec(analysis.kelly) : null;
+    
+    let resultsHtml = '';
+    if (analysis && analysis.prob) {
+        const hasOdds = odds && parseFloat(odds) > 1;
+        
+        resultsHtml = `
+            <div class="mt-3 space-y-2">
+                <!-- Probabilidad -->
+                <div class="flex justify-between items-center bg-gray-100 rounded-lg px-3 py-2">
+                    <span class="text-xs text-gray-600">Prob. Ganar</span>
+                    <span class="font-black text-lg ${analysis.prob >= 55 ? 'text-green-600' : analysis.prob >= 45 ? 'text-yellow-600' : 'text-red-600'}">${analysis.prob}%</span>
+                </div>
+                
+                <!-- Cuota Justa -->
+                <div class="flex justify-between items-center bg-gray-50 rounded-lg px-3 py-1">
+                    <span class="text-xs text-gray-500">Cuota Justa</span>
+                    <span class="font-bold text-sm text-gray-700">${analysis.fairOdds}</span>
+                </div>
+                
+                ${hasOdds ? `
+                    <!-- EV% -->
+                    <div class="flex justify-between items-center ${parseFloat(analysis.ev) >= 0 ? 'bg-green-100' : 'bg-red-100'} rounded-lg px-3 py-2">
+                        <span class="text-xs ${parseFloat(analysis.ev) >= 0 ? 'text-green-700' : 'text-red-700'}">Expected Value</span>
+                        <span class="font-black text-lg ${parseFloat(analysis.ev) >= 0 ? 'text-green-600' : 'text-red-600'}">${parseFloat(analysis.ev) >= 0 ? '+' : ''}${analysis.ev}%</span>
+                    </div>
+                    
+                    <!-- Edge -->
+                    <div class="flex justify-between items-center bg-gray-50 rounded-lg px-3 py-1">
+                        <span class="text-xs text-gray-500">Edge vs Casa</span>
+                        <span class="font-bold text-sm ${parseFloat(analysis.edge) >= 0 ? 'text-green-600' : 'text-red-600'}">${parseFloat(analysis.edge) >= 0 ? '+' : ''}${analysis.edge}%</span>
+                    </div>
+                ` : `
+                    <div class="bg-blue-50 rounded-lg px-3 py-2 text-center">
+                        <span class="text-xs text-blue-600">⬇️ Ingresa la cuota para ver EV</span>
+                    </div>
+                `}
+                
+                <!-- Veredicto -->
+                <div class="${evColor(hasOdds ? analysis.ev : null, analysis.prob)} rounded-xl p-3 text-center shadow-lg">
+                    <p class="text-2xl">${verdict.icon}</p>
+                    <p class="text-white font-black text-sm">${verdict.text}</p>
+                    ${verdict.stars ? `<p class="text-yellow-300 text-xs">${verdict.stars}</p>` : ''}
+                </div>
+                
+                ${hasOdds && stake ? `
+                    <div class="text-center">
+                        <span class="text-xs ${stake.class}">💰 ${stake.text}</span>
+                    </div>
+                ` : ''}
             </div>
-            <input type="number" step="0.5" value="${line}" placeholder="Línea" class="w-full p-2 border rounded text-center text-sm font-bold" onchange="updateLine('${id}',this.value)">
-            ${ph}
+        `;
+    }
+    
+    return `
+        <div class="bg-white rounded-xl p-3 shadow-lg">
+            <p class="text-sm font-black text-center text-gray-800 mb-1">${label}: <span class="text-purple-600">${trend}</span></p>
+            
+            <!-- Selector Over/Under -->
+            <div class="flex gap-1 my-2">
+                <button onclick="setType('${id}','OVER')" class="flex-1 py-2 text-xs rounded-lg font-bold transition-all ${type==='OVER'?'bg-green-600 text-white shadow-md':'bg-gray-200 hover:bg-gray-300'}">OVER</button>
+                <button onclick="setType('${id}','UNDER')" class="flex-1 py-2 text-xs rounded-lg font-bold transition-all ${type==='UNDER'?'bg-red-600 text-white shadow-md':'bg-gray-200 hover:bg-gray-300'}">UNDER</button>
+            </div>
+            
+            <!-- Input Línea -->
+            <div class="mb-2">
+                <label class="text-xs text-gray-500 block mb-1">📏 Línea</label>
+                <input type="number" step="0.5" value="${line}" placeholder="ej: ${label === '1Q' ? '53.5' : label === '1H' ? '104.5' : '221.5'}" 
+                    class="w-full p-2 border-2 border-gray-200 rounded-lg text-center text-sm font-bold focus:border-purple-500 focus:outline-none" 
+                    onchange="updateLine('${id}',this.value)">
+            </div>
+            
+            <!-- Input Cuota -->
+            <div class="mb-2">
+                <label class="text-xs text-gray-500 block mb-1">💰 Cuota (decimal)</label>
+                <input type="number" step="0.01" value="${odds || ''}" placeholder="ej: 1.85" 
+                    class="w-full p-2 border-2 border-amber-200 rounded-lg text-center text-sm font-bold bg-amber-50 focus:border-amber-500 focus:outline-none" 
+                    onchange="updateOdds('${id}',this.value)">
+            </div>
+            
+            ${resultsHtml}
         </div>
     `;
 }
@@ -1403,11 +1640,18 @@ function selectBestPick(local, away) {
     navigateTo('tendencia');
 }
 
-function registerPick(period, betType, line, probability) {
-    const oddsInput = prompt('Ingresa la cuota (ej: 1.85):');
-    if (oddsInput === null) return;
+function registerPick(period, betType, line, probability, oddsFromForm) {
+    let odds = oddsFromForm ? parseFloat(oddsFromForm) : null;
     
-    const odds = parseFloat(oddsInput) || null;
+    // Si no hay cuota del formulario, pedirla
+    if (!odds || odds <= 1) {
+        const oddsInput = prompt('Ingresa la cuota (ej: 1.85):');
+        if (oddsInput === null) return;
+        odds = parseFloat(oddsInput) || null;
+    }
+    
+    // Calcular EV para guardar
+    const ev = odds ? calcEV(probability, odds) : null;
     
     addPick({
         localTeam,
@@ -1416,7 +1660,8 @@ function registerPick(period, betType, line, probability) {
         betType,
         line,
         probability,
-        odds
+        odds,
+        ev // Guardar EV para análisis posterior
     });
 }
 
@@ -1774,6 +2019,13 @@ function updateLine(p, v) {
     if (p === 'Full') lineFull = v;
     render();
     setTimeout(checkForValuePicks, 100);
+}
+
+function updateOdds(p, v) {
+    if (p === 'Q1') oddsQ1 = v;
+    if (p === 'Half') oddsHalf = v;
+    if (p === 'Full') oddsFull = v;
+    render();
 }
 
 // ═══════════════════════════════════════════════════════════════
