@@ -1188,7 +1188,69 @@ function renderTendencia() {
                 </div>
             </div>
             
-            <!-- BOTÓN REGISTRAR PICK -->
+            <!-- BET BUILDER - PICKS COMBINADOS -->
+            ${(() => {
+                const hasQ1 = lineQ1 && pQ1;
+                const hasHalf = lineHalf && pHalf;
+                const hasFull = lineFull && pFull;
+                const validPicks = [hasQ1, hasHalf, hasFull].filter(Boolean).length;
+                
+                if (validPicks >= 2) {
+                    return `
+                    <div class="mt-6 bg-gradient-to-br from-amber-600 to-orange-700 rounded-2xl p-5">
+                        <h3 class="text-lg font-bold text-white mb-4 text-center">🔥 BET BUILDER - Combo</h3>
+                        <p class="text-white/70 text-xs text-center mb-4">Selecciona los picks para tu combinada</p>
+                        
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            ${hasQ1 ? `
+                                <label class="flex items-center gap-2 bg-white/20 p-3 rounded-lg cursor-pointer hover:bg-white/30">
+                                    <input type="checkbox" id="combo_q1" class="w-5 h-5 accent-green-500" checked>
+                                    <div class="text-white text-sm">
+                                        <div class="font-bold">1Q ${typeQ1}</div>
+                                        <div class="text-xs opacity-80">${lineQ1} (${pQ1}%)</div>
+                                    </div>
+                                </label>
+                            ` : '<div></div>'}
+                            ${hasHalf ? `
+                                <label class="flex items-center gap-2 bg-white/20 p-3 rounded-lg cursor-pointer hover:bg-white/30">
+                                    <input type="checkbox" id="combo_half" class="w-5 h-5 accent-green-500" checked>
+                                    <div class="text-white text-sm">
+                                        <div class="font-bold">1H ${typeHalf}</div>
+                                        <div class="text-xs opacity-80">${lineHalf} (${pHalf}%)</div>
+                                    </div>
+                                </label>
+                            ` : '<div></div>'}
+                            ${hasFull ? `
+                                <label class="flex items-center gap-2 bg-white/20 p-3 rounded-lg cursor-pointer hover:bg-white/30">
+                                    <input type="checkbox" id="combo_full" class="w-5 h-5 accent-green-500" checked>
+                                    <div class="text-white text-sm">
+                                        <div class="font-bold">FULL ${typeFull}</div>
+                                        <div class="text-xs opacity-80">${lineFull} (${pFull}%)</div>
+                                    </div>
+                                </label>
+                            ` : '<div></div>'}
+                        </div>
+                        
+                        <div class="bg-black/20 rounded-xl p-4 mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-white/80 text-sm">Cuota Combinada:</span>
+                                <input type="number" step="0.01" id="combo_odds" placeholder="ej: 2.05" 
+                                    class="w-24 p-2 rounded-lg text-center font-bold bg-white text-gray-800">
+                            </div>
+                            <p class="text-white/60 text-xs">Ingresa la cuota total del Bet Builder de tu casa de apuestas</p>
+                        </div>
+                        
+                        <button onclick="registerBetBuilder()" 
+                            class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg transition-all">
+                            🎯 Registrar Bet Builder
+                        </button>
+                    </div>
+                    `;
+                }
+                return '';
+            })()}
+            
+            <!-- BOTÓN REGISTRAR PICK INDIVIDUAL -->
             <div class="mt-6 bg-gradient-to-br from-pink-600 to-rose-700 rounded-2xl p-5">
                 <h3 class="text-lg font-bold text-white mb-4 text-center">📝 Registrar Pick</h3>
                 <div class="grid grid-cols-3 gap-3">
@@ -1437,11 +1499,12 @@ function renderPicks() {
         const date = new Date(pick.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
         
         picksHtml += `
-            <div class="pick-card bg-white/5 rounded-xl p-4 mb-3 border border-white/10">
+            <div class="pick-card bg-white/5 rounded-xl p-4 mb-3 border ${pick.isCombo ? 'border-amber-500/50' : 'border-white/10'}">
                 <div class="flex justify-between items-start mb-2">
                     <div>
+                        ${pick.isCombo ? '<span class="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full mb-1 inline-block">🔥 BET BUILDER</span>' : ''}
                         <p class="text-white font-bold">${pick.localTeam} vs ${pick.awayTeam}</p>
-                        <p class="text-gray-400 text-sm">${pick.period} ${pick.betType} ${pick.line}</p>
+                        <p class="text-gray-400 text-sm">${pick.isCombo ? pick.line : `${pick.period} ${pick.betType} ${pick.line}`}</p>
                     </div>
                     <span class="${statusClass} px-3 py-1 rounded-full text-white text-sm font-bold">${statusIcon}</span>
                 </div>
@@ -1450,6 +1513,7 @@ function renderPicks() {
                         <span class="text-gray-500">${date}</span>
                         ${pick.odds ? `<span class="text-yellow-400">@${pick.odds}</span>` : ''}
                         <span class="text-purple-400">${pick.probability}% prob</span>
+                        ${pick.ev ? `<span class="${parseFloat(pick.ev) >= 0 ? 'text-green-400' : 'text-red-400'}">EV: ${parseFloat(pick.ev) >= 0 ? '+' : ''}${pick.ev}%</span>` : ''}
                     </div>
                     <div class="flex gap-2">
                         ${pick.status === 'pending' ? `
@@ -1663,6 +1727,78 @@ function registerPick(period, betType, line, probability, oddsFromForm) {
         odds,
         ev // Guardar EV para análisis posterior
     });
+}
+
+// Registrar Bet Builder (picks combinados)
+function registerBetBuilder() {
+    const comboOdds = document.getElementById('combo_odds')?.value;
+    if (!comboOdds || parseFloat(comboOdds) <= 1) {
+        showNotification('⚠️ Ingresa la cuota combinada del Bet Builder', 'warning');
+        return;
+    }
+    
+    const odds = parseFloat(comboOdds);
+    const legs = []; // Patas del bet builder
+    let combinedProb = 1; // Probabilidad combinada (multiplicar)
+    
+    // Verificar cuáles están seleccionados
+    const q1Checked = document.getElementById('combo_q1')?.checked;
+    const halfChecked = document.getElementById('combo_half')?.checked;
+    const fullChecked = document.getElementById('combo_full')?.checked;
+    
+    if (q1Checked && lineQ1 && calcProb(null, null, null) !== null) {
+        const prob = calcProb(
+            (TEAM_STATS[localTeam]?.q1Home || 0) + (TEAM_STATS[visitingTeam]?.q1Away || 0),
+            lineQ1, typeQ1
+        );
+        legs.push({ period: '1Q', betType: typeQ1, line: lineQ1, probability: prob });
+        combinedProb *= (prob / 100);
+    }
+    
+    if (halfChecked && lineHalf) {
+        const prob = calcProb(
+            (TEAM_STATS[localTeam]?.halfHome || 0) + (TEAM_STATS[visitingTeam]?.halfAway || 0),
+            lineHalf, typeHalf
+        );
+        legs.push({ period: '1H', betType: typeHalf, line: lineHalf, probability: prob });
+        combinedProb *= (prob / 100);
+    }
+    
+    if (fullChecked && lineFull) {
+        const prob = calcProb(
+            (TEAM_STATS[localTeam]?.fullHome || 0) + (TEAM_STATS[visitingTeam]?.fullAway || 0),
+            lineFull, typeFull
+        );
+        legs.push({ period: 'FULL', betType: typeFull, line: lineFull, probability: prob });
+        combinedProb *= (prob / 100);
+    }
+    
+    if (legs.length < 2) {
+        showNotification('⚠️ Selecciona al menos 2 picks para el Bet Builder', 'warning');
+        return;
+    }
+    
+    // Calcular probabilidad combinada y EV
+    const combinedProbPercent = Math.round(combinedProb * 100);
+    const ev = calcEV(combinedProbPercent, odds);
+    
+    // Crear descripción del combo
+    const comboDesc = legs.map(l => `${l.period} ${l.betType} ${l.line}`).join(' + ');
+    
+    addPick({
+        localTeam,
+        awayTeam: visitingTeam,
+        period: 'COMBO',
+        betType: 'BET BUILDER',
+        line: comboDesc,
+        probability: combinedProbPercent,
+        odds,
+        ev,
+        legs, // Guardar detalles de cada pata
+        isCombo: true
+    });
+    
+    showNotification(`🔥 Bet Builder registrado: ${legs.length} picks combinados`, 'success');
 }
 
 // ═══════════════════════════════════════════════════════════════
