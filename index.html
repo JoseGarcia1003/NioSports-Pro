@@ -1595,18 +1595,18 @@ function renderPicks() {
             <div class="pick-card bg-white/5 rounded-xl p-4 mb-3 border ${pick.isCombo ? 'border-amber-500/50' : 'border-white/10'}">
                 <div class="flex justify-between items-start mb-2">
                     <div>
-                        ${pick.isCombo ? '<span class="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full mb-1 inline-block">🔥 BET BUILDER</span>' : ''}
+                        ${pick.isCombo ? '<span class="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full mb-1 inline-block font-bold">🔥 BET BUILDER</span>' : ''}
                         <p class="text-white font-bold">${pick.localTeam} vs ${pick.awayTeam}</p>
-                        <p class="text-gray-400 text-sm">${pick.isCombo ? pick.line : `${pick.period} ${pick.betType} ${pick.line}`}</p>
+                        <p class="text-gray-300 text-sm font-semibold">${pick.isCombo ? pick.line : `${pick.period} ${pick.betType} ${pick.line}`}</p>
                     </div>
                     <span class="${statusClass} px-3 py-1 rounded-full text-white text-sm font-bold">${statusIcon}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm">
-                    <div class="flex gap-4">
-                        <span class="text-gray-500">${date}</span>
-                        ${pick.odds ? `<span class="text-yellow-400">@${pick.odds}</span>` : ''}
-                        <span class="text-purple-400">${pick.probability}% prob</span>
-                        ${pick.ev ? `<span class="${parseFloat(pick.ev) >= 0 ? 'text-green-400' : 'text-red-400'}">EV: ${parseFloat(pick.ev) >= 0 ? '+' : ''}${pick.ev}%</span>` : ''}
+                    <div class="flex gap-4 font-medium">
+                        <span class="text-gray-400">${date}</span>
+                        ${pick.odds ? `<span class="text-yellow-400 font-semibold">@${pick.odds}</span>` : ''}
+                        <span class="text-purple-400 font-semibold">${pick.probability}% prob</span>
+                        ${pick.ev ? `<span class="font-semibold ${parseFloat(pick.ev) >= 0 ? 'text-green-400' : 'text-red-400'}">EV: ${parseFloat(pick.ev) >= 0 ? '+' : ''}${pick.ev}%</span>` : ''}
                     </div>
                     <div class="flex gap-2">
                         ${pick.status === 'pending' ? `
@@ -1750,16 +1750,16 @@ function renderBestPicks() {
                 <div class="flex justify-between items-start mb-3">
                     <div>
                         <p class="text-white font-bold text-lg">${pick.local} vs ${pick.away}</p>
-                        <p class="text-purple-300">${pick.period} ${pick.betType} ${pick.line}</p>
+                        <p class="text-purple-300 font-semibold">${pick.period} ${pick.betType} ${pick.line}</p>
                     </div>
                     <div class="text-right">
                         <p class="text-3xl font-black ${pick.confidence >= 70 ? 'text-green-400' : 'text-yellow-400'}">${pick.confidence}%</p>
-                        <p class="text-xs text-gray-400">confianza</p>
+                        <p class="text-xs text-gray-400 font-medium">confianza</p>
                     </div>
                 </div>
                 <div class="bg-black/20 rounded-lg p-3 mb-3">
-                    <p class="text-gray-300 text-sm">${pick.reason}</p>
-                    ${pick.h2hGames > 0 ? `<p class="text-purple-400 text-xs mt-1">📊 ${pick.h2hGames} partidos H2H analizados</p>` : ''}
+                    <p class="text-gray-300 text-sm font-medium">${pick.reason}</p>
+                    ${pick.h2hGames > 0 ? `<p class="text-purple-400 text-xs mt-1 font-medium">📊 ${pick.h2hGames} partidos H2H analizados</p>` : ''}
                 </div>
                 <button onclick="selectBestPick('${pick.local}', '${pick.away}')" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-sm font-bold">
                     📈 Analizar este matchup
