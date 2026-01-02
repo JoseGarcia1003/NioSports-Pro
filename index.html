@@ -1839,31 +1839,40 @@ function registerBetBuilder() {
     const halfChecked = document.getElementById('combo_half')?.checked;
     const fullChecked = document.getElementById('combo_full')?.checked;
     
-    if (q1Checked && lineQ1 && calcProb(null, null, null) !== null) {
+    // Agregar Q1 si está seleccionado
+    if (q1Checked && lineQ1) {
         const prob = calcProb(
             (TEAM_STATS[localTeam]?.q1Home || 0) + (TEAM_STATS[visitingTeam]?.q1Away || 0),
             lineQ1, typeQ1
         );
-        legs.push({ period: '1Q', betType: typeQ1, line: lineQ1, probability: prob });
-        combinedProb *= (prob / 100);
+        if (prob) {
+            legs.push({ period: '1Q', betType: typeQ1, line: lineQ1, probability: prob });
+            combinedProb *= (prob / 100);
+        }
     }
     
+    // Agregar 1H si está seleccionado
     if (halfChecked && lineHalf) {
         const prob = calcProb(
             (TEAM_STATS[localTeam]?.halfHome || 0) + (TEAM_STATS[visitingTeam]?.halfAway || 0),
             lineHalf, typeHalf
         );
-        legs.push({ period: '1H', betType: typeHalf, line: lineHalf, probability: prob });
-        combinedProb *= (prob / 100);
+        if (prob) {
+            legs.push({ period: '1H', betType: typeHalf, line: lineHalf, probability: prob });
+            combinedProb *= (prob / 100);
+        }
     }
     
+    // Agregar FULL si está seleccionado
     if (fullChecked && lineFull) {
         const prob = calcProb(
             (TEAM_STATS[localTeam]?.fullHome || 0) + (TEAM_STATS[visitingTeam]?.fullAway || 0),
             lineFull, typeFull
         );
-        legs.push({ period: 'FULL', betType: typeFull, line: lineFull, probability: prob });
-        combinedProb *= (prob / 100);
+        if (prob) {
+            legs.push({ period: 'FULL', betType: typeFull, line: lineFull, probability: prob });
+            combinedProb *= (prob / 100);
+        }
     }
     
     if (legs.length < 2) {
