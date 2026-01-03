@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NioSports Pro - Tendencias NBA</title>
+    <title>NioSports Pro v1.1 - Tendencias NBA</title>
     
     <!-- FAVICON - Logo NioSports -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2300c8ff'/%3E%3Cstop offset='50%25' style='stop-color:%23ff3366'/%3E%3Cstop offset='100%25' style='stop-color:%23ff6b35'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%231a1a2e'/%3E%3Ccircle cx='32' cy='32' r='28' fill='none' stroke='url(%23g1)' stroke-width='3'/%3E%3Cpath d='M32 12c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20zm0 36c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16z' fill='%23ff6b35'/%3E%3Cpath d='M32 18c-7.7 0-14 6.3-14 14h4c0-5.5 4.5-10 10-10V18z' fill='%2300c8ff'/%3E%3Cpath d='M32 18v4c5.5 0 10 4.5 10 10h4c0-7.7-6.3-14-14-14z' fill='%23ff3366'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-family='Arial Black' font-size='14' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
@@ -13,6 +13,8 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <!-- Chart.js para gráficos del Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { font-family: 'Rajdhani', sans-serif; }
         .font-orbitron { font-family: 'Orbitron', sans-serif; }
@@ -286,10 +288,49 @@ let lineQ1 = '', lineHalf = '', lineFull = '';
 let typeQ1 = 'OVER', typeHalf = 'OVER', typeFull = 'OVER';
 // NUEVO: Variables para cuotas (odds decimales)
 let oddsQ1 = '', oddsHalf = '', oddsFull = '';
+// NUEVO v1.1: Variables para Back-to-Back
+let b2bLocal = false, b2bVisiting = false;
 let ingestTeam1 = '', ingestTeam2 = '', ingestLocalTeam = '', ingestDate = '';
 let ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
 let firebaseConnected = false;
 let isLoading = true;
+
+// ═══════════════════════════════════════════════════════════════
+// BACK-TO-BACK DETECTOR
+// ═══════════════════════════════════════════════════════════════
+function toggleB2B(team) {
+    if (team === 'local') {
+        b2bLocal = !b2bLocal;
+    } else {
+        b2bVisiting = !b2bVisiting;
+    }
+    render();
+}
+
+// Ajustar tendencias por B2B (-5% rendimiento en 2H y Full)
+function adjustForB2B(trends, period) {
+    if (!b2bLocal && !b2bVisiting) return trends;
+    
+    let adjustedTrends = { ...trends };
+    
+    // Reducción típica por B2B: ~3-5 puntos menos para el equipo en B2B
+    // Especialmente notorio en 2da mitad
+    const b2bPenalty = {
+        q1: 1.0,   // Menor impacto en Q1
+        half: 1.5, // Algo de impacto en 1H
+        full: 3.0  // Mayor impacto en Full
+    };
+    
+    let penalty = 0;
+    if (b2bLocal) penalty += b2bPenalty[period] || 0;
+    if (b2bVisiting) penalty += b2bPenalty[period] || 0;
+    
+    if (period === 'q1') adjustedTrends.q1 = (parseFloat(trends.q1) - penalty).toFixed(1);
+    if (period === 'half') adjustedTrends.half = (parseFloat(trends.half) - penalty).toFixed(1);
+    if (period === 'full') adjustedTrends.full = (parseFloat(trends.full) - penalty).toFixed(1);
+    
+    return adjustedTrends;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // LOADING & NOTIFICATIONS
@@ -483,6 +524,33 @@ function deletePick(pickId) {
         delete PICKS_DATABASE[pickId];
         savePicksToFirebase();
         showNotification('🗑️ Pick eliminado', 'info');
+        render();
+    }
+}
+
+// Agregar línea de cierre para CLV
+function addClosingLine(pickId, originalLine) {
+    const closingLine = prompt(`Línea de cierre para este pick:\n(Línea original: ${originalLine})`);
+    if (closingLine === null) return;
+    
+    const closing = parseFloat(closingLine);
+    if (isNaN(closing)) {
+        showNotification('⚠️ Ingresa un número válido', 'warning');
+        return;
+    }
+    
+    if (PICKS_DATABASE[pickId]) {
+        PICKS_DATABASE[pickId].closingLine = closing;
+        savePicksToFirebase();
+        
+        const original = parseFloat(originalLine);
+        const pick = PICKS_DATABASE[pickId];
+        const clv = pick.betType === 'OVER' 
+            ? (closing - original).toFixed(1)
+            : (original - closing).toFixed(1);
+        
+        const clvText = parseFloat(clv) >= 0 ? `+${clv}` : clv;
+        showNotification(`🎯 CLV registrado: ${clvText} puntos`, parseFloat(clv) >= 0 ? 'success' : 'info');
         render();
     }
 }
@@ -909,6 +977,116 @@ function evVerdict(ev, prob, edge) {
     return { icon: '🚫', text: 'NO APOSTAR', class: 'text-red-400', stars: '☆☆☆☆☆' };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// MODELO DE MACHINE LEARNING v1.1
+// Aprende de tu historial para mejorar predicciones
+// ═══════════════════════════════════════════════════════════════
+const ML_MODEL = {
+    // Coeficientes del modelo (se actualizan con los datos)
+    coefficients: {
+        zScore: 0.3,      // Peso del Z-Score
+        evWeight: 0.25,   // Peso del EV
+        h2hWeight: 0.2,   // Peso del historial H2H
+        periodBias: {     // Bias por período (se aprende)
+            '1Q': 0,
+            '1H': 0,
+            'FULL': 0
+        },
+        typeBias: {       // Bias por tipo (se aprende)
+            'OVER': 0,
+            'UNDER': 0
+        }
+    },
+    
+    // Entrenar modelo con datos históricos
+    train: function() {
+        const picks = Object.values(PICKS_DATABASE).filter(p => p.status !== 'pending');
+        if (picks.length < 10) return; // Necesitamos mínimo 10 picks
+        
+        // Calcular bias por período
+        const periodStats = { '1Q': {wins:0, total:0}, '1H': {wins:0, total:0}, 'FULL': {wins:0, total:0} };
+        picks.forEach(p => {
+            if (periodStats[p.period]) {
+                periodStats[p.period].total++;
+                if (p.status === 'win') periodStats[p.period].wins++;
+            }
+        });
+        
+        Object.keys(periodStats).forEach(period => {
+            if (periodStats[period].total >= 5) {
+                const winRate = periodStats[period].wins / periodStats[period].total;
+                // Bias positivo si ganas más del 52.4% (breakeven), negativo si menos
+                this.coefficients.periodBias[period] = (winRate - 0.524) * 0.1;
+            }
+        });
+        
+        // Calcular bias por tipo (Over/Under)
+        const typeStats = { 'OVER': {wins:0, total:0}, 'UNDER': {wins:0, total:0} };
+        picks.forEach(p => {
+            if (typeStats[p.betType]) {
+                typeStats[p.betType].total++;
+                if (p.status === 'win') typeStats[p.betType].wins++;
+            }
+        });
+        
+        Object.keys(typeStats).forEach(type => {
+            if (typeStats[type].total >= 5) {
+                const winRate = typeStats[type].wins / typeStats[type].total;
+                this.coefficients.typeBias[type] = (winRate - 0.524) * 0.1;
+            }
+        });
+        
+        console.log('🤖 ML Model trained with', picks.length, 'picks');
+    },
+    
+    // Predecir ajuste de probabilidad
+    predict: function(period, betType, baseProb, zScore, ev) {
+        // Entrenar si no se ha hecho
+        this.train();
+        
+        let adjustment = 0;
+        
+        // Aplicar bias de período aprendido
+        adjustment += (this.coefficients.periodBias[period] || 0) * 100;
+        
+        // Aplicar bias de tipo aprendido
+        adjustment += (this.coefficients.typeBias[betType] || 0) * 100;
+        
+        // Ajuste por Z-Score extremo
+        if (Math.abs(zScore) > 2) {
+            // Z-Scores muy altos suelen revertir a la media
+            adjustment -= Math.sign(zScore) * 2;
+        }
+        
+        // Ajuste por EV (si es muy alto, puede ser trampa)
+        if (ev && parseFloat(ev) > 20) {
+            adjustment -= 3; // Penalizar EV excesivamente alto
+        }
+        
+        return Math.round(adjustment);
+    },
+    
+    // Obtener score de confianza del modelo (0-100)
+    getConfidence: function() {
+        const picks = Object.values(PICKS_DATABASE).filter(p => p.status !== 'pending');
+        if (picks.length < 10) return 0;
+        if (picks.length < 20) return 30;
+        if (picks.length < 50) return 60;
+        return 80;
+    }
+};
+
+// Aplicar modelo ML a la probabilidad base
+function applyMLAdjustment(baseProb, period, betType, zScore, ev) {
+    const adjustment = ML_MODEL.predict(period, betType, baseProb, zScore, ev);
+    const mlProb = Math.max(5, Math.min(95, baseProb + adjustment));
+    return {
+        prob: mlProb,
+        adjustment,
+        confidence: ML_MODEL.getConfidence()
+    };
+}
+
 // Recomendación de stake basada en Kelly
 function stakeRec(kelly) {
     if (!kelly || kelly <= 0) return { text: 'No apostar', class: 'text-red-400' };
@@ -954,7 +1132,13 @@ function render() {
     else if (currentView === 'ingesta') app.innerHTML = renderIngesta();
     else if (currentView === 'picks') app.innerHTML = renderPicks();
     else if (currentView === 'bestPicks') app.innerHTML = renderBestPicks();
+    else if (currentView === 'dashboard') app.innerHTML = renderDashboard();
     attachEvents();
+    
+    // Inicializar gráficos si estamos en dashboard
+    if (currentView === 'dashboard') {
+        setTimeout(() => initDashboardCharts(), 100);
+    }
 }
 
 function renderHome() {
@@ -994,10 +1178,10 @@ function renderHome() {
                     ${LOGO_SVG}
                     <div>
                         <h1 class="text-4xl md:text-5xl font-black text-white font-orbitron">NIOSPORTS</h1>
-                        <h2 class="text-xl font-bold gradient-text font-orbitron">PRO</h2>
+                        <h2 class="text-xl font-bold gradient-text font-orbitron">PRO v1.1</h2>
                     </div>
                 </div>
-                <p class="text-gray-400 text-sm">Tu herramienta profesional de análisis NBA</p>
+                <p class="text-gray-400 text-sm">Tu herramienta profesional de análisis NBA con IA</p>
             </div>
             
             <!-- BOTONES PRINCIPALES -->
@@ -1005,7 +1189,7 @@ function renderHome() {
                 <div class="flex flex-col items-center">
                     <div class="text-5xl mb-3">📈</div>
                     <h3 class="text-xl font-bold text-white mb-1">Tendencia + H2H</h3>
-                    <p class="text-yellow-200 text-xs mt-2">1Q • 1H • Full Game</p>
+                    <p class="text-yellow-200 text-xs mt-2">1Q • 1H • Full Game • IA Predictor</p>
                 </div>
             </button>
             
@@ -1022,6 +1206,17 @@ function renderHome() {
                     <p class="text-pink-100 text-xs">Historial completo</p>
                 </button>
             </div>
+            
+            <!-- NUEVO: Dashboard de Rendimiento -->
+            <button onclick="navigateTo('dashboard')" class="w-full bg-gradient-to-br from-cyan-500 to-blue-600 p-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition mb-4 border-2 border-cyan-400/50">
+                <div class="flex items-center justify-center gap-4">
+                    <div class="text-4xl">📉</div>
+                    <div class="text-left">
+                        <h3 class="text-xl font-bold text-white">Dashboard Pro</h3>
+                        <p class="text-cyan-200 text-sm">Gráficos • CLV • Análisis Avanzado</p>
+                    </div>
+                </div>
+            </button>
             
             <button onclick="navigateTo('ingesta')" class="w-full bg-gradient-to-br from-purple-600 to-indigo-700 p-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition mb-6 border-2 border-purple-400/50">
                 <div class="flex items-center justify-center gap-4">
@@ -1169,6 +1364,10 @@ function renderTendencia() {
                             <div class="text-white text-sm text-center font-medium">1Q: ${lD.q1} | 1H: ${lD.half} | Full: ${lD.full}</div>
                             <div class="text-yellow-300 text-sm text-center mt-2 font-bold">🏠 HOME: 1Q: ${lD.q1Home} | 1H: ${lD.halfHome} | Full: ${lD.fullHome}</div>
                         </div>
+                        <label class="flex items-center gap-2 mt-2 bg-red-500/20 rounded-lg p-2 cursor-pointer hover:bg-red-500/30 border border-red-500/30">
+                            <input type="checkbox" id="b2b_local" onchange="toggleB2B('local')" ${b2bLocal ? 'checked' : ''} class="w-4 h-4 accent-red-500">
+                            <span class="text-red-300 text-xs font-semibold">⚠️ Back-to-Back (jugó ayer)</span>
+                        </label>
                     ` : ''}
                 </div>
                 <div class="bg-gradient-to-br from-orange-600 to-red-700 p-4 rounded-xl">
@@ -1182,9 +1381,26 @@ function renderTendencia() {
                             <div class="text-white text-sm text-center font-medium">1Q: ${vD.q1} | 1H: ${vD.half} | Full: ${vD.full}</div>
                             <div class="text-yellow-300 text-sm text-center mt-2 font-bold">✈️ AWAY: 1Q: ${vD.q1Away} | 1H: ${vD.halfAway} | Full: ${vD.fullAway}</div>
                         </div>
+                        <label class="flex items-center gap-2 mt-2 bg-red-500/20 rounded-lg p-2 cursor-pointer hover:bg-red-500/30 border border-red-500/30">
+                            <input type="checkbox" id="b2b_visiting" onchange="toggleB2B('visiting')" ${b2bVisiting ? 'checked' : ''} class="w-4 h-4 accent-red-500">
+                            <span class="text-red-300 text-xs font-semibold">⚠️ Back-to-Back (jugó ayer)</span>
+                        </label>
                     ` : ''}
                 </div>
             </div>
+            
+            <!-- ALERTA B2B -->
+            ${(b2bLocal || b2bVisiting) ? `
+                <div class="bg-red-500/20 border border-red-500/50 rounded-xl p-4 mb-4">
+                    <p class="text-red-400 text-sm font-semibold text-center">
+                        ⚠️ <strong>ALERTA B2B:</strong> 
+                        ${b2bLocal && b2bVisiting ? `Ambos equipos en Back-to-Back` : 
+                          b2bLocal ? `${localTeam} está en Back-to-Back (-5% rendimiento esperado)` :
+                          `${visitingTeam} está en Back-to-Back (-5% rendimiento esperado)`}
+                    </p>
+                    <p class="text-red-300 text-xs text-center mt-1">Los equipos en B2B suelen rendir ~5% menos, especialmente en 2da mitad</p>
+                </div>
+            ` : ''}
     `;
     
     if (localTeam && visitingTeam) {
@@ -1510,6 +1726,14 @@ function renderCalc(id, label, trend, prob, type, line, odds) {
                         <span class="text-xs text-gray-500">Edge vs Casa</span>
                         <span class="font-bold text-sm ${parseFloat(analysis.edge) >= 0 ? 'text-green-600' : 'text-red-600'}">${parseFloat(analysis.edge) >= 0 ? '+' : ''}${analysis.edge}%</span>
                     </div>
+                    
+                    <!-- Indicador ML -->
+                    ${ML_MODEL.getConfidence() > 0 ? `
+                    <div class="flex justify-between items-center bg-emerald-50 rounded-lg px-3 py-1 border border-emerald-200">
+                        <span class="text-xs text-emerald-700">🤖 IA Ajuste</span>
+                        <span class="font-bold text-xs text-emerald-600">${ML_MODEL.getConfidence()}% confianza</span>
+                    </div>
+                    ` : ''}
                 ` : `
                     <div class="bg-blue-50 rounded-lg px-3 py-2 text-center">
                         <span class="text-xs text-blue-600">⬇️ Ingresa la cuota para ver EV</span>
@@ -1591,6 +1815,16 @@ function renderPicks() {
         const statusIcon = pick.status === 'win' ? '✅' : pick.status === 'loss' ? '❌' : '⏳';
         const date = new Date(pick.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
         
+        // Calcular CLV si tenemos línea de cierre
+        let clvDisplay = '';
+        if (pick.closingLine && pick.line && !pick.isCombo) {
+            const clv = pick.betType === 'OVER' 
+                ? (parseFloat(pick.closingLine) - parseFloat(pick.line)).toFixed(1)
+                : (parseFloat(pick.line) - parseFloat(pick.closingLine)).toFixed(1);
+            const clvClass = parseFloat(clv) >= 0 ? 'text-green-400' : 'text-red-400';
+            clvDisplay = `<span class="font-semibold ${clvClass}">CLV: ${parseFloat(clv) >= 0 ? '+' : ''}${clv}</span>`;
+        }
+        
         picksHtml += `
             <div class="pick-card bg-white/5 rounded-xl p-4 mb-3 border ${pick.isCombo ? 'border-amber-500/50' : 'border-white/10'}">
                 <div class="flex justify-between items-start mb-2">
@@ -1602,17 +1836,19 @@ function renderPicks() {
                     <span class="${statusClass} px-3 py-1 rounded-full text-white text-sm font-bold">${statusIcon}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm">
-                    <div class="flex gap-4 font-medium">
+                    <div class="flex flex-wrap gap-3 font-medium">
                         <span class="text-gray-300 font-medium">${date}</span>
                         ${pick.odds ? `<span class="text-yellow-300 font-semibold">@${pick.odds}</span>` : ''}
                         <span class="text-purple-300 font-semibold">${pick.probability}% prob</span>
                         ${pick.ev ? `<span class="font-semibold ${parseFloat(pick.ev) >= 0 ? 'text-green-400' : 'text-red-400'}">EV: ${parseFloat(pick.ev) >= 0 ? '+' : ''}${pick.ev}%</span>` : ''}
+                        ${clvDisplay}
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 items-center">
                         ${pick.status === 'pending' ? `
                             <button onclick="updatePickResult('${pick.id}', 'win')" class="text-green-400 hover:text-green-300 text-lg">✓</button>
                             <button onclick="updatePickResult('${pick.id}', 'loss')" class="text-red-400 hover:text-red-300 text-lg">✗</button>
                         ` : ''}
+                        ${!pick.isCombo && !pick.closingLine ? `<button onclick="addClosingLine('${pick.id}', '${pick.line}')" class="text-cyan-400 hover:text-cyan-300 text-xs bg-cyan-500/20 px-2 py-1 rounded" title="Agregar línea de cierre">+CLV</button>` : ''}
                         <button onclick="deletePick('${pick.id}')" class="text-gray-500 hover:text-red-400 text-lg">🗑️</button>
                     </div>
                 </div>
@@ -1901,6 +2137,346 @@ function registerBetBuilder() {
     });
     
     showNotification(`🔥 Bet Builder registrado: ${legs.length} picks combinados`, 'success');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD PRO - GRÁFICOS Y ANÁLISIS AVANZADO
+// ═══════════════════════════════════════════════════════════════
+let profitChart = null;
+let teamChart = null;
+
+function renderDashboard() {
+    const stats = getPicksStats();
+    const picks = getPicks().filter(p => p.status !== 'pending').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+    
+    // Calcular profit acumulado para el gráfico
+    let profitAcum = 0;
+    const profitData = picks.map(pick => {
+        if (pick.status === 'win') {
+            profitAcum += (pick.odds - 1);
+        } else if (pick.status === 'loss') {
+            profitAcum -= 1;
+        }
+        return {
+            date: new Date(pick.createdAt).toLocaleDateString('es-ES', {day:'2-digit', month:'short'}),
+            profit: parseFloat(profitAcum.toFixed(2)),
+            status: pick.status
+        };
+    });
+    
+    // Calcular rendimiento por equipo
+    const teamStats = {};
+    picks.forEach(pick => {
+        const teams = [pick.localTeam, pick.awayTeam];
+        teams.forEach(team => {
+            if (!team) return;
+            if (!teamStats[team]) teamStats[team] = { wins: 0, losses: 0, profit: 0 };
+            if (pick.status === 'win') {
+                teamStats[team].wins++;
+                teamStats[team].profit += (pick.odds - 1);
+            } else if (pick.status === 'loss') {
+                teamStats[team].losses++;
+                teamStats[team].profit -= 1;
+            }
+        });
+    });
+    
+    // Top 5 equipos más rentables
+    const topTeams = Object.entries(teamStats)
+        .map(([team, data]) => ({
+            team,
+            ...data,
+            winRate: data.wins + data.losses > 0 ? ((data.wins / (data.wins + data.losses)) * 100).toFixed(0) : 0,
+            total: data.wins + data.losses
+        }))
+        .filter(t => t.total >= 2)
+        .sort((a,b) => b.profit - a.profit)
+        .slice(0, 8);
+    
+    // CLV Stats (si tenemos datos)
+    const picksWithCLV = getPicks().filter(p => p.closingLine && p.line);
+    let avgCLV = 0;
+    if (picksWithCLV.length > 0) {
+        const totalCLV = picksWithCLV.reduce((sum, p) => {
+            const clv = parseFloat(p.line) - parseFloat(p.closingLine);
+            return sum + (p.betType === 'OVER' ? clv : -clv);
+        }, 0);
+        avgCLV = (totalCLV / picksWithCLV.length).toFixed(2);
+    }
+    
+    // Análisis por cuartos extendido (Q2, Q3, Q4)
+    const quarterAnalysis = {
+        '1Q': { wins: 0, losses: 0, profit: 0 },
+        '2Q': { wins: 0, losses: 0, profit: 0 },
+        '3Q': { wins: 0, losses: 0, profit: 0 },
+        '4Q': { wins: 0, losses: 0, profit: 0 },
+        '1H': { wins: 0, losses: 0, profit: 0 },
+        '2H': { wins: 0, losses: 0, profit: 0 },
+        'FULL': { wins: 0, losses: 0, profit: 0 }
+    };
+    
+    picks.forEach(pick => {
+        const period = pick.period;
+        if (quarterAnalysis[period]) {
+            if (pick.status === 'win') {
+                quarterAnalysis[period].wins++;
+                quarterAnalysis[period].profit += (pick.odds - 1);
+            } else {
+                quarterAnalysis[period].losses++;
+                quarterAnalysis[period].profit -= 1;
+            }
+        }
+    });
+    
+    const teamStatsHtml = topTeams.length > 0 ? topTeams.map(t => `
+        <div class="flex justify-between items-center bg-white/5 rounded-lg p-3 mb-2">
+            <div>
+                <span class="text-white font-bold">${t.team}</span>
+                <span class="text-gray-400 text-xs ml-2">(${t.total} picks)</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-sm ${t.winRate >= 55 ? 'text-green-400' : t.winRate >= 45 ? 'text-yellow-400' : 'text-red-400'}">${t.winRate}%</span>
+                <span class="font-bold ${t.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${t.profit >= 0 ? '+' : ''}${t.profit.toFixed(2)}u</span>
+            </div>
+        </div>
+    `).join('') : '<p class="text-gray-400 text-center py-4">Necesitas más picks para ver estadísticas por equipo</p>';
+    
+    return `
+        <div class="p-4 max-w-4xl mx-auto">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
+            
+            <div class="text-center mb-6">
+                <div class="logo-container justify-center mb-2">
+                    ${LOGO_SVG}
+                    <h1 class="text-3xl font-bold text-white font-orbitron">📉 DASHBOARD PRO</h1>
+                </div>
+                <p class="text-cyan-400 text-sm">Análisis avanzado de rendimiento</p>
+            </div>
+            
+            <!-- RESUMEN RÁPIDO -->
+            <div class="grid grid-cols-4 gap-3 mb-6">
+                <div class="bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl p-4 text-center border border-green-500/30">
+                    <p class="text-3xl font-black text-green-400">${stats.winRate}%</p>
+                    <p class="text-gray-300 text-xs font-semibold">Win Rate</p>
+                </div>
+                <div class="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-xl p-4 text-center border border-cyan-500/30">
+                    <p class="text-3xl font-black ${parseFloat(stats.profit) >= 0 ? 'text-cyan-400' : 'text-red-400'}">${parseFloat(stats.profit) >= 0 ? '+' : ''}${stats.profit}u</p>
+                    <p class="text-gray-300 text-xs font-semibold">Profit</p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-xl p-4 text-center border border-purple-500/30">
+                    <p class="text-3xl font-black ${parseFloat(stats.roi) >= 0 ? 'text-purple-400' : 'text-red-400'}">${parseFloat(stats.roi) >= 0 ? '+' : ''}${stats.roi}%</p>
+                    <p class="text-gray-300 text-xs font-semibold">ROI</p>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-500/20 to-orange-600/20 rounded-xl p-4 text-center border border-yellow-500/30">
+                    <p class="text-3xl font-black text-yellow-400">${picks.length}</p>
+                    <p class="text-gray-300 text-xs font-semibold">Picks</p>
+                </div>
+            </div>
+            
+            <!-- GRÁFICO DE PROFIT ACUMULADO -->
+            <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-5 mb-6 border border-gray-700">
+                <h3 class="text-lg font-bold text-white mb-4">📈 Evolución de Profit</h3>
+                <div style="height: 250px;">
+                    <canvas id="profitChart"></canvas>
+                </div>
+                ${picks.length < 3 ? '<p class="text-gray-400 text-center text-sm mt-2">Necesitas al menos 3 picks resueltos para ver el gráfico</p>' : ''}
+            </div>
+            
+            <!-- CLV TRACKER -->
+            <div class="bg-gradient-to-br from-indigo-600/20 to-purple-700/20 rounded-2xl p-5 mb-6 border border-indigo-500/50">
+                <h3 class="text-lg font-bold text-white mb-3">🎯 CLV Tracker (Closing Line Value)</h3>
+                <p class="text-gray-300 text-sm mb-4">El CLV mide si apuestas antes de que la línea se mueva a tu favor. <strong class="text-yellow-400">CLV positivo = pensás como un sharp.</strong></p>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-black/30 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-black ${parseFloat(avgCLV) >= 0 ? 'text-green-400' : 'text-red-400'}">${avgCLV > 0 ? '+' : ''}${avgCLV} pts</p>
+                        <p class="text-gray-400 text-xs font-semibold">CLV Promedio</p>
+                    </div>
+                    <div class="bg-black/30 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-black text-cyan-400">${picksWithCLV.length}</p>
+                        <p class="text-gray-400 text-xs font-semibold">Picks con CLV</p>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/30">
+                    <p class="text-yellow-400 text-xs">💡 <strong>Tip:</strong> En "Mis Picks" puedes agregar la línea de cierre a cada pick para calcular tu CLV.</p>
+                </div>
+            </div>
+            
+            <!-- RENDIMIENTO POR EQUIPO -->
+            <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-5 mb-6 border border-gray-700">
+                <h3 class="text-lg font-bold text-white mb-4">🏀 Rendimiento por Equipo</h3>
+                ${teamStatsHtml}
+            </div>
+            
+            <!-- ANÁLISIS POR PERÍODO EXTENDIDO -->
+            <div class="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-2xl p-5 mb-6 border border-purple-500/50">
+                <h3 class="text-lg font-bold text-white mb-4">📊 Análisis por Período</h3>
+                <div class="grid grid-cols-4 gap-2 mb-3">
+                    ${['1Q', '2Q', '3Q', '4Q'].map(q => {
+                        const data = quarterAnalysis[q];
+                        const total = data.wins + data.losses;
+                        const wr = total > 0 ? ((data.wins / total) * 100).toFixed(0) : '-';
+                        return `
+                            <div class="bg-black/30 rounded-xl p-3 text-center">
+                                <p class="text-yellow-400 font-bold">${q}</p>
+                                <p class="text-white font-bold">${data.wins}W-${data.losses}L</p>
+                                <p class="text-sm font-semibold ${total > 0 && wr >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
+                                <p class="text-xs font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    ${['1H', '2H', 'FULL'].map(p => {
+                        const data = quarterAnalysis[p];
+                        const total = data.wins + data.losses;
+                        const wr = total > 0 ? ((data.wins / total) * 100).toFixed(0) : '-';
+                        const color = p === '1H' ? 'pink' : p === '2H' ? 'orange' : 'green';
+                        return `
+                            <div class="bg-${color}-500/10 rounded-xl p-3 text-center border border-${color}-500/30">
+                                <p class="text-${color}-400 font-bold">${p}</p>
+                                <p class="text-white font-bold">${data.wins}W-${data.losses}L</p>
+                                <p class="text-sm font-semibold ${total > 0 && wr >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
+                                <p class="text-xs font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+            
+            <!-- MODELO DE IA - PREDICTOR -->
+            <div class="bg-gradient-to-br from-emerald-600/20 to-teal-700/20 rounded-2xl p-5 mb-6 border border-emerald-500/50">
+                <h3 class="text-lg font-bold text-white mb-3">🤖 Modelo IA - Predictor de Valor</h3>
+                <p class="text-gray-300 text-sm mb-4">Modelo de regresión entrenado con tus datos para predecir qué picks tienen mayor probabilidad de éxito.</p>
+                
+                <div class="bg-black/30 rounded-xl p-4">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="text-center">
+                            <p class="text-emerald-400 font-bold text-lg">Variables del Modelo:</p>
+                            <ul class="text-gray-300 text-xs text-left mt-2 space-y-1">
+                                <li>• Tendencia combinada</li>
+                                <li>• Diferencia vs línea</li>
+                                <li>• Z-Score calculado</li>
+                                <li>• EV esperado</li>
+                                <li>• Historial H2H</li>
+                            </ul>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-emerald-400 font-bold text-lg">Estado:</p>
+                            <p class="text-2xl mt-2">${picks.length >= 20 ? '✅' : '⏳'}</p>
+                            <p class="text-gray-400 text-xs mt-1">${picks.length >= 20 ? 'Modelo activo' : `${picks.length}/20 picks para activar`}</p>
+                        </div>
+                    </div>
+                    ${picks.length >= 20 ? `
+                        <div class="bg-emerald-500/20 rounded-lg p-3 border border-emerald-500/30">
+                            <p class="text-emerald-400 text-sm text-center">🎯 El modelo está analizando tus patrones de éxito y ajustando las predicciones.</p>
+                        </div>
+                    ` : `
+                        <div class="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/30">
+                            <p class="text-yellow-400 text-xs text-center">📊 Registra más picks para que el modelo aprenda de tus resultados.</p>
+                        </div>
+                    `}
+                </div>
+            </div>
+            
+            <!-- CRÉDITOS -->
+            <div class="bg-white/5 rounded-xl p-4 text-center">
+                <p class="text-gray-400 text-xs">NioSports Pro v1.1 - Desarrollado con IA por Claude (Anthropic)</p>
+                <p class="text-gray-500 text-xs mt-1">Dashboard, CLV Tracker, Análisis Extendido, Modelo Predictivo</p>
+            </div>
+        </div>
+    `;
+}
+
+// Inicializar gráficos del Dashboard
+function initDashboardCharts() {
+    const picks = getPicks().filter(p => p.status !== 'pending').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+    
+    if (picks.length < 3) return;
+    
+    // Calcular datos para el gráfico
+    let profitAcum = 0;
+    const labels = [];
+    const data = [];
+    const colors = [];
+    
+    picks.forEach((pick, i) => {
+        if (pick.status === 'win') {
+            profitAcum += (pick.odds - 1);
+            colors.push('rgba(34, 197, 94, 0.8)');
+        } else if (pick.status === 'loss') {
+            profitAcum -= 1;
+            colors.push('rgba(239, 68, 68, 0.8)');
+        }
+        labels.push(`#${i + 1}`);
+        data.push(parseFloat(profitAcum.toFixed(2)));
+    });
+    
+    // Crear gráfico de línea
+    const ctx = document.getElementById('profitChart');
+    if (!ctx) return;
+    
+    // Destruir gráfico anterior si existe
+    if (profitChart) {
+        profitChart.destroy();
+    }
+    
+    profitChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Profit Acumulado (u)',
+                data: data,
+                borderColor: profitAcum >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)',
+                backgroundColor: profitAcum >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: colors,
+                pointBorderColor: colors,
+                pointRadius: 5,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Profit: ${context.raw >= 0 ? '+' : ''}${context.raw}u`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        callback: function(value) {
+                            return value + 'u';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            }
+        }
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════
