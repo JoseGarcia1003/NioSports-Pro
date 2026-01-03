@@ -1514,54 +1514,60 @@ function renderTendencia() {
     teams.forEach(t => { opts += `<option value="${t}">${t}</option>`; });
     
     let html = `
-        <div class="p-4 max-w-4xl mx-auto">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
+        <div class="p-3 md:p-4 max-w-4xl mx-auto">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4 text-sm md:text-base">← Volver</button>
             <div class="text-center mb-6">
                 <div class="logo-container justify-center mb-2">
                     ${LOGO_SVG}
-                    <h1 class="text-3xl font-bold text-white font-orbitron">TENDENCIA + H2H</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold text-white font-orbitron">TENDENCIA + H2H</h1>
                 </div>
             </div>
             
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="bg-gradient-to-br from-cyan-600 to-blue-700 p-4 rounded-xl">
-                    <h2 class="text-lg font-bold text-white mb-2 text-center">🏠 LOCAL</h2>
-                    <select id="localSelect" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-6">
+                <div class="bg-gradient-to-br from-cyan-600 to-blue-700 p-3 md:p-4 rounded-xl">
+                    <h2 class="text-base md:text-lg font-bold text-white mb-2 text-center">🏠 LOCAL</h2>
+                    <select id="localSelect" class="w-full p-2 md:p-3 font-bold rounded-lg text-gray-800 bg-white text-sm md:text-base">
                         ${opts.replace(`value="${localTeam}"`, `value="${localTeam}" selected`)}
                     </select>
                     ${lD && lR ? `
-                        <div class="mt-3 bg-black/30 rounded-lg p-3">
-                            <div class="text-cyan-200 text-sm text-center mb-2 font-semibold">📊 Temporada 2025-26</div>
-                            <div class="text-white text-sm text-center font-medium">
-                                1Q: ${lD.q1} ${formatRanking(lR.q1)} | 
-                                1H: ${lD.half} ${formatRanking(lR.half)} | 
-                                Full: ${lD.full} ${formatRanking(lR.full)}
+                        <div class="mt-3 bg-black/30 rounded-lg p-2 md:p-3">
+                            <div class="text-cyan-200 text-xs md:text-sm text-center mb-2 font-semibold">📊 Temporada 2025-26</div>
+                            <div class="grid grid-cols-3 gap-1 text-center text-xs md:text-sm mb-2">
+                                <div class="text-white">1Q: ${lD.q1} ${formatRanking(lR.q1)}</div>
+                                <div class="text-white">1H: ${lD.half} ${formatRanking(lR.half)}</div>
+                                <div class="text-white">Full: ${lD.full} ${formatRanking(lR.full)}</div>
                             </div>
-                            <div class="text-yellow-300 text-sm text-center mt-2 font-bold">
-                                🏠 HOME: 1Q: ${lD.q1Home} ${formatRanking(lR.q1Home)} | 
-                                1H: ${lD.halfHome} ${formatRanking(lR.halfHome)} | 
-                                Full: ${lD.fullHome} ${formatRanking(lR.fullHome)}
+                            <div class="text-yellow-300 text-xs md:text-sm text-center font-bold border-t border-white/20 pt-2">
+                                <span class="block mb-1">🏠 HOME</span>
+                                <div class="grid grid-cols-3 gap-1">
+                                    <div>1Q: ${lD.q1Home} ${formatRanking(lR.q1Home)}</div>
+                                    <div>1H: ${lD.halfHome} ${formatRanking(lR.halfHome)}</div>
+                                    <div>Full: ${lD.fullHome} ${formatRanking(lR.fullHome)}</div>
+                                </div>
                             </div>
                         </div>
                     ` : ''}
                 </div>
-                <div class="bg-gradient-to-br from-orange-600 to-red-700 p-4 rounded-xl">
-                    <h2 class="text-lg font-bold text-white mb-2 text-center">✈️ VISITANTE</h2>
-                    <select id="visitingSelect" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">
+                <div class="bg-gradient-to-br from-orange-600 to-red-700 p-3 md:p-4 rounded-xl">
+                    <h2 class="text-base md:text-lg font-bold text-white mb-2 text-center">✈️ VISITANTE</h2>
+                    <select id="visitingSelect" class="w-full p-2 md:p-3 font-bold rounded-lg text-gray-800 bg-white text-sm md:text-base">
                         ${opts.replace(`value="${visitingTeam}"`, `value="${visitingTeam}" selected`)}
                     </select>
                     ${vD && vR ? `
-                        <div class="mt-3 bg-black/30 rounded-lg p-3">
-                            <div class="text-orange-200 text-sm text-center mb-2 font-semibold">📊 Temporada 2025-26</div>
-                            <div class="text-white text-sm text-center font-medium">
-                                1Q: ${vD.q1} ${formatRanking(vR.q1)} | 
-                                1H: ${vD.half} ${formatRanking(vR.half)} | 
-                                Full: ${vD.full} ${formatRanking(vR.full)}
+                        <div class="mt-3 bg-black/30 rounded-lg p-2 md:p-3">
+                            <div class="text-orange-200 text-xs md:text-sm text-center mb-2 font-semibold">📊 Temporada 2025-26</div>
+                            <div class="grid grid-cols-3 gap-1 text-center text-xs md:text-sm mb-2">
+                                <div class="text-white">1Q: ${vD.q1} ${formatRanking(vR.q1)}</div>
+                                <div class="text-white">1H: ${vD.half} ${formatRanking(vR.half)}</div>
+                                <div class="text-white">Full: ${vD.full} ${formatRanking(vR.full)}</div>
                             </div>
-                            <div class="text-yellow-300 text-sm text-center mt-2 font-bold">
-                                ✈️ AWAY: 1Q: ${vD.q1Away} ${formatRanking(vR.q1Away)} | 
-                                1H: ${vD.halfAway} ${formatRanking(vR.halfAway)} | 
-                                Full: ${vD.fullAway} ${formatRanking(vR.fullAway)}
+                            <div class="text-yellow-300 text-xs md:text-sm text-center font-bold border-t border-white/20 pt-2">
+                                <span class="block mb-1">✈️ AWAY</span>
+                                <div class="grid grid-cols-3 gap-1">
+                                    <div>1Q: ${vD.q1Away} ${formatRanking(vR.q1Away)}</div>
+                                    <div>1H: ${vD.halfAway} ${formatRanking(vR.halfAway)}</div>
+                                    <div>Full: ${vD.fullAway} ${formatRanking(vR.fullAway)}</div>
+                                </div>
                             </div>
                         </div>
                     ` : ''}
@@ -1571,28 +1577,28 @@ function renderTendencia() {
     
     if (localTeam && visitingTeam) {
         html += `
-            <div class="bg-white rounded-2xl p-5 shadow-xl mb-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-2 text-center">📈 TENDENCIA TEMPORADA 2025-26</h2>
-                <p class="text-center text-gray-500 text-sm mb-4">${localTeam} (HOME) + ${visitingTeam} (AWAY)</p>
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl p-4 text-center">
-                        <p class="text-sm font-bold text-white/90">1Q</p>
-                        <p class="text-4xl font-black text-white">${trends.q1}</p>
+            <div class="bg-white rounded-2xl p-3 md:p-5 shadow-xl mb-6">
+                <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-2 text-center">📈 TENDENCIA TEMPORADA 2025-26</h2>
+                <p class="text-center text-gray-500 text-xs md:text-sm mb-4">${localTeam} (HOME) + ${visitingTeam} (AWAY)</p>
+                <div class="grid grid-cols-3 gap-2 md:gap-4">
+                    <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl p-3 md:p-4 text-center">
+                        <p class="text-xs md:text-sm font-bold text-white/90">1Q</p>
+                        <p class="text-2xl md:text-4xl font-black text-white">${trends.q1}</p>
                     </div>
-                    <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl p-4 text-center">
-                        <p class="text-sm font-bold text-white/90">1H</p>
-                        <p class="text-4xl font-black text-white">${trends.half}</p>
+                    <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl p-3 md:p-4 text-center">
+                        <p class="text-xs md:text-sm font-bold text-white/90">1H</p>
+                        <p class="text-2xl md:text-4xl font-black text-white">${trends.half}</p>
                     </div>
-                    <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 text-center">
-                        <p class="text-sm font-bold text-white/90">FULL</p>
-                        <p class="text-4xl font-black text-white">${trends.full}</p>
+                    <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-3 md:p-4 text-center">
+                        <p class="text-xs md:text-sm font-bold text-white/90">FULL</p>
+                        <p class="text-2xl md:text-4xl font-black text-white">${trends.full}</p>
                     </div>
                 </div>
             </div>
             ${renderH2HSection()}
-            <div class="bg-gradient-to-br from-purple-700 to-indigo-800 rounded-2xl p-5 shadow-xl mt-6">
-                <h2 class="text-xl font-bold text-white mb-4 text-center">🎯 CALCULADORA PRO - Expected Value</h2>
-                <div class="grid grid-cols-3 gap-4">
+            <div class="bg-gradient-to-br from-purple-700 to-indigo-800 rounded-2xl p-3 md:p-5 shadow-xl mt-6">
+                <h2 class="text-lg md:text-xl font-bold text-white mb-4 text-center">🎯 CALCULADORA PRO - Expected Value</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                     ${renderCalc('Q1', '1Q', trends.q1, pQ1, typeQ1, lineQ1, oddsQ1)}
                     ${renderCalc('Half', '1H', trends.half, pHalf, typeHalf, lineHalf, oddsHalf)}
                     ${renderCalc('Full', 'FULL', trends.full, pFull, typeFull, lineFull, oddsFull)}
@@ -1968,13 +1974,13 @@ function renderPicks() {
         typeStatsHtml += `
             <div class="bg-white/5 rounded-lg p-2 text-center">
                 <p class="text-xs text-gray-300 font-semibold">${period} ${betType}</p>
-                <p class="text-lg font-bold ${winRate >= 55 ? 'text-green-400' : winRate >= 45 ? 'text-yellow-400' : 'text-red-400'}">${winRate}%</p>
+                <p class="text-base md:text-lg font-bold ${winRate >= 55 ? 'text-green-400' : winRate >= 45 ? 'text-yellow-400' : 'text-red-400'}">${winRate}%</p>
                 <p class="text-xs text-gray-400 font-medium">${data.wins}W-${data.losses}L</p>
             </div>
         `;
     });
     
-    // Picks list
+    // Picks list - MEJORADO PARA MÓVILES
     let picksHtml = picks.length === 0 ? '<p class="text-center text-gray-400 py-10">No hay picks registrados aún</p>' : '';
     picks.forEach(pick => {
         const statusClass = pick.status === 'win' ? 'win-badge' : pick.status === 'loss' ? 'loss-badge' : 'pending-badge';
@@ -1988,126 +1994,129 @@ function renderPicks() {
                 ? (parseFloat(pick.closingLine) - parseFloat(pick.line)).toFixed(1)
                 : (parseFloat(pick.line) - parseFloat(pick.closingLine)).toFixed(1);
             const clvClass = parseFloat(clv) >= 0 ? 'text-green-400' : 'text-red-400';
-            clvDisplay = `<span class="font-semibold ${clvClass}">CLV: ${parseFloat(clv) >= 0 ? '+' : ''}${clv}</span>`;
+            clvDisplay = `<span class="font-semibold ${clvClass} text-xs">CLV: ${parseFloat(clv) >= 0 ? '+' : ''}${clv}</span>`;
         }
         
         picksHtml += `
-            <div class="pick-card bg-white/5 rounded-xl p-4 mb-3 border ${pick.isCombo ? 'border-amber-500/50' : 'border-white/10'}">
+            <div class="pick-card bg-white/5 rounded-xl p-3 md:p-4 mb-3 border ${pick.isCombo ? 'border-amber-500/50' : 'border-white/10'}">
+                <!-- Header: Equipos + Status -->
                 <div class="flex justify-between items-start mb-2">
-                    <div>
+                    <div class="flex-1 min-w-0 pr-2">
                         ${pick.isCombo ? '<span class="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full mb-1 inline-block font-bold">🔥 BET BUILDER</span>' : ''}
-                        <p class="text-white font-bold">${pick.localTeam} vs ${pick.awayTeam}</p>
-                        <p class="text-gray-200 text-sm font-semibold">${pick.isCombo ? pick.line : `${pick.period} ${pick.betType} ${pick.line}`}</p>
+                        <p class="text-white font-bold text-sm md:text-base truncate">${pick.localTeam} vs ${pick.awayTeam}</p>
+                        <p class="text-gray-200 text-xs md:text-sm font-semibold">${pick.isCombo ? pick.line : `${pick.period} ${pick.betType} ${pick.line}`}</p>
                     </div>
-                    <span class="${statusClass} px-3 py-1 rounded-full text-white text-sm font-bold">${statusIcon}</span>
+                    <span class="${statusClass} px-2 md:px-3 py-1 rounded-full text-white text-xs md:text-sm font-bold flex-shrink-0">${statusIcon}</span>
                 </div>
-                <div class="flex justify-between items-center text-sm">
-                    <div class="flex flex-wrap gap-3 font-medium">
-                        <span class="text-gray-300 font-medium">${date}</span>
-                        ${pick.odds ? `<span class="text-yellow-300 font-semibold">@${pick.odds}</span>` : ''}
-                        <span class="text-purple-300 font-semibold">${pick.probability}% prob</span>
-                        ${pick.ev ? `<span class="font-semibold ${parseFloat(pick.ev) >= 0 ? 'text-green-400' : 'text-red-400'}">EV: ${parseFloat(pick.ev) >= 0 ? '+' : ''}${pick.ev}%</span>` : ''}
-                        ${clvDisplay}
-                    </div>
-                    <div class="flex gap-2 items-center">
-                        ${pick.status === 'pending' ? `
-                            <button onclick="updatePickResult('${pick.id}', 'win')" class="text-green-400 hover:text-green-300 text-lg">✓</button>
-                            <button onclick="updatePickResult('${pick.id}', 'loss')" class="text-red-400 hover:text-red-300 text-lg">✗</button>
-                        ` : ''}
-                        ${!pick.isCombo && !pick.closingLine ? `<button onclick="addClosingLine('${pick.id}', '${pick.line}')" class="text-cyan-400 hover:text-cyan-300 text-xs bg-cyan-500/20 px-2 py-1 rounded" title="Agregar línea de cierre">+CLV</button>` : ''}
-                        <button onclick="deletePick('${pick.id}')" class="text-gray-500 hover:text-red-400 text-lg">🗑️</button>
-                    </div>
+                
+                <!-- Stats Row: Fecha, Odds, Prob, EV, CLV - GRID para móviles -->
+                <div class="grid grid-cols-2 md:flex md:flex-wrap gap-2 md:gap-3 text-xs md:text-sm mb-2">
+                    <span class="text-gray-300 font-medium">📅 ${date}</span>
+                    ${pick.odds ? `<span class="text-yellow-300 font-semibold">@${pick.odds}</span>` : ''}
+                    <span class="text-purple-300 font-semibold">${pick.probability}% prob</span>
+                    ${pick.ev ? `<span class="font-semibold ${parseFloat(pick.ev) >= 0 ? 'text-green-400' : 'text-red-400'}">EV: ${parseFloat(pick.ev) >= 0 ? '+' : ''}${pick.ev}%</span>` : ''}
+                    ${clvDisplay}
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-2 items-center border-t border-white/10 pt-2">
+                    ${pick.status === 'pending' ? `
+                        <button onclick="updatePickResult('${pick.id}', 'win')" class="text-green-400 hover:text-green-300 text-lg p-1">✓</button>
+                        <button onclick="updatePickResult('${pick.id}', 'loss')" class="text-red-400 hover:text-red-300 text-lg p-1">✗</button>
+                    ` : ''}
+                    ${!pick.isCombo && !pick.closingLine ? `<button onclick="addClosingLine('${pick.id}', '${pick.line}')" class="text-cyan-400 hover:text-cyan-300 text-xs bg-cyan-500/20 px-2 py-1 rounded" title="Agregar línea de cierre">+CLV</button>` : ''}
+                    <button onclick="deletePick('${pick.id}')" class="text-gray-500 hover:text-red-400 text-lg p-1">🗑️</button>
                 </div>
             </div>
         `;
     });
     
     return `
-        <div class="p-4 max-w-4xl mx-auto">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
+        <div class="p-3 md:p-4 max-w-4xl mx-auto">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4 text-sm md:text-base">← Volver</button>
             
             <div class="text-center mb-6">
                 <div class="logo-container justify-center mb-2">
                     ${LOGO_SVG}
-                    <h1 class="text-3xl font-bold text-white font-orbitron">MIS PICKS</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold text-white font-orbitron">MIS PICKS</h1>
                 </div>
             </div>
             
             <!-- RESUMEN PRINCIPAL -->
-            <div class="bg-gradient-to-br from-purple-600/30 to-pink-600/30 rounded-2xl p-5 mb-6 border border-purple-500/50">
+            <div class="bg-gradient-to-br from-purple-600/30 to-pink-600/30 rounded-2xl p-4 md:p-5 mb-6 border border-purple-500/50">
                 <!-- Fila 1: Efectividad, Ganados, Perdidos -->
-                <div class="grid grid-cols-3 gap-3 text-center mb-4">
-                    <div class="bg-white/10 rounded-xl p-4">
-                        <p class="text-5xl font-black ${parseFloat(stats.winRate) >= 55 ? 'text-green-400' : parseFloat(stats.winRate) >= 45 ? 'text-yellow-400' : 'text-red-400'}">${stats.winRate}%</p>
-                        <p class="text-gray-300 text-sm font-semibold">Efectividad</p>
+                <div class="grid grid-cols-3 gap-2 md:gap-3 text-center mb-4">
+                    <div class="bg-white/10 rounded-xl p-3 md:p-4">
+                        <p class="text-3xl md:text-5xl font-black ${parseFloat(stats.winRate) >= 55 ? 'text-green-400' : parseFloat(stats.winRate) >= 45 ? 'text-yellow-400' : 'text-red-400'}">${stats.winRate}%</p>
+                        <p class="text-gray-300 text-xs md:text-sm font-semibold">Efectividad</p>
                     </div>
-                    <div class="bg-white/10 rounded-xl p-4">
-                        <p class="text-5xl font-black text-green-400">${stats.wins}<span class="text-lg text-gray-400">/${stats.wins + stats.losses}</span></p>
-                        <p class="text-gray-300 text-sm font-semibold">Ganados</p>
+                    <div class="bg-white/10 rounded-xl p-3 md:p-4">
+                        <p class="text-3xl md:text-5xl font-black text-green-400">${stats.wins}<span class="text-sm md:text-lg text-gray-400">/${stats.wins + stats.losses}</span></p>
+                        <p class="text-gray-300 text-xs md:text-sm font-semibold">Ganados</p>
                     </div>
-                    <div class="bg-white/10 rounded-xl p-4">
-                        <p class="text-5xl font-black text-red-400">${stats.losses}<span class="text-lg text-gray-400">/${stats.wins + stats.losses}</span></p>
-                        <p class="text-gray-300 text-sm font-semibold">Perdidos</p>
+                    <div class="bg-white/10 rounded-xl p-3 md:p-4">
+                        <p class="text-3xl md:text-5xl font-black text-red-400">${stats.losses}<span class="text-sm md:text-lg text-gray-400">/${stats.wins + stats.losses}</span></p>
+                        <p class="text-gray-300 text-xs md:text-sm font-semibold">Perdidos</p>
                     </div>
                 </div>
                 
-                <!-- Fila 2: Profit, ROI, Racha, Pendientes -->
-                <div class="grid grid-cols-4 gap-3 text-center mb-4">
-                    <div class="bg-black/20 rounded-xl p-3">
-                        <p class="text-2xl font-black ${parseFloat(stats.profit) >= 0 ? 'text-green-400' : 'text-red-400'}">${parseFloat(stats.profit) > 0 ? '+' : ''}${stats.profit}u</p>
+                <!-- Fila 2: Profit, ROI, Racha, Pendientes - RESPONSIVO -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 text-center mb-4">
+                    <div class="bg-black/20 rounded-xl p-2 md:p-3">
+                        <p class="text-xl md:text-2xl font-black ${parseFloat(stats.profit) >= 0 ? 'text-green-400' : 'text-red-400'}">${parseFloat(stats.profit) > 0 ? '+' : ''}${stats.profit}u</p>
                         <p class="text-gray-300 text-xs font-semibold">${parseFloat(stats.profit) >= 0 ? '📈' : '📉'} Profit</p>
                     </div>
-                    <div class="bg-black/20 rounded-xl p-3">
-                        <p class="text-2xl font-black ${parseFloat(stats.roi) >= 0 ? 'text-cyan-400' : 'text-red-400'}">${parseFloat(stats.roi) > 0 ? '+' : ''}${stats.roi}%</p>
+                    <div class="bg-black/20 rounded-xl p-2 md:p-3">
+                        <p class="text-xl md:text-2xl font-black ${parseFloat(stats.roi) >= 0 ? 'text-cyan-400' : 'text-red-400'}">${parseFloat(stats.roi) > 0 ? '+' : ''}${stats.roi}%</p>
                         <p class="text-gray-300 text-xs font-semibold">💰 ROI</p>
                     </div>
-                    <div class="bg-black/20 rounded-xl p-3">
+                    <div class="bg-black/20 rounded-xl p-2 md:p-3">
                         ${stats.streak.count > 0 ? `
-                            <p class="text-2xl font-black ${stats.streak.type === 'win' ? 'text-green-400' : 'text-red-400'}">${stats.streak.count}${stats.streak.type === 'win' ? 'W' : 'L'}</p>
-                            <p class="text-gray-300 text-xs font-semibold">${stats.streak.type === 'win' ? '🔥' : '❄️'} Racha Actual</p>
+                            <p class="text-xl md:text-2xl font-black ${stats.streak.type === 'win' ? 'text-green-400' : 'text-red-400'}">${stats.streak.count}${stats.streak.type === 'win' ? 'W' : 'L'}</p>
+                            <p class="text-gray-300 text-xs font-semibold">${stats.streak.type === 'win' ? '🔥' : '❄️'} Racha</p>
                         ` : `
-                            <p class="text-2xl font-black text-gray-500">-</p>
+                            <p class="text-xl md:text-2xl font-black text-gray-500">-</p>
                             <p class="text-gray-300 text-xs font-semibold">🎯 Racha</p>
                         `}
                     </div>
-                    <div class="bg-black/20 rounded-xl p-3">
-                        <p class="text-2xl font-black text-yellow-400">${stats.pending}</p>
+                    <div class="bg-black/20 rounded-xl p-2 md:p-3">
+                        <p class="text-xl md:text-2xl font-black text-yellow-400">${stats.pending}</p>
                         <p class="text-gray-300 text-xs font-semibold">⏳ Pendientes</p>
                     </div>
                 </div>
                 
                 <!-- Rachas históricas -->
                 ${stats.bestWinStreak > 0 || stats.worstLossStreak > 0 ? `
-                <div class="grid grid-cols-2 gap-3 text-center mb-4">
+                <div class="grid grid-cols-2 gap-2 md:gap-3 text-center mb-4">
                     <div class="bg-green-500/10 rounded-lg p-2 border border-green-500/20">
-                        <span class="text-green-400 text-sm font-semibold">🏆 Mejor racha: <strong>${stats.bestWinStreak}W</strong></span>
+                        <span class="text-green-400 text-xs md:text-sm font-semibold">🏆 Mejor: <strong>${stats.bestWinStreak}W</strong></span>
                     </div>
                     <div class="bg-red-500/10 rounded-lg p-2 border border-red-500/20">
-                        <span class="text-red-400 text-sm font-semibold">💀 Peor racha: <strong>${stats.worstLossStreak}L</strong></span>
+                        <span class="text-red-400 text-xs md:text-sm font-semibold">💀 Peor: <strong>${stats.worstLossStreak}L</strong></span>
                     </div>
                 </div>
                 ` : ''}
                 
                 <!-- Desglose por período -->
                 <div class="border-t border-white/10 pt-4">
-                    <h4 class="text-sm font-bold text-gray-300 mb-3">📊 Rendimiento por Período</h4>
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="bg-yellow-500/10 rounded-xl p-3 text-center border border-yellow-500/20">
-                            <p class="text-yellow-400 font-bold text-lg">1Q</p>
-                            <p class="text-white font-bold">${stats.byPeriod['1Q'].wins}W - ${stats.byPeriod['1Q'].losses}L</p>
-                            <p class="text-sm font-semibold ${stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses > 0 ? (stats.byPeriod['1Q'].wins / (stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses) * 100 >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}">${stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses > 0 ? ((stats.byPeriod['1Q'].wins / (stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses)) * 100).toFixed(0) : 0}%</p>
+                    <h4 class="text-xs md:text-sm font-bold text-gray-300 mb-3">📊 Rendimiento por Período</h4>
+                    <div class="grid grid-cols-3 gap-2 md:gap-3">
+                        <div class="bg-yellow-500/10 rounded-xl p-2 md:p-3 text-center border border-yellow-500/20">
+                            <p class="text-yellow-400 font-bold text-base md:text-lg">1Q</p>
+                            <p class="text-white font-bold text-xs md:text-sm">${stats.byPeriod['1Q'].wins}W-${stats.byPeriod['1Q'].losses}L</p>
+                            <p class="text-xs md:text-sm font-semibold ${stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses > 0 ? (stats.byPeriod['1Q'].wins / (stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses) * 100 >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}">${stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses > 0 ? ((stats.byPeriod['1Q'].wins / (stats.byPeriod['1Q'].wins + stats.byPeriod['1Q'].losses)) * 100).toFixed(0) : 0}%</p>
                             <p class="text-xs font-semibold ${stats.byPeriod['1Q'].profit >= 0 ? 'text-green-400' : 'text-red-400'} mt-1">${stats.byPeriod['1Q'].profit >= 0 ? '+' : ''}${stats.byPeriod['1Q'].profit.toFixed(2)}u</p>
                         </div>
-                        <div class="bg-pink-500/10 rounded-xl p-3 text-center border border-pink-500/20">
-                            <p class="text-pink-400 font-bold text-lg">1H</p>
-                            <p class="text-white font-bold">${stats.byPeriod['1H'].wins}W - ${stats.byPeriod['1H'].losses}L</p>
-                            <p class="text-sm font-semibold ${stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses > 0 ? (stats.byPeriod['1H'].wins / (stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses) * 100 >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}">${stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses > 0 ? ((stats.byPeriod['1H'].wins / (stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses)) * 100).toFixed(0) : 0}%</p>
+                        <div class="bg-pink-500/10 rounded-xl p-2 md:p-3 text-center border border-pink-500/20">
+                            <p class="text-pink-400 font-bold text-base md:text-lg">1H</p>
+                            <p class="text-white font-bold text-xs md:text-sm">${stats.byPeriod['1H'].wins}W-${stats.byPeriod['1H'].losses}L</p>
+                            <p class="text-xs md:text-sm font-semibold ${stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses > 0 ? (stats.byPeriod['1H'].wins / (stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses) * 100 >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}">${stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses > 0 ? ((stats.byPeriod['1H'].wins / (stats.byPeriod['1H'].wins + stats.byPeriod['1H'].losses)) * 100).toFixed(0) : 0}%</p>
                             <p class="text-xs font-semibold ${stats.byPeriod['1H'].profit >= 0 ? 'text-green-400' : 'text-red-400'} mt-1">${stats.byPeriod['1H'].profit >= 0 ? '+' : ''}${stats.byPeriod['1H'].profit.toFixed(2)}u</p>
                         </div>
-                        <div class="bg-green-500/10 rounded-xl p-3 text-center border border-green-500/20">
-                            <p class="text-green-400 font-bold text-lg">FULL</p>
-                            <p class="text-white font-bold">${stats.byPeriod['FULL'].wins}W - ${stats.byPeriod['FULL'].losses}L</p>
-                            <p class="text-sm font-semibold ${stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses > 0 ? (stats.byPeriod['FULL'].wins / (stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses) * 100 >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}">${stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses > 0 ? ((stats.byPeriod['FULL'].wins / (stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses)) * 100).toFixed(0) : 0}%</p>
+                        <div class="bg-green-500/10 rounded-xl p-2 md:p-3 text-center border border-green-500/20">
+                            <p class="text-green-400 font-bold text-base md:text-lg">FULL</p>
+                            <p class="text-white font-bold text-xs md:text-sm">${stats.byPeriod['FULL'].wins}W-${stats.byPeriod['FULL'].losses}L</p>
+                            <p class="text-xs md:text-sm font-semibold ${stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses > 0 ? (stats.byPeriod['FULL'].wins / (stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses) * 100 >= 50 ? 'text-green-400' : 'text-red-400') : 'text-gray-400'}">${stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses > 0 ? ((stats.byPeriod['FULL'].wins / (stats.byPeriod['FULL'].wins + stats.byPeriod['FULL'].losses)) * 100).toFixed(0) : 0}%</p>
                             <p class="text-xs font-semibold ${stats.byPeriod['FULL'].profit >= 0 ? 'text-green-400' : 'text-red-400'} mt-1">${stats.byPeriod['FULL'].profit >= 0 ? '+' : ''}${stats.byPeriod['FULL'].profit.toFixed(2)}u</p>
                         </div>
                     </div>
@@ -2115,7 +2124,7 @@ function renderPicks() {
                 
                 ${typeStatsHtml ? `
                 <div class="border-t border-white/10 pt-4 mt-4">
-                    <h4 class="text-sm font-bold text-gray-300 mb-3">🎯 Por Tipo (Over/Under)</h4>
+                    <h4 class="text-xs md:text-sm font-bold text-gray-300 mb-3">🎯 Por Tipo (Over/Under)</h4>
                     <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
                         ${typeStatsHtml}
                     </div>
@@ -2124,10 +2133,10 @@ function renderPicks() {
             </div>
             
             <!-- LISTA DE PICKS -->
-            <div class="glass rounded-xl p-4">
+            <div class="glass rounded-xl p-3 md:p-4">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-white">📋 Historial de Picks</h3>
-                    <span class="text-sm text-gray-400">${stats.total} total</span>
+                    <h3 class="text-base md:text-lg font-bold text-white">📋 Historial de Picks</h3>
+                    <span class="text-xs md:text-sm text-gray-400">${stats.total} total</span>
                 </div>
                 <div class="max-h-96 overflow-y-auto">
                     ${picksHtml}
@@ -2483,58 +2492,58 @@ function renderDashboard() {
     `).join('') : '<p class="text-gray-400 text-center py-4">Necesitas más picks para ver estadísticas por equipo</p>';
     
     return `
-        <div class="p-4 max-w-4xl mx-auto">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
+        <div class="p-3 md:p-4 max-w-4xl mx-auto">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4 text-sm md:text-base">← Volver</button>
             
             <div class="text-center mb-6">
                 <div class="logo-container justify-center mb-2">
                     ${LOGO_SVG}
-                    <h1 class="text-3xl font-bold text-white font-orbitron">📉 DASHBOARD PRO</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold text-white font-orbitron">📉 DASHBOARD PRO</h1>
                 </div>
-                <p class="text-cyan-400 text-sm">Análisis avanzado de rendimiento</p>
+                <p class="text-cyan-400 text-xs md:text-sm">Análisis avanzado de rendimiento</p>
             </div>
             
             <!-- RESUMEN RÁPIDO -->
-            <div class="grid grid-cols-4 gap-3 mb-6">
-                <div class="bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl p-4 text-center border border-green-500/30">
-                    <p class="text-3xl font-black text-green-400">${stats.winRate}%</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-6">
+                <div class="bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl p-3 md:p-4 text-center border border-green-500/30">
+                    <p class="text-2xl md:text-3xl font-black text-green-400">${stats.winRate}%</p>
                     <p class="text-gray-300 text-xs font-semibold">Win Rate</p>
                 </div>
-                <div class="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-xl p-4 text-center border border-cyan-500/30">
-                    <p class="text-3xl font-black ${parseFloat(stats.profit) >= 0 ? 'text-cyan-400' : 'text-red-400'}">${parseFloat(stats.profit) >= 0 ? '+' : ''}${stats.profit}u</p>
+                <div class="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-xl p-3 md:p-4 text-center border border-cyan-500/30">
+                    <p class="text-2xl md:text-3xl font-black ${parseFloat(stats.profit) >= 0 ? 'text-cyan-400' : 'text-red-400'}">${parseFloat(stats.profit) >= 0 ? '+' : ''}${stats.profit}u</p>
                     <p class="text-gray-300 text-xs font-semibold">Profit</p>
                 </div>
-                <div class="bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-xl p-4 text-center border border-purple-500/30">
-                    <p class="text-3xl font-black ${parseFloat(stats.roi) >= 0 ? 'text-purple-400' : 'text-red-400'}">${parseFloat(stats.roi) >= 0 ? '+' : ''}${stats.roi}%</p>
+                <div class="bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-xl p-3 md:p-4 text-center border border-purple-500/30">
+                    <p class="text-2xl md:text-3xl font-black ${parseFloat(stats.roi) >= 0 ? 'text-purple-400' : 'text-red-400'}">${parseFloat(stats.roi) >= 0 ? '+' : ''}${stats.roi}%</p>
                     <p class="text-gray-300 text-xs font-semibold">ROI</p>
                 </div>
-                <div class="bg-gradient-to-br from-yellow-500/20 to-orange-600/20 rounded-xl p-4 text-center border border-yellow-500/30">
-                    <p class="text-3xl font-black text-yellow-400">${picks.length}</p>
+                <div class="bg-gradient-to-br from-yellow-500/20 to-orange-600/20 rounded-xl p-3 md:p-4 text-center border border-yellow-500/30">
+                    <p class="text-2xl md:text-3xl font-black text-yellow-400">${picks.length}</p>
                     <p class="text-gray-300 text-xs font-semibold">Picks</p>
                 </div>
             </div>
             
             <!-- GRÁFICO DE PROFIT ACUMULADO -->
-            <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-5 mb-6 border border-gray-700">
-                <h3 class="text-lg font-bold text-white mb-4">📈 Evolución de Profit</h3>
-                <div style="height: 250px;">
+            <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-3 md:p-5 mb-6 border border-gray-700">
+                <h3 class="text-base md:text-lg font-bold text-white mb-4">📈 Evolución de Profit</h3>
+                <div style="height: 200px;" class="md:h-[250px]">
                     <canvas id="profitChart"></canvas>
                 </div>
-                ${picks.length < 3 ? '<p class="text-gray-400 text-center text-sm mt-2">Necesitas al menos 3 picks resueltos para ver el gráfico</p>' : ''}
+                ${picks.length < 3 ? '<p class="text-gray-400 text-center text-xs md:text-sm mt-2">Necesitas al menos 3 picks resueltos para ver el gráfico</p>' : ''}
             </div>
             
             <!-- CLV TRACKER -->
-            <div class="bg-gradient-to-br from-indigo-600/20 to-purple-700/20 rounded-2xl p-5 mb-6 border border-indigo-500/50">
-                <h3 class="text-lg font-bold text-white mb-3">🎯 CLV Tracker (Closing Line Value)</h3>
-                <p class="text-gray-300 text-sm mb-4">El CLV mide si apuestas antes de que la línea se mueva a tu favor. <strong class="text-yellow-400">CLV positivo = pensás como un sharp.</strong></p>
+            <div class="bg-gradient-to-br from-indigo-600/20 to-purple-700/20 rounded-2xl p-3 md:p-5 mb-6 border border-indigo-500/50">
+                <h3 class="text-base md:text-lg font-bold text-white mb-3">🎯 CLV Tracker (Closing Line Value)</h3>
+                <p class="text-gray-300 text-xs md:text-sm mb-4">El CLV mide si apuestas antes de que la línea se mueva a tu favor. <strong class="text-yellow-400">CLV positivo = pensás como un sharp.</strong></p>
                 
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="bg-black/30 rounded-xl p-4 text-center">
-                        <p class="text-2xl font-black ${parseFloat(avgCLV) >= 0 ? 'text-green-400' : 'text-red-400'}">${avgCLV > 0 ? '+' : ''}${avgCLV} pts</p>
+                <div class="grid grid-cols-2 gap-2 md:gap-4 mb-4">
+                    <div class="bg-black/30 rounded-xl p-3 md:p-4 text-center">
+                        <p class="text-xl md:text-2xl font-black ${parseFloat(avgCLV) >= 0 ? 'text-green-400' : 'text-red-400'}">${avgCLV > 0 ? '+' : ''}${avgCLV} pts</p>
                         <p class="text-gray-400 text-xs font-semibold">CLV Promedio</p>
                     </div>
-                    <div class="bg-black/30 rounded-xl p-4 text-center">
-                        <p class="text-2xl font-black text-cyan-400">${picksWithCLV.length}</p>
+                    <div class="bg-black/30 rounded-xl p-3 md:p-4 text-center">
+                        <p class="text-xl md:text-2xl font-black text-cyan-400">${picksWithCLV.length}</p>
                         <p class="text-gray-400 text-xs font-semibold">Picks con CLV</p>
                     </div>
                 </div>
@@ -2545,25 +2554,25 @@ function renderDashboard() {
             </div>
             
             <!-- RENDIMIENTO POR EQUIPO -->
-            <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-5 mb-6 border border-gray-700">
-                <h3 class="text-lg font-bold text-white mb-4">🏀 Rendimiento por Equipo</h3>
+            <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-3 md:p-5 mb-6 border border-gray-700">
+                <h3 class="text-base md:text-lg font-bold text-white mb-4">🏀 Rendimiento por Equipo</h3>
                 ${teamStatsHtml}
             </div>
             
             <!-- ANÁLISIS POR PERÍODO EXTENDIDO -->
-            <div class="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-2xl p-5 mb-6 border border-purple-500/50">
-                <h3 class="text-lg font-bold text-white mb-4">📊 Análisis por Período</h3>
-                <div class="grid grid-cols-4 gap-2 mb-3">
+            <div class="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-2xl p-3 md:p-5 mb-6 border border-purple-500/50">
+                <h3 class="text-base md:text-lg font-bold text-white mb-4">📊 Análisis por Período</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                     ${['1Q', '2Q', '3Q', '4Q'].map(q => {
                         const data = quarterAnalysis[q];
                         const total = data.wins + data.losses;
                         const wr = total > 0 ? ((data.wins / total) * 100).toFixed(0) : '-';
                         const wrNum = total > 0 ? (data.wins / total) * 100 : 0;
                         return `
-                            <div class="bg-black/30 rounded-xl p-3 text-center">
-                                <p class="text-yellow-400 font-bold">${q}</p>
-                                <p class="text-white font-bold">${data.wins}W-${data.losses}L</p>
-                                <p class="text-sm font-semibold ${total > 0 && wrNum >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
+                            <div class="bg-black/30 rounded-xl p-2 md:p-3 text-center">
+                                <p class="text-yellow-400 font-bold text-sm md:text-base">${q}</p>
+                                <p class="text-white font-bold text-xs md:text-sm">${data.wins}W-${data.losses}L</p>
+                                <p class="text-xs md:text-sm font-semibold ${total > 0 && wrNum >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
                                 <p class="text-xs font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
                             </div>
                         `;
@@ -2578,10 +2587,10 @@ function renderDashboard() {
                         const colors = { '1H': 'pink', '2H': 'orange', 'FULL': 'green' };
                         const color = colors[p];
                         return `
-                            <div class="bg-${color}-500/10 rounded-xl p-3 text-center border border-${color}-500/30">
-                                <p class="text-${color}-400 font-bold">${p}</p>
-                                <p class="text-white font-bold">${data.wins}W-${data.losses}L</p>
-                                <p class="text-sm font-semibold ${total > 0 && wrNum >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
+                            <div class="bg-${color}-500/10 rounded-xl p-2 md:p-3 text-center border border-${color}-500/30">
+                                <p class="text-${color}-400 font-bold text-sm md:text-base">${p}</p>
+                                <p class="text-white font-bold text-xs md:text-sm">${data.wins}W-${data.losses}L</p>
+                                <p class="text-xs md:text-sm font-semibold ${total > 0 && wrNum >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
                                 <p class="text-xs font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
                             </div>
                         `;
@@ -2590,14 +2599,14 @@ function renderDashboard() {
             </div>
             
             <!-- MODELO DE IA - PREDICTOR -->
-            <div class="bg-gradient-to-br from-emerald-600/20 to-teal-700/20 rounded-2xl p-5 mb-6 border border-emerald-500/50">
-                <h3 class="text-lg font-bold text-white mb-3">🤖 Modelo IA - Predictor de Valor</h3>
-                <p class="text-gray-300 text-sm mb-4">Modelo de regresión entrenado con tus datos para predecir qué picks tienen mayor probabilidad de éxito.</p>
+            <div class="bg-gradient-to-br from-emerald-600/20 to-teal-700/20 rounded-2xl p-3 md:p-5 mb-6 border border-emerald-500/50">
+                <h3 class="text-base md:text-lg font-bold text-white mb-3">🤖 Modelo IA - Predictor de Valor</h3>
+                <p class="text-gray-300 text-xs md:text-sm mb-4">Modelo de regresión entrenado con tus datos para predecir qué picks tienen mayor probabilidad de éxito.</p>
                 
-                <div class="bg-black/30 rounded-xl p-4">
-                    <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="bg-black/30 rounded-xl p-3 md:p-4">
+                    <div class="grid grid-cols-2 gap-3 md:gap-4 mb-4">
                         <div class="text-center">
-                            <p class="text-emerald-400 font-bold text-lg">Variables del Modelo:</p>
+                            <p class="text-emerald-400 font-bold text-sm md:text-lg">Variables del Modelo:</p>
                             <ul class="text-gray-300 text-xs text-left mt-2 space-y-1">
                                 <li>• Tendencia combinada</li>
                                 <li>• Diferencia vs línea</li>
