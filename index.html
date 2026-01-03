@@ -282,55 +282,17 @@ async function loadTeamStatsFromAPI() {
 // ═══════════════════════════════════════════════════════════════
 let H2H_DATABASE = {};
 let PICKS_DATABASE = {};
+let VALUE_PICKS = []; // Picks de alto valor detectados automáticamente
 let currentView = 'home';
 let localTeam = '', visitingTeam = '';
 let lineQ1 = '', lineHalf = '', lineFull = '';
 let typeQ1 = 'OVER', typeHalf = 'OVER', typeFull = 'OVER';
 // NUEVO: Variables para cuotas (odds decimales)
 let oddsQ1 = '', oddsHalf = '', oddsFull = '';
-// NUEVO v1.1: Variables para Back-to-Back
-let b2bLocal = false, b2bVisiting = false;
 let ingestTeam1 = '', ingestTeam2 = '', ingestLocalTeam = '', ingestDate = '';
 let ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
 let firebaseConnected = false;
 let isLoading = true;
-
-// ═══════════════════════════════════════════════════════════════
-// BACK-TO-BACK DETECTOR
-// ═══════════════════════════════════════════════════════════════
-function toggleB2B(team) {
-    if (team === 'local') {
-        b2bLocal = !b2bLocal;
-    } else {
-        b2bVisiting = !b2bVisiting;
-    }
-    render();
-}
-
-// Ajustar tendencias por B2B (-5% rendimiento en 2H y Full)
-function adjustForB2B(trends, period) {
-    if (!b2bLocal && !b2bVisiting) return trends;
-    
-    let adjustedTrends = { ...trends };
-    
-    // Reducción típica por B2B: ~3-5 puntos menos para el equipo en B2B
-    // Especialmente notorio en 2da mitad
-    const b2bPenalty = {
-        q1: 1.0,   // Menor impacto en Q1
-        half: 1.5, // Algo de impacto en 1H
-        full: 3.0  // Mayor impacto en Full
-    };
-    
-    let penalty = 0;
-    if (b2bLocal) penalty += b2bPenalty[period] || 0;
-    if (b2bVisiting) penalty += b2bPenalty[period] || 0;
-    
-    if (period === 'q1') adjustedTrends.q1 = (parseFloat(trends.q1) - penalty).toFixed(1);
-    if (period === 'half') adjustedTrends.half = (parseFloat(trends.half) - penalty).toFixed(1);
-    if (period === 'full') adjustedTrends.full = (parseFloat(trends.full) - penalty).toFixed(1);
-    
-    return adjustedTrends;
-}
 
 // ═══════════════════════════════════════════════════════════════
 // LOADING & NOTIFICATIONS
@@ -759,6 +721,13 @@ function checkForValuePicks() {
         full: (lD.fullHome + vD.fullAway).toFixed(1)
     };
     
+    // Obtener odds actuales
+    const oddsMap = {
+        '1Q': oddsQ1,
+        '1H': oddsHalf,
+        'FULL': oddsFull
+    };
+    
     // Verificar si hay valores altos
     [
         { period: '1Q', trend: trends.q1, line: lineQ1, type: typeQ1 },
@@ -767,11 +736,159 @@ function checkForValuePicks() {
     ].forEach(({ period, trend, line, type }) => {
         if (line) {
             const prob = calcProb(trend, line, type);
+            const odds = oddsMap[period];
+            const ev = odds ? calcEV(prob, odds) : null;
+            
             if (prob && prob >= 70) {
                 showNotification(`🔥 VALOR ALTO en ${period}: ${prob}% ${type} ${line}`, 'value');
+                
+                // Guardar automáticamente en VALUE_PICKS
+                addValuePick({
+                    id: `${localTeam}-${visitingTeam}-${period}-${type}-${line}-${Date.now()}`,
+                    local: localTeam,
+                    away: visitingTeam,
+                    period,
+                    betType: type,
+                    line: parseFloat(line),
+                    trend: parseFloat(trend),
+                    probability: prob,
+                    odds: odds ? parseFloat(odds) : null,
+                    ev: ev,
+                    detectedAt: new Date().toISOString()
+                });
             }
         }
     });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SISTEMA DE VALUE PICKS (Picks de Alto Valor Detectados)
+// ═══════════════════════════════════════════════════════════════
+function addValuePick(pick) {
+    // Verificar si ya existe un pick similar (mismo matchup, periodo, tipo, línea)
+    const exists = VALUE_PICKS.some(p => 
+        p.local === pick.local && 
+        p.away === pick.away && 
+        p.period === pick.period && 
+        p.betType === pick.betType && 
+        p.line === pick.line
+    );
+    
+    if (!exists) {
+        VALUE_PICKS.unshift(pick); // Agregar al inicio
+        // Mantener máximo 20 picks
+        if (VALUE_PICKS.length > 20) {
+            VALUE_PICKS = VALUE_PICKS.slice(0, 20);
+        }
+        saveValuePicksToStorage();
+    }
+}
+
+function removeValuePick(pickId) {
+    VALUE_PICKS = VALUE_PICKS.filter(p => p.id !== pickId);
+    saveValuePicksToStorage();
+    render();
+    showNotification('🗑️ Pick descartado', 'info');
+}
+
+function registerFromValuePick(pickId) {
+    const pick = VALUE_PICKS.find(p => p.id === pickId);
+    if (!pick) return;
+    
+    let odds = pick.odds;
+    
+    // Si no hay cuota, pedirla
+    if (!odds || odds <= 1) {
+        const oddsInput = prompt(`Ingresa la cuota para ${pick.period} ${pick.betType} ${pick.line}:`);
+        if (oddsInput === null) return;
+        odds = parseFloat(oddsInput) || null;
+        if (!odds || odds <= 1) {
+            showNotification('⚠️ Cuota inválida', 'warning');
+            return;
+        }
+    }
+    
+    const ev = calcEV(pick.probability, odds);
+    
+    addPick({
+        localTeam: pick.local,
+        awayTeam: pick.away,
+        period: pick.period,
+        betType: pick.betType,
+        line: pick.line,
+        probability: pick.probability,
+        odds: odds,
+        ev: ev
+    });
+    
+    // Remover de VALUE_PICKS después de registrar
+    removeValuePick(pickId);
+    showNotification(`✅ Pick registrado: ${pick.period} ${pick.betType} ${pick.line}`, 'success');
+}
+
+function analyzeFromValuePick(pickId) {
+    const pick = VALUE_PICKS.find(p => p.id === pickId);
+    if (!pick) return;
+    
+    // Configurar el matchup
+    localTeam = pick.local;
+    visitingTeam = pick.away;
+    
+    // Configurar línea y tipo según el período
+    if (pick.period === '1Q') {
+        lineQ1 = pick.line.toString();
+        typeQ1 = pick.betType;
+        if (pick.odds) oddsQ1 = pick.odds.toString();
+    } else if (pick.period === '1H') {
+        lineHalf = pick.line.toString();
+        typeHalf = pick.betType;
+        if (pick.odds) oddsHalf = pick.odds.toString();
+    } else if (pick.period === 'FULL') {
+        lineFull = pick.line.toString();
+        typeFull = pick.betType;
+        if (pick.odds) oddsFull = pick.odds.toString();
+    }
+    
+    navigateTo('tendencia');
+}
+
+function clearAllValuePicks() {
+    if (confirm('¿Eliminar todos los picks de valor detectados?')) {
+        VALUE_PICKS = [];
+        saveValuePicksToStorage();
+        render();
+        showNotification('🗑️ Todos los picks eliminados', 'info');
+    }
+}
+
+// Guardar VALUE_PICKS en localStorage
+function saveValuePicksToStorage() {
+    try {
+        localStorage.setItem('niosports_value_picks', JSON.stringify(VALUE_PICKS));
+    } catch (e) {
+        console.warn('No se pudo guardar VALUE_PICKS:', e);
+    }
+}
+
+// Cargar VALUE_PICKS desde localStorage
+function loadValuePicksFromStorage() {
+    try {
+        const saved = localStorage.getItem('niosports_value_picks');
+        if (saved) {
+            VALUE_PICKS = JSON.parse(saved);
+            // Filtrar picks de más de 24 horas
+            const now = new Date();
+            VALUE_PICKS = VALUE_PICKS.filter(p => {
+                const detected = new Date(p.detectedAt);
+                const hoursDiff = (now - detected) / (1000 * 60 * 60);
+                return hoursDiff < 24;
+            });
+            saveValuePicksToStorage();
+        }
+    } catch (e) {
+        console.warn('No se pudo cargar VALUE_PICKS:', e);
+        VALUE_PICKS = [];
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1951,37 +2068,84 @@ function renderPicks() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BEST PICKS VIEW
+// BEST PICKS VIEW - Muestra picks de alto valor detectados
 // ═══════════════════════════════════════════════════════════════
 function renderBestPicks() {
-    const bestPicks = getBestPicks();
+    // Cargar VALUE_PICKS desde localStorage si no están cargados
+    if (VALUE_PICKS.length === 0) {
+        loadValuePicksFromStorage();
+    }
     
-    let picksHtml = bestPicks.length === 0 ? '<p class="text-center text-gray-400 py-10">No hay picks sugeridos en este momento</p>' : '';
+    let picksHtml = '';
     
-    bestPicks.forEach((pick, index) => {
-        picksHtml += `
-            <div class="best-pick bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl p-4 mb-3 border ${index === 0 ? 'border-yellow-500' : 'border-purple-500/30'}">
-                ${index === 0 ? '<div class="text-yellow-400 text-xs font-bold mb-2">🥇 MEJOR PICK DEL DÍA</div>' : ''}
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <p class="text-white font-bold text-lg">${pick.local} vs ${pick.away}</p>
-                        <p class="text-purple-300 font-semibold">${pick.period} ${pick.betType} ${pick.line}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-3xl font-black ${pick.confidence >= 70 ? 'text-green-400' : 'text-yellow-400'}">${pick.confidence}%</p>
-                        <p class="text-xs text-gray-400 font-medium">confianza</p>
-                    </div>
-                </div>
-                <div class="bg-black/20 rounded-lg p-3 mb-3">
-                    <p class="text-gray-300 text-sm font-medium">${pick.reason}</p>
-                    ${pick.h2hGames > 0 ? `<p class="text-purple-400 text-xs mt-1 font-medium">📊 ${pick.h2hGames} partidos H2H analizados</p>` : ''}
-                </div>
-                <button onclick="selectBestPick('${pick.local}', '${pick.away}')" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-sm font-bold">
-                    📈 Analizar este matchup
+    if (VALUE_PICKS.length === 0) {
+        picksHtml = `
+            <div class="text-center py-10">
+                <div class="text-6xl mb-4">🔍</div>
+                <p class="text-gray-400 text-lg mb-2">No hay picks de valor detectados</p>
+                <p class="text-gray-500 text-sm">Los picks aparecerán automáticamente cuando analices matchups en la calculadora y se detecte valor alto (70%+)</p>
+                <button onclick="navigateTo('tendencia')" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-bold">
+                    📈 Ir a analizar matchups
                 </button>
             </div>
         `;
-    });
+    } else {
+        VALUE_PICKS.forEach((pick, index) => {
+            const timeAgo = getTimeAgo(pick.detectedAt);
+            const evClass = pick.ev && parseFloat(pick.ev) >= 10 ? 'text-green-400' : pick.ev && parseFloat(pick.ev) >= 0 ? 'text-lime-400' : 'text-yellow-400';
+            const periodColor = pick.period === '1Q' ? 'yellow' : pick.period === '1H' ? 'pink' : 'green';
+            
+            picksHtml += `
+                <div class="value-pick bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl p-4 mb-3 border ${index === 0 ? 'border-yellow-500 border-2' : 'border-purple-500/30'}">
+                    ${index === 0 ? '<div class="text-yellow-400 text-xs font-bold mb-2">🥇 PICK MÁS RECIENTE</div>' : ''}
+                    
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-white font-bold text-lg">${pick.local} vs ${pick.away}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="bg-${periodColor}-500/30 text-${periodColor}-400 text-xs px-2 py-1 rounded font-bold">${pick.period}</span>
+                                <span class="text-purple-300 font-semibold">${pick.betType} ${pick.line}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-black ${pick.probability >= 75 ? 'text-green-400' : 'text-yellow-400'}">${pick.probability}%</p>
+                            <p class="text-xs text-gray-400 font-medium">probabilidad</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-black/20 rounded-lg p-3 mb-3">
+                        <div class="grid grid-cols-3 gap-2 text-center text-sm">
+                            <div>
+                                <p class="text-gray-400 text-xs">Tendencia</p>
+                                <p class="text-white font-bold">${pick.trend}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-xs">Línea</p>
+                                <p class="text-white font-bold">${pick.line}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-xs">EV</p>
+                                <p class="font-bold ${evClass}">${pick.ev ? (parseFloat(pick.ev) >= 0 ? '+' : '') + pick.ev + '%' : '-'}</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-500 text-xs mt-2 text-center">⏱️ Detectado ${timeAgo}</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="analyzeFromValuePick('${pick.id}')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-bold">
+                            📊 Analizar
+                        </button>
+                        <button onclick="registerFromValuePick('${pick.id}')" class="bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-bold">
+                            ✅ Registrar
+                        </button>
+                        <button onclick="removeValuePick('${pick.id}')" class="bg-red-600/50 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-bold">
+                            🗑️ Descartar
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
     
     return `
         <div class="p-4 max-w-4xl mx-auto">
@@ -1990,20 +2154,47 @@ function renderBestPicks() {
             <div class="text-center mb-6">
                 <div class="logo-container justify-center mb-2">
                     ${LOGO_SVG}
-                    <h1 class="text-3xl font-bold text-white font-orbitron">🔥 MEJORES PICKS</h1>
+                    <h1 class="text-3xl font-bold text-white font-orbitron">🔥 VALOR DETECTADO</h1>
                 </div>
-                <p class="text-gray-400 text-sm">Algoritmo basado en tendencias + H2H</p>
+                <p class="text-gray-400 text-sm">Picks de alto valor detectados automáticamente</p>
+                ${VALUE_PICKS.length > 0 ? `<p class="text-purple-400 text-sm mt-1">${VALUE_PICKS.length} pick${VALUE_PICKS.length > 1 ? 's' : ''} guardado${VALUE_PICKS.length > 1 ? 's' : ''}</p>` : ''}
             </div>
+            
+            ${VALUE_PICKS.length > 1 ? `
+                <div class="flex justify-end mb-4">
+                    <button onclick="clearAllValuePicks()" class="text-red-400 hover:text-red-300 text-sm flex items-center gap-1">
+                        🗑️ Limpiar todo
+                    </button>
+                </div>
+            ` : ''}
             
             <div class="glass rounded-xl p-4">
                 ${picksHtml}
             </div>
             
-            <div class="mt-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+            <div class="mt-6 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                <p class="text-blue-400 text-sm">💡 <strong>Tip:</strong> Los picks se guardan automáticamente cuando la calculadora detecta probabilidad ≥70%. Se eliminan después de 24 horas.</p>
+            </div>
+            
+            <div class="mt-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
                 <p class="text-yellow-400 text-sm">⚠️ <strong>Disclaimer:</strong> Estas sugerencias son basadas en análisis estadístico. Siempre haz tu propia investigación y apuesta responsablemente.</p>
             </div>
         </div>
     `;
+}
+
+// Función auxiliar para calcular tiempo transcurrido
+function getTimeAgo(dateString) {
+    const now = new Date();
+    const detected = new Date(dateString);
+    const diffMs = now - detected;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    
+    if (diffMins < 1) return 'hace un momento';
+    if (diffMins < 60) return `hace ${diffMins} min`;
+    if (diffHours < 24) return `hace ${diffHours}h`;
+    return 'hace más de 24h';
 }
 
 function selectBestPick(local, away) {
@@ -2841,6 +3032,8 @@ function updateOdds(p, v) {
 // INICIALIZAR
 // ═══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
+    // Cargar VALUE_PICKS desde localStorage
+    loadValuePicksFromStorage();
     // Primero cargar estadísticas desde API
     await loadTeamStatsFromAPI();
     // Luego cargar datos de Firebase
