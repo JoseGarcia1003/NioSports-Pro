@@ -897,6 +897,55 @@ function loadValuePicksFromStorage() {
 function getTeams() { return Object.keys(TEAM_STATS).sort(); }
 
 // ═══════════════════════════════════════════════════════════════
+// SISTEMA DE RANKINGS - Posición de cada equipo en PPG
+// ═══════════════════════════════════════════════════════════════
+// Calcular ranking de un equipo en una estadística específica
+function getTeamRanking(teamName, stat) {
+    const teams = Object.entries(TEAM_STATS);
+    if (teams.length === 0) return null;
+    
+    // Ordenar equipos por la estadística (mayor a menor)
+    const sorted = teams
+        .filter(([name, data]) => data[stat] !== undefined)
+        .sort((a, b) => b[1][stat] - a[1][stat]);
+    
+    // Encontrar posición del equipo (1-indexed)
+    const index = sorted.findIndex(([name]) => name === teamName);
+    return index >= 0 ? index + 1 : null;
+}
+
+// Obtener todos los rankings de un equipo
+function getAllTeamRankings(teamName) {
+    const stats = TEAM_STATS[teamName];
+    if (!stats) return null;
+    
+    return {
+        full: getTeamRanking(teamName, 'full'),
+        fullHome: getTeamRanking(teamName, 'fullHome'),
+        fullAway: getTeamRanking(teamName, 'fullAway'),
+        half: getTeamRanking(teamName, 'half'),
+        halfHome: getTeamRanking(teamName, 'halfHome'),
+        halfAway: getTeamRanking(teamName, 'halfAway'),
+        q1: getTeamRanking(teamName, 'q1'),
+        q1Home: getTeamRanking(teamName, 'q1Home'),
+        q1Away: getTeamRanking(teamName, 'q1Away')
+    };
+}
+
+// Formatear ranking con color según posición
+function formatRanking(rank, totalTeams = 30) {
+    if (!rank) return '';
+    
+    // Color según posición (verde = top, amarillo = medio, rojo = bajo)
+    let colorClass = '';
+    if (rank <= 10) colorClass = 'text-green-400'; // Top 10
+    else if (rank <= 20) colorClass = 'text-yellow-400'; // Medio
+    else colorClass = 'text-red-400'; // Bottom 10
+    
+    return `<span class="${colorClass} text-xs font-bold">#${rank}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SISTEMA PROFESIONAL DE EXPECTED VALUE (EV)
 // Basado en: Gabel & Redner (2012), Martín-González et al. (2016)
 // Paper: "Random Walk Picture of Basketball Scoring"
@@ -1444,6 +1493,11 @@ function renderTendencia() {
     const teams = getTeams();
     const lD = localTeam ? TEAM_STATS[localTeam] : null;
     const vD = visitingTeam ? TEAM_STATS[visitingTeam] : null;
+    
+    // Calcular rankings
+    const lR = localTeam ? getAllTeamRankings(localTeam) : null;
+    const vR = visitingTeam ? getAllTeamRankings(visitingTeam) : null;
+    
     let trends = { q1: '-', half: '-', full: '-' };
     if (lD && vD) {
         trends = {
@@ -1475,11 +1529,19 @@ function renderTendencia() {
                     <select id="localSelect" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">
                         ${opts.replace(`value="${localTeam}"`, `value="${localTeam}" selected`)}
                     </select>
-                    ${lD ? `
+                    ${lD && lR ? `
                         <div class="mt-3 bg-black/30 rounded-lg p-3">
                             <div class="text-cyan-200 text-sm text-center mb-2 font-semibold">📊 Temporada 2024-25</div>
-                            <div class="text-white text-sm text-center font-medium">1Q: ${lD.q1} | 1H: ${lD.half} | Full: ${lD.full}</div>
-                            <div class="text-yellow-300 text-sm text-center mt-2 font-bold">🏠 HOME: 1Q: ${lD.q1Home} | 1H: ${lD.halfHome} | Full: ${lD.fullHome}</div>
+                            <div class="text-white text-sm text-center font-medium">
+                                1Q: ${lD.q1} ${formatRanking(lR.q1)} | 
+                                1H: ${lD.half} ${formatRanking(lR.half)} | 
+                                Full: ${lD.full} ${formatRanking(lR.full)}
+                            </div>
+                            <div class="text-yellow-300 text-sm text-center mt-2 font-bold">
+                                🏠 HOME: 1Q: ${lD.q1Home} ${formatRanking(lR.q1Home)} | 
+                                1H: ${lD.halfHome} ${formatRanking(lR.halfHome)} | 
+                                Full: ${lD.fullHome} ${formatRanking(lR.fullHome)}
+                            </div>
                         </div>
                     ` : ''}
                 </div>
@@ -1488,11 +1550,19 @@ function renderTendencia() {
                     <select id="visitingSelect" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">
                         ${opts.replace(`value="${visitingTeam}"`, `value="${visitingTeam}" selected`)}
                     </select>
-                    ${vD ? `
+                    ${vD && vR ? `
                         <div class="mt-3 bg-black/30 rounded-lg p-3">
                             <div class="text-orange-200 text-sm text-center mb-2 font-semibold">📊 Temporada 2024-25</div>
-                            <div class="text-white text-sm text-center font-medium">1Q: ${vD.q1} | 1H: ${vD.half} | Full: ${vD.full}</div>
-                            <div class="text-yellow-300 text-sm text-center mt-2 font-bold">✈️ AWAY: 1Q: ${vD.q1Away} | 1H: ${vD.halfAway} | Full: ${vD.fullAway}</div>
+                            <div class="text-white text-sm text-center font-medium">
+                                1Q: ${vD.q1} ${formatRanking(vR.q1)} | 
+                                1H: ${vD.half} ${formatRanking(vR.half)} | 
+                                Full: ${vD.full} ${formatRanking(vR.full)}
+                            </div>
+                            <div class="text-yellow-300 text-sm text-center mt-2 font-bold">
+                                ✈️ AWAY: 1Q: ${vD.q1Away} ${formatRanking(vR.q1Away)} | 
+                                1H: ${vD.halfAway} ${formatRanking(vR.halfAway)} | 
+                                Full: ${vD.fullAway} ${formatRanking(vR.fullAway)}
+                            </div>
                         </div>
                     ` : ''}
                 </div>
