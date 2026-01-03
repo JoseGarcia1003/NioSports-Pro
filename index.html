@@ -2146,6 +2146,7 @@ let profitChart = null;
 let teamChart = null;
 
 function renderDashboard() {
+    try {
     const stats = getPicksStats();
     const picks = getPicks().filter(p => p.status !== 'pending').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
     
@@ -2235,7 +2236,7 @@ function renderDashboard() {
                 <span class="text-gray-400 text-xs ml-2">(${t.total} picks)</span>
             </div>
             <div class="flex items-center gap-4">
-                <span class="text-sm ${t.winRate >= 55 ? 'text-green-400' : t.winRate >= 45 ? 'text-yellow-400' : 'text-red-400'}">${t.winRate}%</span>
+                <span class="text-sm ${parseFloat(t.winRate) >= 55 ? 'text-green-400' : parseFloat(t.winRate) >= 45 ? 'text-yellow-400' : 'text-red-400'}">${t.winRate}%</span>
                 <span class="font-bold ${t.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${t.profit >= 0 ? '+' : ''}${t.profit.toFixed(2)}u</span>
             </div>
         </div>
@@ -2317,11 +2318,12 @@ function renderDashboard() {
                         const data = quarterAnalysis[q];
                         const total = data.wins + data.losses;
                         const wr = total > 0 ? ((data.wins / total) * 100).toFixed(0) : '-';
+                        const wrNum = total > 0 ? (data.wins / total) * 100 : 0;
                         return `
                             <div class="bg-black/30 rounded-xl p-3 text-center">
                                 <p class="text-yellow-400 font-bold">${q}</p>
                                 <p class="text-white font-bold">${data.wins}W-${data.losses}L</p>
-                                <p class="text-sm font-semibold ${total > 0 && wr >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
+                                <p class="text-sm font-semibold ${total > 0 && wrNum >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
                                 <p class="text-xs font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
                             </div>
                         `;
@@ -2332,12 +2334,14 @@ function renderDashboard() {
                         const data = quarterAnalysis[p];
                         const total = data.wins + data.losses;
                         const wr = total > 0 ? ((data.wins / total) * 100).toFixed(0) : '-';
-                        const color = p === '1H' ? 'pink' : p === '2H' ? 'orange' : 'green';
+                        const wrNum = total > 0 ? (data.wins / total) * 100 : 0;
+                        const colors = { '1H': 'pink', '2H': 'orange', 'FULL': 'green' };
+                        const color = colors[p];
                         return `
                             <div class="bg-${color}-500/10 rounded-xl p-3 text-center border border-${color}-500/30">
                                 <p class="text-${color}-400 font-bold">${p}</p>
                                 <p class="text-white font-bold">${data.wins}W-${data.losses}L</p>
-                                <p class="text-sm font-semibold ${total > 0 && wr >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
+                                <p class="text-sm font-semibold ${total > 0 && wrNum >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
                                 <p class="text-xs font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
                             </div>
                         `;
@@ -2387,6 +2391,18 @@ function renderDashboard() {
             </div>
         </div>
     `;
+    } catch (error) {
+        console.error('Error en renderDashboard:', error);
+        return `
+            <div class="p-4 max-w-4xl mx-auto">
+                <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
+                <div class="bg-red-500/20 border border-red-500 rounded-xl p-6 text-center">
+                    <p class="text-red-400 text-xl mb-2">⚠️ Error al cargar Dashboard</p>
+                    <p class="text-gray-300 text-sm">${error.message}</p>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // Inicializar gráficos del Dashboard
