@@ -1364,10 +1364,6 @@ function renderTendencia() {
                             <div class="text-white text-sm text-center font-medium">1Q: ${lD.q1} | 1H: ${lD.half} | Full: ${lD.full}</div>
                             <div class="text-yellow-300 text-sm text-center mt-2 font-bold">🏠 HOME: 1Q: ${lD.q1Home} | 1H: ${lD.halfHome} | Full: ${lD.fullHome}</div>
                         </div>
-                        <label class="flex items-center gap-2 mt-2 bg-red-500/20 rounded-lg p-2 cursor-pointer hover:bg-red-500/30 border border-red-500/30">
-                            <input type="checkbox" id="b2b_local" onchange="toggleB2B('local')" ${b2bLocal ? 'checked' : ''} class="w-4 h-4 accent-red-500">
-                            <span class="text-red-300 text-xs font-semibold">⚠️ Back-to-Back (jugó ayer)</span>
-                        </label>
                     ` : ''}
                 </div>
                 <div class="bg-gradient-to-br from-orange-600 to-red-700 p-4 rounded-xl">
@@ -1381,26 +1377,9 @@ function renderTendencia() {
                             <div class="text-white text-sm text-center font-medium">1Q: ${vD.q1} | 1H: ${vD.half} | Full: ${vD.full}</div>
                             <div class="text-yellow-300 text-sm text-center mt-2 font-bold">✈️ AWAY: 1Q: ${vD.q1Away} | 1H: ${vD.halfAway} | Full: ${vD.fullAway}</div>
                         </div>
-                        <label class="flex items-center gap-2 mt-2 bg-red-500/20 rounded-lg p-2 cursor-pointer hover:bg-red-500/30 border border-red-500/30">
-                            <input type="checkbox" id="b2b_visiting" onchange="toggleB2B('visiting')" ${b2bVisiting ? 'checked' : ''} class="w-4 h-4 accent-red-500">
-                            <span class="text-red-300 text-xs font-semibold">⚠️ Back-to-Back (jugó ayer)</span>
-                        </label>
                     ` : ''}
                 </div>
             </div>
-            
-            <!-- ALERTA B2B -->
-            ${(b2bLocal || b2bVisiting) ? `
-                <div class="bg-red-500/20 border border-red-500/50 rounded-xl p-4 mb-4">
-                    <p class="text-red-400 text-sm font-semibold text-center">
-                        ⚠️ <strong>ALERTA B2B:</strong> 
-                        ${b2bLocal && b2bVisiting ? `Ambos equipos en Back-to-Back` : 
-                          b2bLocal ? `${localTeam} está en Back-to-Back (-5% rendimiento esperado)` :
-                          `${visitingTeam} está en Back-to-Back (-5% rendimiento esperado)`}
-                    </p>
-                    <p class="text-red-300 text-xs text-center mt-1">Los equipos en B2B suelen rendir ~5% menos, especialmente en 2da mitad</p>
-                </div>
-            ` : ''}
     `;
     
     if (localTeam && visitingTeam) {
