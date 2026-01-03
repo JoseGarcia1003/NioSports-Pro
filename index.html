@@ -2148,7 +2148,7 @@ let teamChart = null;
 function renderDashboard() {
     try {
     const stats = getPicksStats();
-    const picks = getPicks().filter(p => p.status !== 'pending').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+    const picks = Object.values(PICKS_DATABASE).filter(p => p.status !== 'pending').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
     
     // Calcular profit acumulado para el gráfico
     let profitAcum = 0;
@@ -2195,7 +2195,7 @@ function renderDashboard() {
         .slice(0, 8);
     
     // CLV Stats (si tenemos datos)
-    const picksWithCLV = getPicks().filter(p => p.closingLine && p.line);
+    const picksWithCLV = Object.values(PICKS_DATABASE).filter(p => p.closingLine && p.line);
     let avgCLV = 0;
     if (picksWithCLV.length > 0) {
         const totalCLV = picksWithCLV.reduce((sum, p) => {
@@ -2407,7 +2407,7 @@ function renderDashboard() {
 
 // Inicializar gráficos del Dashboard
 function initDashboardCharts() {
-    const picks = getPicks().filter(p => p.status !== 'pending').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+    const picks = Object.values(PICKS_DATABASE).filter(p => p.status !== 'pending').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
     
     if (picks.length < 3) return;
     
