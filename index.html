@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NioSports Pro v1.1 - Tendencias NBA</title>
+    <title>NioSports Pro v1.2 - Tendencias NBA</title>
     
     <!-- FAVICON - Logo NioSports -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2300c8ff'/%3E%3Cstop offset='50%25' style='stop-color:%23ff3366'/%3E%3Cstop offset='100%25' style='stop-color:%23ff6b35'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%231a1a2e'/%3E%3Ccircle cx='32' cy='32' r='28' fill='none' stroke='url(%23g1)' stroke-width='3'/%3E%3Cpath d='M32 12c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20zm0 36c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16z' fill='%23ff6b35'/%3E%3Cpath d='M32 18c-7.7 0-14 6.3-14 14h4c0-5.5 4.5-10 10-10V18z' fill='%2300c8ff'/%3E%3Cpath d='M32 18v4c5.5 0 10 4.5 10 10h4c0-7.7-6.3-14-14-14z' fill='%23ff3366'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-family='Arial Black' font-size='14' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
@@ -240,38 +240,38 @@ async function loadTeamStatsFromAPI() {
         apiConnected = false;
         showNotification('⚠️ Error cargando stats: usando datos de respaldo', 'warning');
         
-        // Datos de respaldo en caso de error
+        // Datos de respaldo en caso de error (incluye PACE, DEF, O/U)
         TEAM_STATS = {
-            "Nuggets": { fullHome: 126.1, fullAway: 125.5, full: 125.8, q1Home: 32.9, q1Away: 30.5, q1: 31.7, halfHome: 65.7, halfAway: 59.8, half: 62.4 },
-            "Thunder": { fullHome: 121.8, fullAway: 120.8, full: 121.3, q1Home: 30.0, q1Away: 31.4, q1: 30.8, halfHome: 60.8, halfAway: 59.3, half: 60.0 },
-            "Rockets": { fullHome: 121.2, fullAway: 120.1, full: 120.5, q1Home: 29.6, q1Away: 30.6, q1: 30.3, halfHome: 61.0, halfAway: 58.1, half: 59.3 },
-            "Knicks": { fullHome: 123.1, fullAway: 117.1, full: 120.4, q1Home: 32.0, q1Away: 28.2, q1: 30.2, halfHome: 62.6, halfAway: 58.0, half: 60.8 },
-            "Cavaliers": { fullHome: 118.1, fullAway: 123.2, full: 120.2, q1Home: 29.0, q1Away: 32.6, q1: 30.4, halfHome: 54.7, halfAway: 61.3, half: 57.4 },
-            "Spurs": { fullHome: 120.4, fullAway: 119.8, full: 120.1, q1Home: 30.2, q1Away: 31.2, q1: 30.7, halfHome: 60.7, halfAway: 59.5, half: 60.1 },
-            "Jazz": { fullHome: 126.4, fullAway: 110.7, full: 119.9, q1Home: 34.2, q1Away: 23.9, q1: 30.0, halfHome: 64.1, halfAway: 49.2, half: 57.3 },
-            "Bulls": { fullHome: 114.8, fullAway: 123.8, full: 119.7, q1Home: 30.7, q1Away: 29.1, q1: 29.8, halfHome: 59.2, halfAway: 59.2, half: 59.2 },
-            "Heat": { fullHome: 119.1, fullAway: 119.3, full: 119.2, q1Home: 28.9, q1Away: 34.0, q1: 31.5, halfHome: 62.1, halfAway: 65.5, half: 63.7 },
-            "Pistons": { fullHome: 119.5, fullAway: 118.9, full: 119.2, q1Home: 29.6, q1Away: 30.8, q1: 30.2, halfHome: 59.4, halfAway: 60.9, half: 60.2 },
-            "Timberwolves": { fullHome: 115.9, fullAway: 123.0, full: 119.1, q1Home: 29.5, q1Away: 28.5, q1: 29.1, halfHome: 61.4, halfAway: 56.4, half: 58.8 },
-            "Hawks": { fullHome: 116.8, fullAway: 120.5, full: 118.8, q1Home: 31.4, q1Away: 29.5, q1: 30.4, halfHome: 58.0, halfAway: 59.3, half: 58.8 },
-            "Magic": { fullHome: 115.9, fullAway: 118.3, full: 117.2, q1Home: 29.9, q1Away: 31.3, q1: 30.6, halfHome: 58.2, halfAway: 62.8, half: 60.3 },
-            "Trail Blazers": { fullHome: 117.2, fullAway: 117.0, full: 117.1, q1Home: 27.8, q1Away: 29.6, q1: 28.8, halfHome: 57.9, halfAway: 60.1, half: 59.3 },
-            "Lakers": { fullHome: 121.1, fullAway: 114.0, full: 116.9, q1Home: 31.8, q1Away: 28.5, q1: 29.8, halfHome: 63.5, halfAway: 57.8, half: 60.4 },
-            "76ers": { fullHome: 115.0, fullAway: 119.0, full: 116.6, q1Home: 30.5, q1Away: 32.0, q1: 31.1, halfHome: 60.2, halfAway: 64.6, half: 62.0 },
-            "Celtics": { fullHome: 118.6, fullAway: 113.2, full: 116.0, q1Home: 29.8, q1Away: 31.3, q1: 30.5, halfHome: 61.4, halfAway: 59.4, half: 60.4 },
-            "Pelicans": { fullHome: 119.9, fullAway: 109.5, full: 115.5, q1Home: 30.1, q1Away: 24.9, q1: 27.9, halfHome: 58.8, halfAway: 52.5, half: 56.0 },
-            "Hornets": { fullHome: 116.1, fullAway: 114.8, full: 115.4, q1Home: 32.1, q1Away: 28.3, q1: 30.2, halfHome: 59.8, halfAway: 57.2, half: 58.5 },
-            "Grizzlies": { fullHome: 117.2, fullAway: 113.1, full: 115.0, q1Home: 28.9, q1Away: 28.2, q1: 28.5, halfHome: 59.7, halfAway: 52.7, half: 56.2 },
-            "Suns": { fullHome: 116.4, fullAway: 113.2, full: 114.9, q1Home: 28.1, q1Away: 30.8, q1: 29.4, halfHome: 57.7, halfAway: 59.1, half: 58.3 },
-            "Warriors": { fullHome: 118.3, fullAway: 111.5, full: 114.5, q1Home: 27.6, q1Away: 25.8, q1: 26.6, halfHome: 57.2, halfAway: 51.6, half: 54.0 },
-            "Mavericks": { fullHome: 114.6, fullAway: 112.6, full: 113.7, q1Home: 28.9, q1Away: 28.3, q1: 28.6, halfHome: 53.3, halfAway: 54.0, half: 53.6 },
-            "Raptors": { fullHome: 113.0, fullAway: 113.8, full: 113.4, q1Home: 28.6, q1Away: 29.2, q1: 28.9, halfHome: 57.9, halfAway: 57.3, half: 57.6 },
-            "Bucks": { fullHome: 117.1, fullAway: 108.4, full: 113.0, q1Home: 28.3, q1Away: 28.9, q1: 28.6, halfHome: 57.3, halfAway: 55.4, half: 56.4 },
-            "Wizards": { fullHome: 115.3, fullAway: 110.6, full: 112.6, q1Home: 30.2, q1Away: 28.9, q1: 29.5, halfHome: 60.5, halfAway: 54.8, half: 57.4 },
-            "Kings": { fullHome: 110.4, fullAway: 113.4, full: 112.0, q1Home: 27.7, q1Away: 29.1, q1: 28.4, halfHome: 53.0, halfAway: 60.2, half: 57.1 },
-            "Clippers": { fullHome: 112.8, fullAway: 109.9, full: 111.2, q1Home: 30.5, q1Away: 29.5, q1: 30.0, halfHome: 60.7, halfAway: 54.9, half: 57.3 },
-            "Nets": { fullHome: 108.7, fullAway: 109.9, full: 109.3, q1Home: 28.7, q1Away: 27.7, q1: 28.2, halfHome: 54.9, halfAway: 57.5, half: 56.1 },
-            "Pacers": { fullHome: 112.7, fullAway: 105.1, full: 109.2, q1Home: 28.3, q1Away: 26.8, q1: 27.6, halfHome: 56.3, halfAway: 52.4, half: 54.4 }
+            "Nuggets": { fullHome: 126.1, fullAway: 125.5, full: 125.8, q1Home: 32.9, q1Away: 30.5, q1: 31.7, halfHome: 65.7, halfAway: 59.8, half: 62.4, pace: 102.5, oppPpg: 118.2, ouOver: 25, ouUnder: 18 },
+            "Thunder": { fullHome: 121.8, fullAway: 120.8, full: 121.3, q1Home: 30.0, q1Away: 31.4, q1: 30.8, halfHome: 60.8, halfAway: 59.3, half: 60.0, pace: 100.8, oppPpg: 108.5, ouOver: 22, ouUnder: 21 },
+            "Rockets": { fullHome: 121.2, fullAway: 120.1, full: 120.5, q1Home: 29.6, q1Away: 30.6, q1: 30.3, halfHome: 61.0, halfAway: 58.1, half: 59.3, pace: 99.2, oppPpg: 110.8, ouOver: 24, ouUnder: 19 },
+            "Knicks": { fullHome: 123.1, fullAway: 117.1, full: 120.4, q1Home: 32.0, q1Away: 28.2, q1: 30.2, halfHome: 62.6, halfAway: 58.0, half: 60.8, pace: 98.5, oppPpg: 109.2, ouOver: 23, ouUnder: 20 },
+            "Cavaliers": { fullHome: 118.1, fullAway: 123.2, full: 120.2, q1Home: 29.0, q1Away: 32.6, q1: 30.4, halfHome: 54.7, halfAway: 61.3, half: 57.4, pace: 97.8, oppPpg: 107.5, ouOver: 21, ouUnder: 22 },
+            "Spurs": { fullHome: 120.4, fullAway: 119.8, full: 120.1, q1Home: 30.2, q1Away: 31.2, q1: 30.7, halfHome: 60.7, halfAway: 59.5, half: 60.1, pace: 101.2, oppPpg: 117.5, ouOver: 26, ouUnder: 17 },
+            "Jazz": { fullHome: 126.4, fullAway: 110.7, full: 119.9, q1Home: 34.2, q1Away: 23.9, q1: 30.0, halfHome: 64.1, halfAway: 49.2, half: 57.3, pace: 100.5, oppPpg: 119.8, ouOver: 24, ouUnder: 19 },
+            "Bulls": { fullHome: 114.8, fullAway: 123.8, full: 119.7, q1Home: 30.7, q1Away: 29.1, q1: 29.8, halfHome: 59.2, halfAway: 59.2, half: 59.2, pace: 99.8, oppPpg: 116.2, ouOver: 22, ouUnder: 21 },
+            "Heat": { fullHome: 119.1, fullAway: 119.3, full: 119.2, q1Home: 28.9, q1Away: 34.0, q1: 31.5, halfHome: 62.1, halfAway: 65.5, half: 63.7, pace: 97.2, oppPpg: 112.5, ouOver: 20, ouUnder: 23 },
+            "Pistons": { fullHome: 119.5, fullAway: 118.9, full: 119.2, q1Home: 29.6, q1Away: 30.8, q1: 30.2, halfHome: 59.4, halfAway: 60.9, half: 60.2, pace: 100.2, oppPpg: 120.5, ouOver: 27, ouUnder: 16 },
+            "Timberwolves": { fullHome: 115.9, fullAway: 123.0, full: 119.1, q1Home: 29.5, q1Away: 28.5, q1: 29.1, halfHome: 61.4, halfAway: 56.4, half: 58.8, pace: 98.8, oppPpg: 108.2, ouOver: 19, ouUnder: 24 },
+            "Hawks": { fullHome: 116.8, fullAway: 120.5, full: 118.8, q1Home: 31.4, q1Away: 29.5, q1: 30.4, halfHome: 58.0, halfAway: 59.3, half: 58.8, pace: 101.5, oppPpg: 118.8, ouOver: 25, ouUnder: 18 },
+            "Magic": { fullHome: 115.9, fullAway: 118.3, full: 117.2, q1Home: 29.9, q1Away: 31.3, q1: 30.6, halfHome: 58.2, halfAway: 62.8, half: 60.3, pace: 96.5, oppPpg: 106.5, ouOver: 18, ouUnder: 25 },
+            "Trail Blazers": { fullHome: 117.2, fullAway: 117.0, full: 117.1, q1Home: 27.8, q1Away: 29.6, q1: 28.8, halfHome: 57.9, halfAway: 60.1, half: 59.3, pace: 99.5, oppPpg: 119.2, ouOver: 23, ouUnder: 20 },
+            "Lakers": { fullHome: 121.1, fullAway: 114.0, full: 116.9, q1Home: 31.8, q1Away: 28.5, q1: 29.8, halfHome: 63.5, halfAway: 57.8, half: 60.4, pace: 100.8, oppPpg: 114.5, ouOver: 21, ouUnder: 22 },
+            "76ers": { fullHome: 115.0, fullAway: 119.0, full: 116.6, q1Home: 30.5, q1Away: 32.0, q1: 31.1, halfHome: 60.2, halfAway: 64.6, half: 62.0, pace: 98.2, oppPpg: 115.8, ouOver: 22, ouUnder: 21 },
+            "Celtics": { fullHome: 118.6, fullAway: 113.2, full: 116.0, q1Home: 29.8, q1Away: 31.3, q1: 30.5, halfHome: 61.4, halfAway: 59.4, half: 60.4, pace: 99.5, oppPpg: 109.8, ouOver: 20, ouUnder: 23 },
+            "Pelicans": { fullHome: 119.9, fullAway: 109.5, full: 115.5, q1Home: 30.1, q1Away: 24.9, q1: 27.9, halfHome: 58.8, halfAway: 52.5, half: 56.0, pace: 98.8, oppPpg: 116.5, ouOver: 21, ouUnder: 22 },
+            "Hornets": { fullHome: 116.1, fullAway: 114.8, full: 115.4, q1Home: 32.1, q1Away: 28.3, q1: 30.2, halfHome: 59.8, halfAway: 57.2, half: 58.5, pace: 101.8, oppPpg: 121.2, ouOver: 26, ouUnder: 17 },
+            "Grizzlies": { fullHome: 117.2, fullAway: 113.1, full: 115.0, q1Home: 28.9, q1Away: 28.2, q1: 28.5, halfHome: 59.7, halfAway: 52.7, half: 56.2, pace: 99.2, oppPpg: 113.8, ouOver: 20, ouUnder: 23 },
+            "Suns": { fullHome: 116.4, fullAway: 113.2, full: 114.9, q1Home: 28.1, q1Away: 30.8, q1: 29.4, halfHome: 57.7, halfAway: 59.1, half: 58.3, pace: 98.5, oppPpg: 115.2, ouOver: 22, ouUnder: 21 },
+            "Warriors": { fullHome: 118.3, fullAway: 111.5, full: 114.5, q1Home: 27.6, q1Away: 25.8, q1: 26.6, halfHome: 57.2, halfAway: 51.6, half: 54.0, pace: 100.2, oppPpg: 113.5, ouOver: 19, ouUnder: 24 },
+            "Mavericks": { fullHome: 114.6, fullAway: 112.6, full: 113.7, q1Home: 28.9, q1Away: 28.3, q1: 28.6, halfHome: 53.3, halfAway: 54.0, half: 53.6, pace: 99.8, oppPpg: 112.8, ouOver: 21, ouUnder: 22 },
+            "Raptors": { fullHome: 113.0, fullAway: 113.8, full: 113.4, q1Home: 28.6, q1Away: 29.2, q1: 28.9, halfHome: 57.9, halfAway: 57.3, half: 57.6, pace: 98.5, oppPpg: 118.5, ouOver: 23, ouUnder: 20 },
+            "Bucks": { fullHome: 117.1, fullAway: 108.4, full: 113.0, q1Home: 28.3, q1Away: 28.9, q1: 28.6, halfHome: 57.3, halfAway: 55.4, half: 56.4, pace: 99.2, oppPpg: 114.2, ouOver: 22, ouUnder: 21 },
+            "Wizards": { fullHome: 115.3, fullAway: 110.6, full: 112.6, q1Home: 30.2, q1Away: 28.9, q1: 29.5, halfHome: 60.5, halfAway: 54.8, half: 57.4, pace: 100.5, oppPpg: 122.5, ouOver: 28, ouUnder: 15 },
+            "Kings": { fullHome: 110.4, fullAway: 113.4, full: 112.0, q1Home: 27.7, q1Away: 29.1, q1: 28.4, halfHome: 53.0, halfAway: 60.2, half: 57.1, pace: 101.2, oppPpg: 117.8, ouOver: 24, ouUnder: 19 },
+            "Clippers": { fullHome: 112.8, fullAway: 109.9, full: 111.2, q1Home: 30.5, q1Away: 29.5, q1: 30.0, halfHome: 60.7, halfAway: 54.9, half: 57.3, pace: 97.5, oppPpg: 110.5, ouOver: 18, ouUnder: 25 },
+            "Nets": { fullHome: 108.7, fullAway: 109.9, full: 109.3, q1Home: 28.7, q1Away: 27.7, q1: 28.2, halfHome: 54.9, halfAway: 57.5, half: 56.1, pace: 98.2, oppPpg: 117.2, ouOver: 22, ouUnder: 21 },
+            "Pacers": { fullHome: 112.7, fullAway: 105.1, full: 109.2, q1Home: 28.3, q1Away: 26.8, q1: 27.6, halfHome: 56.3, halfAway: 52.4, half: 54.4, pace: 102.8, oppPpg: 119.5, ouOver: 25, ouUnder: 18 }
         };
         statsSource = 'Datos de respaldo (offline)';
     }
@@ -739,7 +739,7 @@ function checkForValuePicks() {
             const odds = oddsMap[period];
             const ev = odds ? calcEV(prob, odds) : null;
             
-            if (prob && prob >= 70) {
+            if (prob && prob >= 75) {
                 showNotification(`🔥 VALOR ALTO en ${period}: ${prob}% ${type} ${line}`, 'value');
                 
                 // Guardar automáticamente en VALUE_PICKS
@@ -928,19 +928,30 @@ function getAllTeamRankings(teamName) {
         halfAway: getTeamRanking(teamName, 'halfAway'),
         q1: getTeamRanking(teamName, 'q1'),
         q1Home: getTeamRanking(teamName, 'q1Home'),
-        q1Away: getTeamRanking(teamName, 'q1Away')
+        q1Away: getTeamRanking(teamName, 'q1Away'),
+        // Nuevas stats
+        pace: getTeamRanking(teamName, 'pace'),
+        oppPpg: getTeamRanking(teamName, 'oppPpg')
     };
 }
 
 // Formatear ranking con color según posición
-function formatRanking(rank, totalTeams = 30) {
+function formatRanking(rank, inverse = false) {
     if (!rank) return '';
     
-    // Color según posición (verde = top, amarillo = medio, rojo = bajo)
+    // Para stats defensivas, menor rank = mejor (inverse = true)
     let colorClass = '';
-    if (rank <= 10) colorClass = 'text-green-400'; // Top 10
-    else if (rank <= 20) colorClass = 'text-yellow-400'; // Medio
-    else colorClass = 'text-red-400'; // Bottom 10
+    if (inverse) {
+        // Inverso: #1 = mejor defensa (permite menos puntos)
+        if (rank <= 10) colorClass = 'text-green-400';
+        else if (rank <= 20) colorClass = 'text-yellow-400';
+        else colorClass = 'text-red-400';
+    } else {
+        // Normal: #1 = más puntos
+        if (rank <= 10) colorClass = 'text-green-400';
+        else if (rank <= 20) colorClass = 'text-yellow-400';
+        else colorClass = 'text-red-400';
+    }
     
     return `<span class="${colorClass} text-sm font-black">#${rank}</span>`;
 }
@@ -1344,7 +1355,7 @@ function renderHome() {
                     ${LOGO_SVG}
                     <div>
                         <h1 class="text-4xl md:text-5xl font-black text-white font-orbitron">NIOSPORTS</h1>
-                        <h2 class="text-xl font-bold gradient-text font-orbitron">PRO v1.1</h2>
+                        <h2 class="text-xl font-bold gradient-text font-orbitron">PRO v1.2</h2>
                     </div>
                 </div>
                 <p class="text-gray-400 text-sm">Tu herramienta profesional de análisis NBA con IA</p>
@@ -1545,6 +1556,23 @@ function renderTendencia() {
                                     <div>Full: ${lD.fullHome} ${formatRanking(lR.fullHome)}</div>
                                 </div>
                             </div>
+                            <!-- Stats Avanzadas -->
+                            <div class="border-t border-white/20 pt-2 mt-2">
+                                <div class="grid grid-cols-3 gap-1 text-center text-xs">
+                                    <div class="bg-blue-500/20 rounded p-1">
+                                        <span class="text-blue-300">⚡ PACE</span>
+                                        <p class="text-white font-bold">${lD.pace || '-'} ${formatRanking(lR.pace)}</p>
+                                    </div>
+                                    <div class="bg-red-500/20 rounded p-1">
+                                        <span class="text-red-300">🛡️ DEF</span>
+                                        <p class="text-white font-bold">${lD.oppPpg || '-'} ${formatRanking(lR.oppPpg, true)}</p>
+                                    </div>
+                                    <div class="bg-purple-500/20 rounded p-1">
+                                        <span class="text-purple-300">📊 O/U</span>
+                                        <p class="text-white font-bold">${lD.ouOver || 0}-${lD.ouUnder || 0}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     ` : ''}
                 </div>
@@ -1569,6 +1597,23 @@ function renderTendencia() {
                                     <div>Full: ${vD.fullAway} ${formatRanking(vR.fullAway)}</div>
                                 </div>
                             </div>
+                            <!-- Stats Avanzadas -->
+                            <div class="border-t border-white/20 pt-2 mt-2">
+                                <div class="grid grid-cols-3 gap-1 text-center text-xs">
+                                    <div class="bg-blue-500/20 rounded p-1">
+                                        <span class="text-blue-300">⚡ PACE</span>
+                                        <p class="text-white font-bold">${vD.pace || '-'} ${formatRanking(vR.pace)}</p>
+                                    </div>
+                                    <div class="bg-red-500/20 rounded p-1">
+                                        <span class="text-red-300">🛡️ DEF</span>
+                                        <p class="text-white font-bold">${vD.oppPpg || '-'} ${formatRanking(vR.oppPpg, true)}</p>
+                                    </div>
+                                    <div class="bg-purple-500/20 rounded p-1">
+                                        <span class="text-purple-300">📊 O/U</span>
+                                        <p class="text-white font-bold">${vD.ouOver || 0}-${vD.ouUnder || 0}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     ` : ''}
                 </div>
@@ -1576,22 +1621,60 @@ function renderTendencia() {
     `;
     
     if (localTeam && visitingTeam) {
+        // Calcular O/U combinado
+        const localOU = lD ? { over: lD.ouOver || 0, under: lD.ouUnder || 0 } : { over: 0, under: 0 };
+        const visitOU = vD ? { over: vD.ouOver || 0, under: vD.ouUnder || 0 } : { over: 0, under: 0 };
+        const combinedOver = localOU.over + visitOU.over;
+        const combinedUnder = localOU.under + visitOU.under;
+        const combinedTotal = combinedOver + combinedUnder;
+        const overPct = combinedTotal > 0 ? ((combinedOver / combinedTotal) * 100).toFixed(0) : 50;
+        
+        // Calcular líneas sugeridas (redondeadas a .5)
+        const suggestedQ1 = (Math.round(parseFloat(trends.q1) * 2) / 2).toFixed(1);
+        const suggestedHalf = (Math.round(parseFloat(trends.half) * 2) / 2).toFixed(1);
+        const suggestedFull = (Math.round(parseFloat(trends.full) * 2) / 2).toFixed(1);
+        
         html += `
             <div class="bg-white rounded-2xl p-3 md:p-5 shadow-xl mb-6">
                 <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-2 text-center">📈 TENDENCIA TEMPORADA 2025-26</h2>
                 <p class="text-center text-gray-500 text-xs md:text-sm mb-4">${localTeam} (HOME) + ${visitingTeam} (AWAY)</p>
-                <div class="grid grid-cols-3 gap-2 md:gap-4">
+                <div class="grid grid-cols-3 gap-2 md:gap-4 mb-4">
                     <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl p-3 md:p-4 text-center">
                         <p class="text-xs md:text-sm font-bold text-white/90">1Q</p>
                         <p class="text-2xl md:text-4xl font-black text-white">${trends.q1}</p>
+                        <p class="text-xs text-white/70 mt-1">Línea: ${suggestedQ1}</p>
                     </div>
                     <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl p-3 md:p-4 text-center">
                         <p class="text-xs md:text-sm font-bold text-white/90">1H</p>
                         <p class="text-2xl md:text-4xl font-black text-white">${trends.half}</p>
+                        <p class="text-xs text-white/70 mt-1">Línea: ${suggestedHalf}</p>
                     </div>
                     <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-3 md:p-4 text-center">
                         <p class="text-xs md:text-sm font-bold text-white/90">FULL</p>
                         <p class="text-2xl md:text-4xl font-black text-white">${trends.full}</p>
+                        <p class="text-xs text-white/70 mt-1">Línea: ${suggestedFull}</p>
+                    </div>
+                </div>
+                
+                <!-- O/U Record Combinado -->
+                <div class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-3 md:p-4">
+                    <div class="flex justify-between items-center">
+                        <div class="text-center flex-1">
+                            <p class="text-xs text-gray-600 font-semibold">📊 O/U RECORD COMBINADO</p>
+                            <p class="text-xl md:text-2xl font-black ${parseInt(overPct) >= 55 ? 'text-green-600' : parseInt(overPct) <= 45 ? 'text-red-600' : 'text-gray-700'}">
+                                ${combinedOver}O - ${combinedUnder}U
+                            </p>
+                        </div>
+                        <div class="text-center px-4 border-l border-gray-300">
+                            <p class="text-xs text-gray-500">OVER %</p>
+                            <p class="text-2xl md:text-3xl font-black ${parseInt(overPct) >= 55 ? 'text-green-600' : parseInt(overPct) <= 45 ? 'text-red-600' : 'text-gray-700'}">${overPct}%</p>
+                        </div>
+                        <div class="text-center pl-4 border-l border-gray-300">
+                            <p class="text-xs text-gray-500">Tendencia</p>
+                            <p class="text-lg font-bold ${parseInt(overPct) >= 55 ? 'text-green-600' : parseInt(overPct) <= 45 ? 'text-red-600' : 'text-gray-600'}">
+                                ${parseInt(overPct) >= 55 ? '🔥 OVER' : parseInt(overPct) <= 45 ? '❄️ UNDER' : '➡️ NEUTRAL'}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1898,14 +1981,6 @@ function renderCalc(id, label, trend, prob, type, line, odds) {
                         <span class="text-xs text-gray-500">Edge vs Casa</span>
                         <span class="font-bold text-sm ${parseFloat(analysis.edge) >= 0 ? 'text-green-600' : 'text-red-600'}">${parseFloat(analysis.edge) >= 0 ? '+' : ''}${analysis.edge}%</span>
                     </div>
-                    
-                    <!-- Indicador ML -->
-                    ${ML_MODEL.getConfidence() > 0 ? `
-                    <div class="flex justify-between items-center bg-emerald-50 rounded-lg px-3 py-1 border border-emerald-200">
-                        <span class="text-xs text-emerald-700">🤖 IA Ajuste</span>
-                        <span class="font-bold text-xs text-emerald-600">${ML_MODEL.getConfidence()}% confianza</span>
-                    </div>
-                    ` : ''}
                 ` : `
                     <div class="bg-blue-50 rounded-lg px-3 py-2 text-center">
                         <span class="text-xs text-blue-600">⬇️ Ingresa la cuota para ver EV</span>
@@ -2162,7 +2237,7 @@ function renderBestPicks() {
             <div class="text-center py-10">
                 <div class="text-6xl mb-4">🔍</div>
                 <p class="text-gray-400 text-lg mb-2">No hay picks de valor detectados</p>
-                <p class="text-gray-500 text-sm">Los picks aparecerán automáticamente cuando analices matchups en la calculadora y se detecte valor alto (70%+)</p>
+                <p class="text-gray-500 text-sm">Los picks aparecerán automáticamente cuando analices matchups en la calculadora y se detecte valor alto (75%+)</p>
                 <button onclick="navigateTo('tendencia')" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-bold">
                     📈 Ir a analizar matchups
                 </button>
@@ -2559,75 +2634,59 @@ function renderDashboard() {
                 ${teamStatsHtml}
             </div>
             
-            <!-- ANÁLISIS POR PERÍODO EXTENDIDO -->
+            <!-- ANÁLISIS POR PERÍODO -->
             <div class="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-2xl p-3 md:p-5 mb-6 border border-purple-500/50">
-                <h3 class="text-base md:text-lg font-bold text-white mb-4">📊 Análisis por Período</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                    ${['1Q', '2Q', '3Q', '4Q'].map(q => {
-                        const data = quarterAnalysis[q];
-                        const total = data.wins + data.losses;
-                        const wr = total > 0 ? ((data.wins / total) * 100).toFixed(0) : '-';
-                        const wrNum = total > 0 ? (data.wins / total) * 100 : 0;
-                        return `
-                            <div class="bg-black/30 rounded-xl p-2 md:p-3 text-center">
-                                <p class="text-yellow-400 font-bold text-sm md:text-base">${q}</p>
-                                <p class="text-white font-bold text-xs md:text-sm">${data.wins}W-${data.losses}L</p>
-                                <p class="text-xs md:text-sm font-semibold ${total > 0 && wrNum >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
-                                <p class="text-xs font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    ${['1H', '2H', 'FULL'].map(p => {
+                <h3 class="text-base md:text-lg font-bold text-white mb-4">📊 Rendimiento por Período</h3>
+                <div class="grid grid-cols-3 gap-2 md:gap-3">
+                    ${['1Q', '1H', 'FULL'].map(p => {
                         const data = quarterAnalysis[p];
                         const total = data.wins + data.losses;
                         const wr = total > 0 ? ((data.wins / total) * 100).toFixed(0) : '-';
                         const wrNum = total > 0 ? (data.wins / total) * 100 : 0;
-                        const colors = { '1H': 'pink', '2H': 'orange', 'FULL': 'green' };
+                        const colors = { '1Q': 'yellow', '1H': 'pink', 'FULL': 'green' };
                         const color = colors[p];
                         return `
-                            <div class="bg-${color}-500/10 rounded-xl p-2 md:p-3 text-center border border-${color}-500/30">
-                                <p class="text-${color}-400 font-bold text-sm md:text-base">${p}</p>
-                                <p class="text-white font-bold text-xs md:text-sm">${data.wins}W-${data.losses}L</p>
-                                <p class="text-xs md:text-sm font-semibold ${total > 0 && wrNum >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
-                                <p class="text-xs font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
+                            <div class="bg-${color}-500/10 rounded-xl p-3 md:p-4 text-center border border-${color}-500/30">
+                                <p class="text-${color}-400 font-bold text-lg md:text-xl">${p}</p>
+                                <p class="text-white font-bold text-sm md:text-base">${data.wins}W-${data.losses}L</p>
+                                <p class="text-base md:text-lg font-black ${total > 0 && wrNum >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
+                                <p class="text-xs md:text-sm font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
                             </div>
                         `;
                     }).join('')}
                 </div>
             </div>
             
-            <!-- MODELO DE IA - PREDICTOR -->
+            <!-- ANÁLISIS DE PATRONES PERSONALES -->
             <div class="bg-gradient-to-br from-emerald-600/20 to-teal-700/20 rounded-2xl p-3 md:p-5 mb-6 border border-emerald-500/50">
-                <h3 class="text-base md:text-lg font-bold text-white mb-3">🤖 Modelo IA - Predictor de Valor</h3>
-                <p class="text-gray-300 text-xs md:text-sm mb-4">Modelo de regresión entrenado con tus datos para predecir qué picks tienen mayor probabilidad de éxito.</p>
+                <h3 class="text-base md:text-lg font-bold text-white mb-3">📊 Análisis de Patrones Personales</h3>
+                <p class="text-gray-300 text-xs md:text-sm mb-4">Análisis de tus picks históricos para identificar tus fortalezas y áreas de mejora.</p>
                 
                 <div class="bg-black/30 rounded-xl p-3 md:p-4">
                     <div class="grid grid-cols-2 gap-3 md:gap-4 mb-4">
                         <div class="text-center">
-                            <p class="text-emerald-400 font-bold text-sm md:text-lg">Variables del Modelo:</p>
+                            <p class="text-emerald-400 font-bold text-sm md:text-lg">Lo que analizo:</p>
                             <ul class="text-gray-300 text-xs text-left mt-2 space-y-1">
-                                <li>• Tendencia combinada</li>
-                                <li>• Diferencia vs línea</li>
-                                <li>• Z-Score calculado</li>
-                                <li>• EV esperado</li>
-                                <li>• Historial H2H</li>
+                                <li>• Períodos más rentables</li>
+                                <li>• OVER vs UNDER performance</li>
+                                <li>• Equipos donde aciertas más</li>
+                                <li>• Rachas y consistencia</li>
+                                <li>• ROI por tipo de apuesta</li>
                             </ul>
                         </div>
                         <div class="text-center">
-                            <p class="text-emerald-400 font-bold text-lg">Estado:</p>
-                            <p class="text-2xl mt-2">${picks.length >= 20 ? '✅' : '⏳'}</p>
-                            <p class="text-gray-400 text-xs mt-1">${picks.length >= 20 ? 'Modelo activo' : `${picks.length}/20 picks para activar`}</p>
+                            <p class="text-emerald-400 font-bold text-sm md:text-lg">Datos:</p>
+                            <p class="text-3xl md:text-4xl mt-2 font-black text-white">${picks.length}</p>
+                            <p class="text-gray-400 text-xs mt-1">picks analizados</p>
                         </div>
                     </div>
-                    ${picks.length >= 20 ? `
+                    ${picks.length >= 10 ? `
                         <div class="bg-emerald-500/20 rounded-lg p-3 border border-emerald-500/30">
-                            <p class="text-emerald-400 text-sm text-center">🎯 El modelo está analizando tus patrones de éxito y ajustando las predicciones.</p>
+                            <p class="text-emerald-400 text-xs md:text-sm text-center">✅ Suficientes datos. Revisa las secciones anteriores para ver tus patrones.</p>
                         </div>
                     ` : `
                         <div class="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/30">
-                            <p class="text-yellow-400 text-xs text-center">📊 Registra más picks para que el modelo aprenda de tus resultados.</p>
+                            <p class="text-yellow-400 text-xs text-center">📊 Registra al menos 10 picks para obtener análisis más precisos.</p>
                         </div>
                     `}
                 </div>
@@ -2635,8 +2694,8 @@ function renderDashboard() {
             
             <!-- CRÉDITOS -->
             <div class="bg-white/5 rounded-xl p-4 text-center">
-                <p class="text-gray-400 text-xs">NioSports Pro v1.1 - Desarrollado con IA por Claude (Anthropic)</p>
-                <p class="text-gray-500 text-xs mt-1">Dashboard, CLV Tracker, Análisis Extendido, Modelo Predictivo</p>
+                <p class="text-gray-400 text-xs">NioSports Pro v1.2 - Desarrollado con IA por Claude (Anthropic)</p>
+                <p class="text-gray-500 text-xs mt-1">Dashboard Pro, CLV Tracker, Rankings, Análisis Avanzado</p>
             </div>
         </div>
     `;
