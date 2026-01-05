@@ -1556,23 +1556,6 @@ function renderTendencia() {
                                     <div>Full: ${lD.fullHome} ${formatRanking(lR.fullHome)}</div>
                                 </div>
                             </div>
-                            <!-- Stats Avanzadas -->
-                            <div class="border-t border-white/20 pt-2 mt-2">
-                                <div class="grid grid-cols-3 gap-1 text-center text-xs">
-                                    <div class="bg-blue-500/20 rounded p-1">
-                                        <span class="text-blue-300">⚡ PACE</span>
-                                        <p class="text-white font-bold">${lD.pace || '-'} ${formatRanking(lR.pace)}</p>
-                                    </div>
-                                    <div class="bg-red-500/20 rounded p-1">
-                                        <span class="text-red-300">🛡️ DEF</span>
-                                        <p class="text-white font-bold">${lD.oppPpg || '-'} ${formatRanking(lR.oppPpg, true)}</p>
-                                    </div>
-                                    <div class="bg-purple-500/20 rounded p-1">
-                                        <span class="text-purple-300">📊 O/U</span>
-                                        <p class="text-white font-bold">${lD.ouOver || 0}-${lD.ouUnder || 0}</p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     ` : ''}
                 </div>
@@ -1597,23 +1580,6 @@ function renderTendencia() {
                                     <div>Full: ${vD.fullAway} ${formatRanking(vR.fullAway)}</div>
                                 </div>
                             </div>
-                            <!-- Stats Avanzadas -->
-                            <div class="border-t border-white/20 pt-2 mt-2">
-                                <div class="grid grid-cols-3 gap-1 text-center text-xs">
-                                    <div class="bg-blue-500/20 rounded p-1">
-                                        <span class="text-blue-300">⚡ PACE</span>
-                                        <p class="text-white font-bold">${vD.pace || '-'} ${formatRanking(vR.pace)}</p>
-                                    </div>
-                                    <div class="bg-red-500/20 rounded p-1">
-                                        <span class="text-red-300">🛡️ DEF</span>
-                                        <p class="text-white font-bold">${vD.oppPpg || '-'} ${formatRanking(vR.oppPpg, true)}</p>
-                                    </div>
-                                    <div class="bg-purple-500/20 rounded p-1">
-                                        <span class="text-purple-300">📊 O/U</span>
-                                        <p class="text-white font-bold">${vD.ouOver || 0}-${vD.ouUnder || 0}</p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     ` : ''}
                 </div>
@@ -1621,14 +1587,6 @@ function renderTendencia() {
     `;
     
     if (localTeam && visitingTeam) {
-        // Calcular O/U combinado
-        const localOU = lD ? { over: lD.ouOver || 0, under: lD.ouUnder || 0 } : { over: 0, under: 0 };
-        const visitOU = vD ? { over: vD.ouOver || 0, under: vD.ouUnder || 0 } : { over: 0, under: 0 };
-        const combinedOver = localOU.over + visitOU.over;
-        const combinedUnder = localOU.under + visitOU.under;
-        const combinedTotal = combinedOver + combinedUnder;
-        const overPct = combinedTotal > 0 ? ((combinedOver / combinedTotal) * 100).toFixed(0) : 50;
-        
         // Calcular líneas sugeridas (redondeadas a .5)
         const suggestedQ1 = (Math.round(parseFloat(trends.q1) * 2) / 2).toFixed(1);
         const suggestedHalf = (Math.round(parseFloat(trends.half) * 2) / 2).toFixed(1);
@@ -1638,7 +1596,7 @@ function renderTendencia() {
             <div class="bg-white rounded-2xl p-3 md:p-5 shadow-xl mb-6">
                 <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-2 text-center">📈 TENDENCIA TEMPORADA 2025-26</h2>
                 <p class="text-center text-gray-500 text-xs md:text-sm mb-4">${localTeam} (HOME) + ${visitingTeam} (AWAY)</p>
-                <div class="grid grid-cols-3 gap-2 md:gap-4 mb-4">
+                <div class="grid grid-cols-3 gap-2 md:gap-4">
                     <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl p-3 md:p-4 text-center">
                         <p class="text-xs md:text-sm font-bold text-white/90">1Q</p>
                         <p class="text-2xl md:text-4xl font-black text-white">${trends.q1}</p>
@@ -1653,28 +1611,6 @@ function renderTendencia() {
                         <p class="text-xs md:text-sm font-bold text-white/90">FULL</p>
                         <p class="text-2xl md:text-4xl font-black text-white">${trends.full}</p>
                         <p class="text-xs text-white/70 mt-1">Línea: ${suggestedFull}</p>
-                    </div>
-                </div>
-                
-                <!-- O/U Record Combinado -->
-                <div class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-3 md:p-4">
-                    <div class="flex justify-between items-center">
-                        <div class="text-center flex-1">
-                            <p class="text-xs text-gray-600 font-semibold">📊 O/U RECORD COMBINADO</p>
-                            <p class="text-xl md:text-2xl font-black ${parseInt(overPct) >= 55 ? 'text-green-600' : parseInt(overPct) <= 45 ? 'text-red-600' : 'text-gray-700'}">
-                                ${combinedOver}O - ${combinedUnder}U
-                            </p>
-                        </div>
-                        <div class="text-center px-4 border-l border-gray-300">
-                            <p class="text-xs text-gray-500">OVER %</p>
-                            <p class="text-2xl md:text-3xl font-black ${parseInt(overPct) >= 55 ? 'text-green-600' : parseInt(overPct) <= 45 ? 'text-red-600' : 'text-gray-700'}">${overPct}%</p>
-                        </div>
-                        <div class="text-center pl-4 border-l border-gray-300">
-                            <p class="text-xs text-gray-500">Tendencia</p>
-                            <p class="text-lg font-bold ${parseInt(overPct) >= 55 ? 'text-green-600' : parseInt(overPct) <= 45 ? 'text-red-600' : 'text-gray-600'}">
-                                ${parseInt(overPct) >= 55 ? '🔥 OVER' : parseInt(overPct) <= 45 ? '❄️ UNDER' : '➡️ NEUTRAL'}
-                            </p>
-                        </div>
                     </div>
                 </div>
             </div>
