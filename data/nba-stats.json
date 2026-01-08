@@ -601,12 +601,11 @@
       "halfAwayRank": 30
     }
   },
-  "lastUpdated": "2026-01-08T18:56:35.838Z",
+  "lastUpdated": "2026-01-08T20:14:41.671Z",
   "source": "TeamRankings.com",
-  "version": "1.0",
+  "version": "2.0",
   "stats": {
     "teamsCount": 30,
-    "scrapedUrls": 9,
-    "scrapeDurationMs": 19654
+    "scrapedAt": "2026-01-08T20:14:41.671Z"
   }
 }
