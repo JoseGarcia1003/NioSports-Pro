@@ -1,32 +1,30 @@
 name: 🏀 Scrape NBA Stats
 
 on:
-  workflow_dispatch:  # Permite ejecutar manualmente
+  workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *'  # Cada 6 horas: 00:00, 06:00, 12:00, 18:00 UTC
+    - cron: '0 */6 * * *'
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
     
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
         
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
+          
       - name: 📦 Install dependencies
-        run: |
-          npm cache clean --force
-          npm install --no-package-lock    
+        run: npm install axios cheerio
         
       - name: 🕷️ Run scraper
         run: node scrape.js
         
-      - name: 📤 Commit and push changes
+      - name: 📤 Commit changes
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
