@@ -1,0 +1,13 @@
+{
+  "name": "niosports-scraper",
+  "version": "1.0.0",
+  "description": "NBA Stats Scraper from TeamRankings",
+  "main": "scrape.js",
+  "scripts": {
+    "scrape": "node scrape.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}
