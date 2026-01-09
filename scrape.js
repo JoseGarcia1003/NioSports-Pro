@@ -1,27 +1,41 @@
-// NioSports NBA Stats Scraper v3.0
-// URLs CORREGIDAS para Home/Away
+// NioSports NBA Stats Scraper v4.0 - MODELO AVANZADO
+// Incluye: PPG, Q1, 1H, Home/Away, PACE, Defensive Rating (OppPPG)
 
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs').promises;
 const path = require('path');
 
-// URLs CORREGIDAS de TeamRankings
+// URLs de TeamRankings - TODAS LAS ESTADÍSTICAS NECESARIAS
 const URLS = {
-  // General (funcionan)
+  // Puntos por juego (Ofensivo)
   ppg: 'https://www.teamrankings.com/nba/stat/points-per-game',
-  q1: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game',
-  half: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game',
-  
-  // Home - URLs correctas
   ppgHome: 'https://www.teamrankings.com/nba/stat/points-per-game?date=2025-01-10&home_away=home',
-  q1Home: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game?date=2025-01-10&home_away=home',
-  halfHome: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game?date=2025-01-10&home_away=home',
-  
-  // Away - URLs correctas
   ppgAway: 'https://www.teamrankings.com/nba/stat/points-per-game?date=2025-01-10&home_away=away',
+  
+  // Primer cuarto
+  q1: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game',
+  q1Home: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game?date=2025-01-10&home_away=home',
   q1Away: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game?date=2025-01-10&home_away=away',
-  halfAway: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game?date=2025-01-10&home_away=away'
+  
+  // Primera mitad
+  half: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game',
+  halfHome: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game?date=2025-01-10&home_away=home',
+  halfAway: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game?date=2025-01-10&home_away=away',
+  
+  // PACE (Posesiones por juego) - NUEVO
+  pace: 'https://www.teamrankings.com/nba/stat/possessions-per-game',
+  
+  // Defensive Rating - Puntos permitidos (OppPPG) - NUEVO
+  oppPpg: 'https://www.teamrankings.com/nba/stat/opponent-points-per-game',
+  oppPpgHome: 'https://www.teamrankings.com/nba/stat/opponent-points-per-game?date=2025-01-10&home_away=home',
+  oppPpgAway: 'https://www.teamrankings.com/nba/stat/opponent-points-per-game?date=2025-01-10&home_away=away',
+  
+  // Defensive Q1 - NUEVO
+  oppQ1: 'https://www.teamrankings.com/nba/stat/opponent-1st-quarter-points-per-game',
+  
+  // Defensive 1H - NUEVO
+  oppHalf: 'https://www.teamrankings.com/nba/stat/opponent-1st-half-points-per-game'
 };
 
 const TEAM_NAME_MAP = {
@@ -57,23 +71,20 @@ async function scrapeTable(url, statName) {
     const data = {};
     let rank = 0;
 
-    // Buscar filas en la tabla
     $('table tbody tr').each((index, row) => {
       const cells = $(row).find('td');
       if (cells.length < 3) return;
       
-      // Columna 2: nombre del equipo
       const teamCell = $(cells[1]);
       let teamName = teamCell.find('a').text().trim() || teamCell.text().trim();
       const normalized = normalizeTeamName(teamName);
       
       if (!normalized) return;
       
-      // Columna 3: valor de la temporada actual (2024-25)
       const valueText = $(cells[2]).text().trim();
       const value = parseFloat(valueText);
       
-      if (!isNaN(value) && value > 10 && value < 180) {
+      if (!isNaN(value) && value > 0 && value < 200) {
         rank++;
         data[normalized] = { value, rank };
       }
@@ -88,8 +99,8 @@ async function scrapeTable(url, statName) {
 }
 
 async function main() {
-  console.log('🏀 NioSports Scraper v3.0');
-  console.log('=========================\n');
+  console.log('🏀 NioSports Scraper v4.0 - MODELO AVANZADO');
+  console.log('============================================\n');
 
   const results = {};
   
@@ -102,48 +113,89 @@ async function main() {
   const allTeams = new Set();
   Object.values(results).forEach(d => Object.keys(d).forEach(t => allTeams.add(t)));
 
+  // Calcular promedios de liga para normalización
+  let leaguePace = 0, leaguePpg = 0, count = 0;
+  Object.keys(results.pace || {}).forEach(team => {
+    leaguePace += results.pace[team]?.value || 0;
+    leaguePpg += results.ppg[team]?.value || 0;
+    count++;
+  });
+  leaguePace = count > 0 ? leaguePace / count : 100;
+  leaguePpg = count > 0 ? leaguePpg / count : 115;
+
   const teams = {};
   allTeams.forEach(team => {
     teams[team] = {
+      // Ofensivo - PPG
       full: results.ppg[team]?.value || 0,
       fullRank: results.ppg[team]?.rank || 30,
       fullHome: results.ppgHome[team]?.value || 0,
       fullHomeRank: results.ppgHome[team]?.rank || 30,
       fullAway: results.ppgAway[team]?.value || 0,
       fullAwayRank: results.ppgAway[team]?.rank || 30,
+      
+      // Ofensivo - Q1
       q1: results.q1[team]?.value || 0,
       q1Rank: results.q1[team]?.rank || 30,
       q1Home: results.q1Home[team]?.value || 0,
       q1HomeRank: results.q1Home[team]?.rank || 30,
       q1Away: results.q1Away[team]?.value || 0,
       q1AwayRank: results.q1Away[team]?.rank || 30,
+      
+      // Ofensivo - 1H
       half: results.half[team]?.value || 0,
       halfRank: results.half[team]?.rank || 30,
       halfHome: results.halfHome[team]?.value || 0,
       halfHomeRank: results.halfHome[team]?.rank || 30,
       halfAway: results.halfAway[team]?.value || 0,
-      halfAwayRank: results.halfAway[team]?.rank || 30
+      halfAwayRank: results.halfAway[team]?.rank || 30,
+      
+      // PACE - NUEVO
+      pace: results.pace[team]?.value || 100,
+      paceRank: results.pace[team]?.rank || 15,
+      
+      // Defensivo - OppPPG (puntos permitidos) - NUEVO
+      oppPpg: results.oppPpg[team]?.value || 115,
+      oppPpgRank: results.oppPpg[team]?.rank || 15,
+      oppPpgHome: results.oppPpgHome[team]?.value || 0,
+      oppPpgHomeRank: results.oppPpgHome[team]?.rank || 30,
+      oppPpgAway: results.oppPpgAway[team]?.value || 0,
+      oppPpgAwayRank: results.oppPpgAway[team]?.rank || 30,
+      
+      // Defensivo Q1 y 1H - NUEVO
+      oppQ1: results.oppQ1[team]?.value || 29,
+      oppQ1Rank: results.oppQ1[team]?.rank || 15,
+      oppHalf: results.oppHalf[team]?.value || 57,
+      oppHalfRank: results.oppHalf[team]?.rank || 15
     };
   });
 
   const output = {
     teams,
+    leagueAverages: {
+      pace: parseFloat(leaguePace.toFixed(1)),
+      ppg: parseFloat(leaguePpg.toFixed(1))
+    },
     lastUpdated: new Date().toISOString(),
     source: 'TeamRankings.com',
-    version: '3.0'
+    version: '4.0',
+    features: ['PPG', 'Q1', '1H', 'Home/Away', 'PACE', 'DefRating', 'OppPPG']
   };
 
   await fs.mkdir('data', { recursive: true });
   await fs.writeFile('data/nba-stats.json', JSON.stringify(output, null, 2));
 
   console.log(`\n✅ Guardado! ${Object.keys(teams).length} equipos`);
+  console.log(`📈 Liga AVG - PACE: ${leaguePace.toFixed(1)}, PPG: ${leaguePpg.toFixed(1)}`);
   
   // Verificar Bulls
   if (teams['Bulls']) {
-    console.log('\n📊 Bulls Away:');
-    console.log(`   Full: ${teams['Bulls'].fullAway}`);
-    console.log(`   Q1: ${teams['Bulls'].q1Away}`);
-    console.log(`   1H: ${teams['Bulls'].halfAway}`);
+    console.log('\n📊 Bulls (verificación):');
+    console.log(`   Full Away: ${teams['Bulls'].fullAway}`);
+    console.log(`   Q1 Away: ${teams['Bulls'].q1Away}`);
+    console.log(`   1H Away: ${teams['Bulls'].halfAway}`);
+    console.log(`   PACE: ${teams['Bulls'].pace}`);
+    console.log(`   Def Rating (OppPPG): ${teams['Bulls'].oppPpg}`);
   }
 }
 
