@@ -536,7 +536,7 @@
       "oppPpg": 116.6,
       "oppPpgRank": 16,
       "oppPpgHome": 114,
-      "oppPpgHomeRank": 20,
+      "oppPpgHomeRank": 19,
       "oppPpgAway": 114,
       "oppPpgAwayRank": 20,
       "oppQ1": 31.3,
@@ -664,7 +664,7 @@
       "oppPpg": 112.4,
       "oppPpgRank": 6,
       "oppPpgHome": 114,
-      "oppPpgHomeRank": 19,
+      "oppPpgHomeRank": 20,
       "oppPpgAway": 114,
       "oppPpgAwayRank": 19,
       "oppQ1": 27.9,
@@ -965,7 +965,7 @@
     "pace": 104.1,
     "ppg": 116.4
   },
-  "lastUpdated": "2026-01-09T13:56:48.269Z",
+  "lastUpdated": "2026-01-09T19:01:02.566Z",
   "source": "TeamRankings.com",
   "version": "4.0",
   "features": [
