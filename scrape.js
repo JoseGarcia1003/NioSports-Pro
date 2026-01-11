@@ -1,42 +1,53 @@
-// NioSports NBA Stats Scraper v4.0 - MODELO AVANZADO
-// Incluye: PPG, Q1, 1H, Home/Away, PACE, Defensive Rating (OppPPG)
+// NioSports NBA Stats Scraper v6.0 - COLUMNA CORRECTA
+// FIX CRÍTICO: Lee la columna correcta según el tipo de stat
+// - Stats generales: Columna "2025" (índice 2)
+// - Stats Home: Columna "Home" (índice 5)
+// - Stats Away: Columna "Away" (índice 6)
 
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs').promises;
-const path = require('path');
 
-// URLs de TeamRankings - TODAS LAS ESTADÍSTICAS NECESARIAS
-const URLS = {
-  // Puntos por juego (Ofensivo)
-  ppg: 'https://www.teamrankings.com/nba/stat/points-per-game',
-  ppgHome: 'https://www.teamrankings.com/nba/stat/points-per-game?date=2025-01-10&home_away=home',
-  ppgAway: 'https://www.teamrankings.com/nba/stat/points-per-game?date=2025-01-10&home_away=away',
+// Obtener fecha actual
+function getCurrentDate() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+const TODAY = getCurrentDate();
+console.log(`📅 Fecha: ${TODAY}\n`);
+
+// URLs base (sin parámetros de fecha para stats generales)
+const STATS_CONFIG = [
+  // PPG
+  { key: 'ppg', url: 'https://www.teamrankings.com/nba/stat/points-per-game', column: '2025' },
+  { key: 'ppgHome', url: 'https://www.teamrankings.com/nba/stat/points-per-game', column: 'Home' },
+  { key: 'ppgAway', url: 'https://www.teamrankings.com/nba/stat/points-per-game', column: 'Away' },
   
-  // Primer cuarto
-  q1: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game',
-  q1Home: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game?date=2025-01-10&home_away=home',
-  q1Away: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game?date=2025-01-10&home_away=away',
+  // Q1
+  { key: 'q1', url: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game', column: '2025' },
+  { key: 'q1Home', url: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game', column: 'Home' },
+  { key: 'q1Away', url: 'https://www.teamrankings.com/nba/stat/1st-quarter-points-per-game', column: 'Away' },
   
-  // Primera mitad
-  half: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game',
-  halfHome: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game?date=2025-01-10&home_away=home',
-  halfAway: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game?date=2025-01-10&home_away=away',
+  // 1H
+  { key: 'half', url: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game', column: '2025' },
+  { key: 'halfHome', url: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game', column: 'Home' },
+  { key: 'halfAway', url: 'https://www.teamrankings.com/nba/stat/1st-half-points-per-game', column: 'Away' },
   
-  // PACE (Posesiones por juego) - NUEVO
-  pace: 'https://www.teamrankings.com/nba/stat/possessions-per-game',
+  // PACE
+  { key: 'pace', url: 'https://www.teamrankings.com/nba/stat/possessions-per-game', column: '2025' },
   
-  // Defensive Rating - Puntos permitidos (OppPPG) - NUEVO
-  oppPpg: 'https://www.teamrankings.com/nba/stat/opponent-points-per-game',
-  oppPpgHome: 'https://www.teamrankings.com/nba/stat/opponent-points-per-game?date=2025-01-10&home_away=home',
-  oppPpgAway: 'https://www.teamrankings.com/nba/stat/opponent-points-per-game?date=2025-01-10&home_away=away',
+  // Opponent PPG (Defensive)
+  { key: 'oppPpg', url: 'https://www.teamrankings.com/nba/stat/opponent-points-per-game', column: '2025' },
+  { key: 'oppPpgHome', url: 'https://www.teamrankings.com/nba/stat/opponent-points-per-game', column: 'Home' },
+  { key: 'oppPpgAway', url: 'https://www.teamrankings.com/nba/stat/opponent-points-per-game', column: 'Away' },
   
-  // Defensive Q1 - NUEVO
-  oppQ1: 'https://www.teamrankings.com/nba/stat/opponent-1st-quarter-points-per-game',
+  // Opponent Q1
+  { key: 'oppQ1', url: 'https://www.teamrankings.com/nba/stat/opponent-1st-quarter-points-per-game', column: '2025' },
   
-  // Defensive 1H - NUEVO
-  oppHalf: 'https://www.teamrankings.com/nba/stat/opponent-1st-half-points-per-game'
-};
+  // Opponent 1H
+  { key: 'oppHalf', url: 'https://www.teamrankings.com/nba/stat/opponent-1st-half-points-per-game', column: '2025' }
+];
 
 const TEAM_NAME_MAP = {
   'Atlanta': 'Hawks', 'Boston': 'Celtics', 'Brooklyn': 'Nets', 'Charlotte': 'Hornets',
@@ -51,11 +62,12 @@ const TEAM_NAME_MAP = {
 
 function normalizeTeamName(name) {
   if (!name) return null;
-  return TEAM_NAME_MAP[name.trim()] || name.trim();
+  const trimmed = name.trim();
+  return TEAM_NAME_MAP[trimmed] || trimmed;
 }
 
-async function scrapeTable(url, statName) {
-  console.log(`📊 Scraping ${statName}...`);
+async function scrapeTable(url, statKey, targetColumn) {
+  console.log(`📊 ${statKey} (columna: ${targetColumn})`);
   
   try {
     const response = await axios.get(url, {
@@ -69,51 +81,74 @@ async function scrapeTable(url, statName) {
 
     const $ = cheerio.load(response.data);
     const data = {};
-    let rank = 0;
-
-    $('table tbody tr').each((index, row) => {
+    
+    // PASO 1: Encontrar el índice de la columna correcta por su nombre en el header
+    let columnIndex = 2; // Default: columna 2 (2025)
+    
+    $('table thead tr th, table thead tr td').each((idx, th) => {
+      const headerText = $(th).text().trim();
+      // Buscar coincidencia exacta o parcial con el nombre de la columna objetivo
+      if (headerText === targetColumn || headerText.includes(targetColumn)) {
+        columnIndex = idx;
+        console.log(`   ✓ Columna "${targetColumn}" encontrada en índice ${idx}`);
+      }
+    });
+    
+    // PASO 2: Extraer datos de la columna correcta
+    $('table tbody tr').each((rowIndex, row) => {
       const cells = $(row).find('td');
-      if (cells.length < 3) return;
+      if (cells.length < columnIndex + 1) return;
       
+      // Columna 0: Rank
+      const rank = parseInt($(cells[0]).text().trim()) || (rowIndex + 1);
+      
+      // Columna 1: Team name
       const teamCell = $(cells[1]);
       let teamName = teamCell.find('a').text().trim() || teamCell.text().trim();
       const normalized = normalizeTeamName(teamName);
-      
       if (!normalized) return;
       
-      const valueText = $(cells[2]).text().trim();
+      // Columna objetivo: Valor
+      const valueText = $(cells[columnIndex]).text().trim();
       const value = parseFloat(valueText);
       
       if (!isNaN(value) && value > 0 && value < 200) {
-        rank++;
         data[normalized] = { value, rank };
+        
+        // Debug para Memphis/Grizzlies
+        if (normalized === 'Grizzlies') {
+          console.log(`   🔍 GRIZZLIES: ${value} (columna ${columnIndex}, rank ${rank})`);
+        }
       }
     });
 
-    console.log(`   ✅ ${statName}: ${Object.keys(data).length} equipos`);
+    console.log(`   ✅ ${Object.keys(data).length} equipos\n`);
     return data;
+    
   } catch (error) {
-    console.error(`   ❌ ${statName}: ${error.message}`);
+    console.error(`   ❌ Error: ${error.message}\n`);
     return {};
   }
 }
 
 async function main() {
-  console.log('🏀 NioSports Scraper v4.0 - MODELO AVANZADO');
-  console.log('============================================\n');
+  console.log('🏀 NioSports Scraper v6.0 - COLUMNA CORRECTA');
+  console.log('=============================================\n');
 
   const results = {};
   
-  for (const [key, url] of Object.entries(URLS)) {
-    results[key] = await scrapeTable(url, key);
-    await new Promise(r => setTimeout(r, 1500));
+  // Scrape cada estadística
+  for (const config of STATS_CONFIG) {
+    results[config.key] = await scrapeTable(config.url, config.key, config.column);
+    await new Promise(r => setTimeout(r, 2000)); // 2 segundos entre requests
   }
 
-  // Combinar datos
+  // Obtener lista de todos los equipos
   const allTeams = new Set();
   Object.values(results).forEach(d => Object.keys(d).forEach(t => allTeams.add(t)));
+  console.log(`📋 Total equipos: ${allTeams.size}\n`);
 
-  // Calcular promedios de liga para normalización
+  // Calcular promedios de liga
   let leaguePace = 0, leaguePpg = 0, count = 0;
   Object.keys(results.pace || {}).forEach(team => {
     leaguePace += results.pace[team]?.value || 0;
@@ -123,10 +158,11 @@ async function main() {
   leaguePace = count > 0 ? leaguePace / count : 100;
   leaguePpg = count > 0 ? leaguePpg / count : 115;
 
+  // Construir objeto de equipos
   const teams = {};
   allTeams.forEach(team => {
     teams[team] = {
-      // Ofensivo - PPG
+      // PPG
       full: results.ppg[team]?.value || 0,
       fullRank: results.ppg[team]?.rank || 30,
       fullHome: results.ppgHome[team]?.value || 0,
@@ -134,7 +170,7 @@ async function main() {
       fullAway: results.ppgAway[team]?.value || 0,
       fullAwayRank: results.ppgAway[team]?.rank || 30,
       
-      // Ofensivo - Q1
+      // Q1
       q1: results.q1[team]?.value || 0,
       q1Rank: results.q1[team]?.rank || 30,
       q1Home: results.q1Home[team]?.value || 0,
@@ -142,7 +178,7 @@ async function main() {
       q1Away: results.q1Away[team]?.value || 0,
       q1AwayRank: results.q1Away[team]?.rank || 30,
       
-      // Ofensivo - 1H
+      // 1H
       half: results.half[team]?.value || 0,
       halfRank: results.half[team]?.rank || 30,
       halfHome: results.halfHome[team]?.value || 0,
@@ -150,25 +186,37 @@ async function main() {
       halfAway: results.halfAway[team]?.value || 0,
       halfAwayRank: results.halfAway[team]?.rank || 30,
       
-      // PACE - NUEVO
+      // PACE
       pace: results.pace[team]?.value || 100,
       paceRank: results.pace[team]?.rank || 15,
       
-      // Defensivo - OppPPG (puntos permitidos) - NUEVO
+      // Defensive
       oppPpg: results.oppPpg[team]?.value || 115,
       oppPpgRank: results.oppPpg[team]?.rank || 15,
       oppPpgHome: results.oppPpgHome[team]?.value || 0,
       oppPpgHomeRank: results.oppPpgHome[team]?.rank || 30,
       oppPpgAway: results.oppPpgAway[team]?.value || 0,
       oppPpgAwayRank: results.oppPpgAway[team]?.rank || 30,
-      
-      // Defensivo Q1 y 1H - NUEVO
       oppQ1: results.oppQ1[team]?.value || 29,
       oppQ1Rank: results.oppQ1[team]?.rank || 15,
       oppHalf: results.oppHalf[team]?.value || 57,
       oppHalfRank: results.oppHalf[team]?.rank || 15
     };
   });
+
+  // VERIFICACIÓN CRÍTICA: Grizzlies
+  console.log('═══════════════════════════════════════════');
+  console.log('📊 VERIFICACIÓN GRIZZLIES (debe coincidir con TeamRankings):');
+  console.log('═══════════════════════════════════════════');
+  if (teams['Grizzlies']) {
+    const g = teams['Grizzlies'];
+    console.log(`Q1 General: ${g.q1} (#${g.q1Rank})`);
+    console.log(`Q1 HOME:    ${g.q1Home} (#${g.q1HomeRank}) ← DEBE SER ~28.9`);
+    console.log(`Q1 AWAY:    ${g.q1Away} (#${g.q1AwayRank})`);
+    console.log(`1H HOME:    ${g.halfHome} (#${g.halfHomeRank})`);
+    console.log(`Full HOME:  ${g.fullHome} (#${g.fullHomeRank})`);
+  }
+  console.log('═══════════════════════════════════════════\n');
 
   const output = {
     teams,
@@ -178,25 +226,20 @@ async function main() {
     },
     lastUpdated: new Date().toISOString(),
     source: 'TeamRankings.com',
-    version: '4.0',
-    features: ['PPG', 'Q1', '1H', 'Home/Away', 'PACE', 'DefRating', 'OppPPG']
+    version: '6.0',
+    scrapedDate: TODAY,
+    features: ['PPG', 'Q1', '1H', 'Home/Away', 'PACE', 'DefRating']
   };
 
+  // Guardar
   await fs.mkdir('data', { recursive: true });
   await fs.writeFile('data/nba-stats.json', JSON.stringify(output, null, 2));
 
-  console.log(`\n✅ Guardado! ${Object.keys(teams).length} equipos`);
+  console.log('✅ Guardado en data/nba-stats.json');
   console.log(`📈 Liga AVG - PACE: ${leaguePace.toFixed(1)}, PPG: ${leaguePpg.toFixed(1)}`);
-  
-  // Verificar Bulls
-  if (teams['Bulls']) {
-    console.log('\n📊 Bulls (verificación):');
-    console.log(`   Full Away: ${teams['Bulls'].fullAway}`);
-    console.log(`   Q1 Away: ${teams['Bulls'].q1Away}`);
-    console.log(`   1H Away: ${teams['Bulls'].halfAway}`);
-    console.log(`   PACE: ${teams['Bulls'].pace}`);
-    console.log(`   Def Rating (OppPPG): ${teams['Bulls'].oppPpg}`);
-  }
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+main().catch(e => { 
+  console.error('❌ Error:', e); 
+  process.exit(1); 
+});
