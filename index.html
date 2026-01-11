@@ -2060,13 +2060,6 @@ function renderTendencia() {
                         </div>
                     </details>
                 </div>
-                                <p class="mt-1">Ejemplo: +20 pts sobre línea con SD=13 (1H) es Z=1.54 → 93%</p>
-                                <p>Ejemplo: +22 pts sobre línea con SD=18.5 (Full) es Z=1.19 → 88%</p>
-                                <p class="mt-1 text-yellow-300">Aunque Full tiene más puntos de "colchón", la variabilidad es proporcionalmente mayor.</p>
-                            </div>
-                        </div>
-                    </details>
-                </div>
             </div>
             
             <!-- BET BUILDER - PICKS COMBINADOS -->
@@ -2078,7 +2071,7 @@ function renderTendencia() {
                 
                 if (validPicks >= 2) {
                     return `
-                    <div class="mt-6 bg-gradient-to-br from-amber-600 to-orange-700 rounded-2xl p-5">
+                    <div class="bg-gradient-to-br from-amber-600 to-orange-700 rounded-2xl p-5 shadow-xl">
                         <h3 class="text-lg font-bold text-white mb-4 text-center">🔥 BET BUILDER - Combo</h3>
                         <p class="text-white/70 text-xs text-center mb-4">Selecciona los picks para tu combinada</p>
                         
@@ -2132,7 +2125,7 @@ function renderTendencia() {
             })()}
             
             <!-- BOTÓN REGISTRAR PICK INDIVIDUAL -->
-            <div class="mt-6 bg-gradient-to-br from-pink-600 to-rose-700 rounded-2xl p-5">
+            <div class="bg-gradient-to-br from-pink-600 to-rose-700 rounded-2xl p-5 shadow-xl mt-6">
                 <h3 class="text-lg font-bold text-white mb-4 text-center">📝 Registrar Pick</h3>
                 <div class="grid grid-cols-3 gap-3">
                     ${lineQ1 && pQ1 ? (() => {
