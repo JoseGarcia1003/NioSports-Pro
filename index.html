@@ -1920,8 +1920,8 @@ function renderTendencia() {
                     
                     <!-- Mini-guía de interpretación -->
                     <div class="flex flex-wrap justify-center gap-3 text-xs text-gray-500 mb-3">
-                        ${advancedData.combinedPace ? `<span class="${advancedData.combinedPace > 101 ? 'text-green-600' : advancedData.combinedPace < 99 ? 'text-red-600' : 'text-gray-500'}">
-                            ${advancedData.combinedPace > 101 ? '↑ Ritmo rápido (+pts)' : advancedData.combinedPace < 99 ? '↓ Ritmo lento (-pts)' : '→ Ritmo promedio'}
+                        ${advancedData.components?.full?.pace !== undefined ? `<span class="${(advancedData.components.full.pace || 0) > 0.3 ? 'text-green-600' : (advancedData.components.full.pace || 0) < -0.3 ? 'text-red-600' : 'text-gray-500'}">
+                            ${(advancedData.components.full.pace || 0) > 0.3 ? '↑ Ritmo rápido (+pts)' : (advancedData.components.full.pace || 0) < -0.3 ? '↓ Ritmo lento (-pts)' : '→ Ritmo promedio'}
                         </span>` : ''}
                         <span class="${advancedData.confidence >= 85 ? 'text-green-600' : advancedData.confidence >= 75 ? 'text-yellow-600' : 'text-red-600'}">
                             ${advancedData.confidence >= 85 ? '✓ Alta fiabilidad' : advancedData.confidence >= 75 ? '~ Fiabilidad moderada' : '⚠ Usar con cautela'}
@@ -1972,7 +1972,12 @@ function renderTendencia() {
                                 <div class="text-center bg-white p-2 rounded-lg shadow-sm">
                                     <div class="font-bold text-gray-700">PACE adj.</div>
                                     <div class="text-blue-600 text-lg font-bold">${advancedData.components?.full?.pace?.toFixed(2) || '0'}</div>
-                                    <div class="text-gray-400 text-xs mt-1">${advancedData.combinedPace > 101 ? '↑ Rápido' : advancedData.combinedPace < 99 ? '↓ Lento' : '→ Normal'}</div>
+                                    <div class="text-gray-400 text-xs mt-1">${
+                                        // La etiqueta debe ser consistente con el SIGNO del ajuste
+                                        (advancedData.components?.full?.pace || 0) > 0.3 ? '↑ Rápido (+pts)' : 
+                                        (advancedData.components?.full?.pace || 0) < -0.3 ? '↓ Lento (-pts)' : 
+                                        '→ Normal'
+                                    }</div>
                                 </div>
                                 <div class="text-center bg-white p-2 rounded-lg shadow-sm">
                                     <div class="font-bold text-gray-700">Contexto</div>
