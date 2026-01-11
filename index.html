@@ -270,40 +270,45 @@ async function loadTeamStatsFromAPI() {
         apiConnected = false;
         showNotification('⚠️ Error cargando stats: usando datos de respaldo', 'warning');
         
-        // Datos de respaldo actualizados con PACE y OppPPG para modelo v2.0
+        // ⚠️ DATOS DE RESPALDO - SOLO PARA EMERGENCIAS
+        // Si ves estos datos, significa que la API falló
+        // Los datos HOME/AWAY pueden no ser precisos
+        console.warn('⚠️ USANDO DATOS DE RESPALDO - API NO DISPONIBLE');
+        showNotification('⚠️ API offline - usando datos de respaldo (pueden no ser precisos)', 'warning');
+        
         TEAM_STATS = {
-            "Nuggets": { fullHome: 126.1, fullAway: 122.7, full: 124.1, q1Home: 31.0, q1Away: 30.1, q1: 31.2, halfHome: 63.6, halfAway: 60.3, half: 61.6, pace: 102.5, oppPpg: 118.2, oppQ1: 29.5, oppHalf: 58.0 },
-            "Thunder": { fullHome: 129.0, fullAway: 110.3, full: 121.4, q1Home: 31.0, q1Away: 31.3, q1: 31.3, halfHome: 62.5, halfAway: 58.8, half: 60.7, pace: 100.8, oppPpg: 108.5, oppQ1: 27.2, oppHalf: 54.5 },
-            "Cavaliers": { fullHome: 120.0, fullAway: 120.9, full: 119.2, q1Home: 29.3, q1Away: 31.3, q1: 30.3, halfHome: 59.2, halfAway: 61.1, half: 59.0, pace: 97.8, oppPpg: 107.5, oppQ1: 27.0, oppHalf: 54.0 },
-            "Knicks": { fullHome: 121.7, fullAway: 117.8, full: 119.8, q1Home: 27.0, q1Away: 29.9, q1: 30.6, halfHome: 60.9, halfAway: 61.1, half: 61.0, pace: 98.5, oppPpg: 109.2, oppQ1: 27.5, oppHalf: 55.0 },
-            "Celtics": { fullHome: 123.7, fullAway: 110.0, full: 117.6, q1Home: 36.0, q1Away: 31.3, q1: 30.8, halfHome: 61.0, halfAway: 58.7, half: 60.2, pace: 99.5, oppPpg: 109.8, oppQ1: 27.5, oppHalf: 55.0 },
-            "Bulls": { fullHome: 117.6, fullAway: 117.6, full: 117.1, q1Home: 27.2, q1Away: 27.2, q1: 29.2, halfHome: 56.9, halfAway: 56.9, half: 57.6, pace: 99.8, oppPpg: 116.2, oppQ1: 29.0, oppHalf: 58.0 },
-            "Hawks": { fullHome: 117.0, fullAway: 119.3, full: 118.4, q1Home: 31.6, q1Away: 29.9, q1: 30.7, halfHome: 59.2, halfAway: 60.6, half: 59.9, pace: 101.5, oppPpg: 118.8, oppQ1: 29.5, oppHalf: 59.0 },
-            "Heat": { fullHome: 110.8, fullAway: 111.8, full: 111.3, q1Home: 28.3, q1Away: 28.6, q1: 28.4, halfHome: 54.3, halfAway: 58.0, half: 56.2, pace: 97.2, oppPpg: 112.5, oppQ1: 28.0, oppHalf: 56.0 },
-            "Bucks": { fullHome: 113.7, fullAway: 107.8, full: 110.6, q1Home: 28.5, q1Away: 26.5, q1: 27.5, halfHome: 57.4, halfAway: 54.3, half: 55.8, pace: 99.2, oppPpg: 114.2, oppQ1: 28.5, oppHalf: 57.0 },
-            "76ers": { fullHome: 128.3, fullAway: 109.2, full: 117.6, q1Home: 30.6, q1Away: 31.3, q1: 30.9, halfHome: 60.5, halfAway: 63.3, half: 61.8, pace: 98.2, oppPpg: 115.8, oppQ1: 29.0, oppHalf: 58.0 },
-            "Pacers": { fullHome: 114.9, fullAway: 118.8, full: 116.9, q1Home: 28.9, q1Away: 28.8, q1: 28.9, halfHome: 55.5, halfAway: 57.8, half: 56.7, pace: 102.8, oppPpg: 119.5, oppQ1: 30.0, oppHalf: 60.0 },
-            "Pistons": { fullHome: 115.5, fullAway: 110.4, full: 112.9, q1Home: 30.0, q1Away: 29.4, q1: 29.8, halfHome: 59.2, halfAway: 62.6, half: 60.3, pace: 100.2, oppPpg: 120.5, oppQ1: 30.0, oppHalf: 60.0 },
-            "Timberwolves": { fullHome: 115.8, fullAway: 123.7, full: 119.6, q1Home: 29.1, q1Away: 30.0, q1: 29.5, halfHome: 57.0, halfAway: 61.0, half: 59.1, pace: 98.8, oppPpg: 108.2, oppQ1: 27.0, oppHalf: 54.0 },
-            "Magic": { fullHome: 112.7, fullAway: 120.5, full: 116.7, q1Home: 26.0, q1Away: 27.1, q1: 30.0, halfHome: 48.0, halfAway: 53.0, half: 59.5, pace: 96.5, oppPpg: 106.5, oppQ1: 26.5, oppHalf: 53.0 },
-            "Trail Blazers": { fullHome: 112.7, fullAway: 119.0, full: 115.9, q1Home: 32.0, q1Away: 29.5, q1: 29.7, halfHome: 57.0, halfAway: 53.8, half: 59.6, pace: 99.5, oppPpg: 119.2, oppQ1: 30.0, oppHalf: 59.5 },
-            "Lakers": { fullHome: 114.6, fullAway: 113.8, full: 114.3, q1Home: 26.0, q1Away: 30.2, q1: 29.6, halfHome: 43.0, halfAway: 56.4, half: 57.0, pace: 100.8, oppPpg: 114.5, oppQ1: 28.5, oppHalf: 57.0 },
-            "Rockets": { fullHome: 113.2, fullAway: 116.0, full: 114.7, q1Home: 26.0, q1Away: 29.5, q1: 30.0, halfHome: 47.0, halfAway: 57.5, half: 58.4, pace: 99.2, oppPpg: 110.8, oppQ1: 27.5, oppHalf: 55.5 },
-            "Suns": { fullHome: 115.5, fullAway: 117.1, full: 116.3, q1Home: 30.3, q1Away: 26.7, q1: 28.4, halfHome: 57.1, halfAway: 59.2, half: 58.2, pace: 98.5, oppPpg: 115.2, oppQ1: 29.0, oppHalf: 57.5 },
-            "Warriors": { fullHome: 118.5, fullAway: 110.1, full: 114.1, q1Home: 27.1, q1Away: 26.0, q1: 26.5, halfHome: 56.8, halfAway: 52.7, half: 54.6, pace: 100.2, oppPpg: 113.5, oppQ1: 28.5, oppHalf: 57.0 },
+            "Nuggets": { fullHome: 122.7, fullAway: 117.5, full: 119.9, q1Home: 32.6, q1Away: 30.1, q1: 31.2, halfHome: 60.3, halfAway: 58.0, half: 59.2, pace: 101.5, oppPpg: 115.2, oppQ1: 28.5, oppHalf: 56.5 },
+            "Thunder": { fullHome: 121.0, fullAway: 118.5, full: 120.1, q1Home: 31.3, q1Away: 30.6, q1: 31.1, halfHome: 59.8, halfAway: 58.8, half: 59.3, pace: 99.8, oppPpg: 106.5, oppQ1: 26.5, oppHalf: 53.0 },
+            "Cavaliers": { fullHome: 122.5, fullAway: 119.0, full: 120.9, q1Home: 31.3, q1Away: 29.0, q1: 30.1, halfHome: 61.1, halfAway: 59.2, half: 60.2, pace: 98.2, oppPpg: 108.5, oppQ1: 27.0, oppHalf: 54.0 },
+            "Celtics": { fullHome: 119.5, fullAway: 115.2, full: 117.6, q1Home: 31.4, q1Away: 30.0, q1: 30.9, halfHome: 59.4, halfAway: 58.7, half: 59.0, pace: 99.5, oppPpg: 109.8, oppQ1: 27.5, oppHalf: 55.0 },
+            "Knicks": { fullHome: 118.8, fullAway: 114.5, full: 116.8, q1Home: 31.1, q1Away: 29.1, q1: 30.4, halfHome: 58.8, halfAway: 57.0, half: 58.0, pace: 98.5, oppPpg: 110.5, oppQ1: 27.5, oppHalf: 55.5 },
+            "Grizzlies": { fullHome: 116.5, fullAway: 113.8, full: 115.2, q1Home: 28.9, q1Away: 28.6, q1: 28.7, halfHome: 57.0, halfAway: 56.2, half: 56.6, pace: 99.2, oppPpg: 113.8, oppQ1: 28.5, oppHalf: 57.0 },
+            "Rockets": { fullHome: 115.0, fullAway: 113.5, full: 114.5, q1Home: 29.5, q1Away: 28.4, q1: 30.0, halfHome: 57.5, halfAway: 56.8, half: 57.2, pace: 99.2, oppPpg: 110.8, oppQ1: 27.5, oppHalf: 55.5 },
+            "Lakers": { fullHome: 115.8, fullAway: 112.0, full: 114.0, q1Home: 30.9, q1Away: 28.2, q1: 29.5, halfHome: 58.0, halfAway: 55.5, half: 56.8, pace: 100.5, oppPpg: 114.5, oppQ1: 28.5, oppHalf: 57.0 },
+            "Heat": { fullHome: 112.5, fullAway: 110.8, full: 111.5, q1Home: 28.9, q1Away: 27.8, q1: 28.4, halfHome: 55.5, halfAway: 54.8, half: 55.2, pace: 97.2, oppPpg: 111.5, oppQ1: 28.0, oppHalf: 56.0 },
+            "Bucks": { fullHome: 114.5, fullAway: 109.8, full: 112.5, q1Home: 28.8, q1Away: 27.7, q1: 28.6, halfHome: 56.5, halfAway: 54.8, half: 55.8, pace: 99.2, oppPpg: 114.2, oppQ1: 28.5, oppHalf: 57.0 },
+            "Warriors": { fullHome: 116.0, fullAway: 111.5, full: 114.1, q1Home: 27.1, q1Away: 26.0, q1: 26.5, halfHome: 56.8, halfAway: 52.7, half: 54.6, pace: 100.2, oppPpg: 113.5, oppQ1: 28.5, oppHalf: 57.0 },
+            "Suns": { fullHome: 115.5, fullAway: 113.0, full: 114.3, q1Home: 27.8, q1Away: 29.6, q1: 28.7, halfHome: 57.0, halfAway: 56.5, half: 56.8, pace: 98.5, oppPpg: 115.2, oppQ1: 29.0, oppHalf: 57.5 },
             "Mavericks": { fullHome: 117.5, fullAway: 113.7, full: 115.5, q1Home: 28.2, q1Away: 28.2, q1: 28.2, halfHome: 57.2, halfAway: 57.0, half: 57.1, pace: 99.8, oppPpg: 112.8, oppQ1: 28.0, oppHalf: 56.5 },
-            "Clippers": { fullHome: 114.9, fullAway: 112.6, full: 113.7, q1Home: 30.0, q1Away: 29.3, q1: 30.1, halfHome: 57.0, halfAway: 58.8, half: 58.3, pace: 97.5, oppPpg: 110.5, oppQ1: 27.5, oppHalf: 55.0 },
-            "Kings": { fullHome: 111.9, fullAway: 122.5, full: 119.1, q1Home: 31.6, q1Away: 30.5, q1: 30.9, halfHome: 56.6, halfAway: 61.4, half: 59.2, pace: 101.2, oppPpg: 117.8, oppQ1: 29.5, oppHalf: 59.0 },
-            "Spurs": { fullHome: 107.3, fullAway: 113.3, full: 118.8, q1Home: 31.6, q1Away: 31.6, q1: 30.9, halfHome: 51.0, halfAway: 62.0, half: 60.5, pace: 101.2, oppPpg: 117.5, oppQ1: 29.5, oppHalf: 59.0 },
-            "Raptors": { fullHome: 119.3, fullAway: 118.9, full: 119.1, q1Home: 29.5, q1Away: 28.6, q1: 29.0, halfHome: 59.4, halfAway: 55.3, half: 57.3, pace: 98.5, oppPpg: 118.5, oppQ1: 29.5, oppHalf: 59.0 },
-            "Jazz": { fullHome: 126.3, fullAway: 112.5, full: 119.8, q1Home: 34.4, q1Away: 27.5, q1: 29.6, halfHome: 64.4, halfAway: 52.6, half: 58.8, pace: 100.5, oppPpg: 119.8, oppQ1: 30.0, oppHalf: 60.0 },
-            "Pelicans": { fullHome: 115.5, fullAway: 110.9, full: 113.2, q1Home: 30.0, q1Away: 26.7, q1: 28.3, halfHome: 59.1, halfAway: 53.6, half: 56.3, pace: 98.8, oppPpg: 116.5, oppQ1: 29.0, oppHalf: 58.0 },
-            "Hornets": { fullHome: 109.9, fullAway: 107.8, full: 108.9, q1Home: 29.3, q1Away: 26.5, q1: 27.9, halfHome: 54.6, halfAway: 52.6, half: 53.7, pace: 101.8, oppPpg: 121.2, oppQ1: 30.5, oppHalf: 60.5 },
-            "Grizzlies": { fullHome: 119.0, fullAway: 111.5, full: 115.2, q1Home: 30.2, q1Away: 28.4, q1: 29.3, halfHome: 58.5, halfAway: 54.6, half: 56.5, pace: 99.2, oppPpg: 113.8, oppQ1: 28.5, oppHalf: 57.0 },
-            "Wizards": { fullHome: 106.9, fullAway: 109.5, full: 114.9, q1Home: 29.3, q1Away: 27.5, q1: 29.5, halfHome: 56.0, halfAway: 54.3, half: 58.1, pace: 100.5, oppPpg: 122.5, oppQ1: 30.5, oppHalf: 61.0 },
-            "Nets": { fullHome: 105.6, fullAway: 112.8, full: 109.5, q1Home: 27.3, q1Away: 27.7, q1: 27.5, halfHome: 51.7, halfAway: 57.0, half: 54.5, pace: 98.2, oppPpg: 117.2, oppQ1: 29.5, oppHalf: 58.5 }
+            "Clippers": { fullHome: 114.0, fullAway: 110.5, full: 112.5, q1Home: 28.9, q1Away: 27.5, q1: 29.8, halfHome: 56.5, halfAway: 54.5, half: 55.5, pace: 97.5, oppPpg: 110.5, oppQ1: 27.5, oppHalf: 55.0 },
+            "Kings": { fullHome: 115.5, fullAway: 118.0, full: 116.8, q1Home: 30.5, q1Away: 28.7, q1: 29.1, halfHome: 57.5, halfAway: 58.5, half: 58.0, pace: 101.2, oppPpg: 117.8, oppQ1: 29.5, oppHalf: 59.0 },
+            "Pacers": { fullHome: 118.0, fullAway: 115.5, full: 116.8, q1Home: 28.9, q1Away: 28.8, q1: 28.9, halfHome: 57.5, halfAway: 57.0, half: 57.3, pace: 102.8, oppPpg: 119.5, oppQ1: 30.0, oppHalf: 60.0 },
+            "76ers": { fullHome: 116.5, fullAway: 114.0, full: 115.5, q1Home: 30.9, q1Away: 27.5, q1: 30.8, halfHome: 58.5, halfAway: 56.5, half: 57.5, pace: 98.2, oppPpg: 115.8, oppQ1: 29.0, oppHalf: 58.0 },
+            "Hawks": { fullHome: 117.0, fullAway: 116.5, full: 118.4, q1Home: 31.6, q1Away: 29.2, q1: 30.7, halfHome: 59.2, halfAway: 58.5, half: 59.9, pace: 101.5, oppPpg: 118.8, oppQ1: 29.5, oppHalf: 59.0 },
+            "Bulls": { fullHome: 115.0, fullAway: 114.5, full: 117.1, q1Home: 28.0, q1Away: 28.3, q1: 29.3, halfHome: 56.5, halfAway: 56.2, half: 57.6, pace: 99.8, oppPpg: 116.2, oppQ1: 29.0, oppHalf: 58.0 },
+            "Nets": { fullHome: 108.5, fullAway: 110.5, full: 109.5, q1Home: 27.3, q1Away: 27.7, q1: 27.5, halfHome: 53.5, halfAway: 55.0, half: 54.5, pace: 98.2, oppPpg: 117.2, oppQ1: 29.5, oppHalf: 58.5 },
+            "Magic": { fullHome: 112.0, fullAway: 108.5, full: 110.5, q1Home: 28.0, q1Away: 27.1, q1: 29.9, halfHome: 55.0, halfAway: 53.0, half: 54.2, pace: 96.5, oppPpg: 106.5, oppQ1: 26.5, oppHalf: 53.0 },
+            "Pistons": { fullHome: 113.0, fullAway: 110.5, full: 112.0, q1Home: 29.3, q1Away: 28.0, q1: 29.8, halfHome: 56.5, halfAway: 55.5, half: 56.0, pace: 100.2, oppPpg: 120.5, oppQ1: 30.0, oppHalf: 60.0 },
+            "Raptors": { fullHome: 114.0, fullAway: 109.0, full: 111.5, q1Home: 29.2, q1Away: 27.3, q1: 28.8, halfHome: 56.5, halfAway: 54.0, half: 55.2, pace: 98.5, oppPpg: 118.5, oppQ1: 29.5, oppHalf: 59.0 },
+            "Hornets": { fullHome: 108.5, fullAway: 107.0, full: 107.8, q1Home: 30.3, q1Away: 25.0, q1: 30.7, halfHome: 55.0, halfAway: 52.5, half: 53.7, pace: 101.8, oppPpg: 121.2, oppQ1: 30.5, oppHalf: 60.5 },
+            "Wizards": { fullHome: 109.5, fullAway: 107.5, full: 108.5, q1Home: 29.1, q1Away: 27.5, q1: 29.4, halfHome: 54.5, halfAway: 53.5, half: 54.0, pace: 100.5, oppPpg: 122.5, oppQ1: 30.5, oppHalf: 61.0 },
+            "Trail Blazers": { fullHome: 112.0, fullAway: 108.5, full: 110.5, q1Home: 29.4, q1Away: 26.5, q1: 29.6, halfHome: 56.0, halfAway: 53.5, half: 55.0, pace: 99.5, oppPpg: 119.2, oppQ1: 30.0, oppHalf: 59.5 },
+            "Spurs": { fullHome: 112.5, fullAway: 110.0, full: 111.2, q1Home: 30.2, q1Away: 27.5, q1: 30.7, halfHome: 56.0, halfAway: 54.5, half: 55.3, pace: 101.2, oppPpg: 117.5, oppQ1: 29.5, oppHalf: 59.0 },
+            "Jazz": { fullHome: 118.5, fullAway: 110.0, full: 114.5, q1Home: 33.4, q1Away: 24.3, q1: 29.3, halfHome: 60.0, halfAway: 52.5, half: 56.5, pace: 100.5, oppPpg: 119.8, oppQ1: 30.0, oppHalf: 60.0 },
+            "Pelicans": { fullHome: 111.5, fullAway: 108.0, full: 109.8, q1Home: 30.5, q1Away: 26.4, q1: 28.8, halfHome: 55.5, halfAway: 53.0, half: 54.3, pace: 98.8, oppPpg: 116.5, oppQ1: 29.0, oppHalf: 58.0 },
+            "Timberwolves": { fullHome: 114.0, fullAway: 111.5, full: 112.8, q1Home: 29.6, q1Away: 27.5, q1: 29.1, halfHome: 56.5, halfAway: 55.0, half: 55.8, pace: 98.8, oppPpg: 108.2, oppQ1: 27.0, oppHalf: 54.0 }
         };
-        statsSource = 'Datos de respaldo (offline)';
+        statsSource = '⚠️ DATOS DE RESPALDO (API offline)';
     }
 }
 
