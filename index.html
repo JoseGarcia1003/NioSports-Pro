@@ -756,6 +756,12 @@ let oddsQ1 = '', oddsHalf = '', oddsFull = '';
 let vegasLineQ1 = '', vegasLineHalf = '', vegasLineFull = '';
 // NUEVO: Variables para Back-to-Back
 let localB2B = false, awayB2B = false;
+// NUEVO: Variables para Rest Days (días de descanso)
+let localRestDays = 1, awayRestDays = 1; // 1 = ayer, 2 = anteayer, etc.
+// NUEVO: Variables para Injuries (lesiones de estrellas)
+let localInjury = false, awayInjury = false;
+// NUEVO: Variables para Streaks (rachas)
+let localStreak = 0, awayStreak = 0; // Positivo = ganando, Negativo = perdiendo
 let ingestTeam1 = '', ingestTeam2 = '', ingestLocalTeam = '', ingestDate = '';
 let ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
 let firebaseConnected = false;
@@ -1697,6 +1703,30 @@ const B2B_PENALTY = {
     q1: -0.3        // Proporcionalmente en Q1
 };
 
+// NUEVO: Rest Days bonus (equipos descansados rinden mejor)
+// Investigación: +1.5 pts con 3+ días de descanso
+const REST_BONUS = {
+    full: { days3plus: 1.5, days2: 0.5 },   // 3+ días = +1.5, 2 días = +0.5
+    half: { days3plus: 0.75, days2: 0.25 },
+    q1: { days3plus: 0.4, days2: 0.1 }
+};
+
+// NUEVO: Injury penalty (estrella lesionada)
+// Investigación: -3 a -5 puntos dependiendo del jugador
+const INJURY_PENALTY = {
+    full: -3.5,     // Impacto significativo sin estrella
+    half: -1.75,
+    q1: -0.9
+};
+
+// NUEVO: Streak factor (momentum)
+// Investigación: Equipos en racha caliente/fría ±1 pt
+const STREAK_FACTOR = {
+    full: 0.25,     // Por cada partido de racha (max ±5 = ±1.25 pts)
+    half: 0.12,
+    q1: 0.06
+};
+
 // Configuración del modelo avanzado
 const MODEL_CONFIG = {
     weights: {
@@ -1848,12 +1878,73 @@ function calculateAdvancedTrend(localTeamName, awayTeamName, period = 'full') {
     }
     components.b2b = b2bAdjust;
     
+    // 4.6 AJUSTE POR REST DAYS (días de descanso)
+    let restAdjust = 0;
+    // Local
+    if (localRestDays >= 3) {
+        if (period === 'q1') restAdjust += REST_BONUS.q1.days3plus;
+        else if (period === 'half') restAdjust += REST_BONUS.half.days3plus;
+        else restAdjust += REST_BONUS.full.days3plus;
+    } else if (localRestDays === 2) {
+        if (period === 'q1') restAdjust += REST_BONUS.q1.days2;
+        else if (period === 'half') restAdjust += REST_BONUS.half.days2;
+        else restAdjust += REST_BONUS.full.days2;
+    }
+    // Away
+    if (awayRestDays >= 3) {
+        if (period === 'q1') restAdjust += REST_BONUS.q1.days3plus;
+        else if (period === 'half') restAdjust += REST_BONUS.half.days3plus;
+        else restAdjust += REST_BONUS.full.days3plus;
+    } else if (awayRestDays === 2) {
+        if (period === 'q1') restAdjust += REST_BONUS.q1.days2;
+        else if (period === 'half') restAdjust += REST_BONUS.half.days2;
+        else restAdjust += REST_BONUS.full.days2;
+    }
+    components.rest = restAdjust;
+    if (localRestDays >= 3) warnings.push(`✅ ${localTeamName} descansado (${localRestDays} días)`);
+    if (awayRestDays >= 3) warnings.push(`✅ ${awayTeamName} descansado (${awayRestDays} días)`);
+    
+    // 4.7 AJUSTE POR INJURIES (lesiones de estrellas)
+    let injuryAdjust = 0;
+    if (localInjury) {
+        if (period === 'q1') injuryAdjust += INJURY_PENALTY.q1;
+        else if (period === 'half') injuryAdjust += INJURY_PENALTY.half;
+        else injuryAdjust += INJURY_PENALTY.full;
+        warnings.push(`🏥 ${localTeamName} sin estrella (-3.5 pts)`);
+    }
+    if (awayInjury) {
+        if (period === 'q1') injuryAdjust += INJURY_PENALTY.q1;
+        else if (period === 'half') injuryAdjust += INJURY_PENALTY.half;
+        else injuryAdjust += INJURY_PENALTY.full;
+        warnings.push(`🏥 ${awayTeamName} sin estrella (-3.5 pts)`);
+    }
+    components.injury = injuryAdjust;
+    
+    // 4.8 AJUSTE POR STREAKS (rachas)
+    let streakAdjust = 0;
+    // Local streak (limitado a ±5)
+    const localStreakLimited = Math.max(-5, Math.min(5, localStreak));
+    const awayStreakLimited = Math.max(-5, Math.min(5, awayStreak));
+    
+    if (period === 'q1') {
+        streakAdjust = (localStreakLimited + awayStreakLimited) * STREAK_FACTOR.q1;
+    } else if (period === 'half') {
+        streakAdjust = (localStreakLimited + awayStreakLimited) * STREAK_FACTOR.half;
+    } else {
+        streakAdjust = (localStreakLimited + awayStreakLimited) * STREAK_FACTOR.full;
+    }
+    components.streak = streakAdjust;
+    if (localStreak >= 3) warnings.push(`🔥 ${localTeamName} en racha +${localStreak}`);
+    if (localStreak <= -3) warnings.push(`❄️ ${localTeamName} en racha ${localStreak}`);
+    if (awayStreak >= 3) warnings.push(`🔥 ${awayTeamName} en racha +${awayStreak}`);
+    if (awayStreak <= -3) warnings.push(`❄️ ${awayTeamName} en racha ${awayStreak}`);
+    
     // 5. CÁLCULO FINAL
     const baseTotal = (components.offense * MODEL_CONFIG.weights.offense + 
                        components.defense * MODEL_CONFIG.weights.defense) / 
                       (MODEL_CONFIG.weights.offense + MODEL_CONFIG.weights.defense);
     
-    let finalTrend = baseTotal + components.pace + components.context + b2bAdjust;
+    let finalTrend = baseTotal + components.pace + components.context + b2bAdjust + restAdjust + injuryAdjust + streakAdjust;
     
     // 6. EARLY SEASON BIAS
     if (EARLY_SEASON_BIAS.active && isEarlySeason()) {
@@ -2567,20 +2658,136 @@ function renderTendencia() {
                         ${advancedData.isEarlySeason ? `<span class="badge-neon badge-neon-yellow" title="Primeras semanas de temporada - datos limitados">⚠️ Early Season</span>` : ''}
                         ${localB2B ? `<span class="badge-neon badge-neon-pink" title="Equipo local jugó ayer">🔴 ${localTeam} B2B</span>` : ''}
                         ${awayB2B ? `<span class="badge-neon badge-neon-pink" title="Equipo visitante jugó ayer">🔴 ${visitingTeam} B2B</span>` : ''}
+                        ${localInjury ? `<span class="badge-neon badge-neon-pink" title="Estrella lesionada">🏥 ${localTeam} -Estrella</span>` : ''}
+                        ${awayInjury ? `<span class="badge-neon badge-neon-pink" title="Estrella lesionada">🏥 ${visitingTeam} -Estrella</span>` : ''}
+                        ${localRestDays >= 3 ? `<span class="badge-neon badge-neon-green" title="Equipo descansado">💪 ${localTeam} +${localRestDays}d</span>` : ''}
+                        ${awayRestDays >= 3 ? `<span class="badge-neon badge-neon-green" title="Equipo descansado">💪 ${visitingTeam} +${awayRestDays}d</span>` : ''}
+                        ${localStreak >= 3 ? `<span class="badge-neon badge-neon-green" title="En racha ganadora">🔥 ${localTeam} +${localStreak}W</span>` : ''}
+                        ${localStreak <= -3 ? `<span class="badge-neon badge-neon-pink" title="En racha perdedora">❄️ ${localTeam} ${localStreak}L</span>` : ''}
+                        ${awayStreak >= 3 ? `<span class="badge-neon badge-neon-green" title="En racha ganadora">🔥 ${visitingTeam} +${awayStreak}W</span>` : ''}
+                        ${awayStreak <= -3 ? `<span class="badge-neon badge-neon-pink" title="En racha perdedora">❄️ ${visitingTeam} ${awayStreak}L</span>` : ''}
                         <span class="badge-neon ${advancedData.confidence >= 85 ? 'badge-neon-green' : advancedData.confidence >= 75 ? 'badge-neon-yellow' : 'badge-neon-pink'}" title="${advancedData.confidence >= 85 ? 'Datos completos y consistentes' : advancedData.confidence >= 75 ? 'Datos buenos pero con algunas limitaciones' : 'Datos limitados, usar con precaución'}">🎯 Confianza: ${advancedData.confidence}%</span>
                     </div>
                     
-                    <!-- Checkboxes B2B -->
-                    <div class="flex justify-center gap-4 mb-3">
-                        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white">
-                            <input type="checkbox" id="localB2B" ${localB2B ? 'checked' : ''} onchange="localB2B = this.checked; render();" class="w-4 h-4 accent-red-500">
-                            <span>🏠 ${localTeam || 'Local'} jugó ayer (B2B)</span>
-                        </label>
-                        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white">
-                            <input type="checkbox" id="awayB2B" ${awayB2B ? 'checked' : ''} onchange="awayB2B = this.checked; render();" class="w-4 h-4 accent-red-500">
-                            <span>✈️ ${visitingTeam || 'Visitante'} jugó ayer (B2B)</span>
-                        </label>
-                    </div>
+                    <!-- PANEL DE AJUSTES CONTEXTUALES -->
+                    <details class="mb-3">
+                        <summary class="text-sm text-cyan-400 cursor-pointer hover:text-cyan-300 font-semibold text-center">⚙️ Ajustes Contextuales (B2B, Descanso, Lesiones, Rachas)</summary>
+                        <div class="mt-3 bg-white/5 rounded-xl p-4 space-y-4">
+                            
+                            <!-- Fila 1: B2B -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-red-500/10 rounded-lg p-3 border border-red-500/20">
+                                    <p class="text-xs text-red-400 font-bold mb-2 text-center">🔴 Back-to-Back (B2B)</p>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+                                            <input type="checkbox" ${localB2B ? 'checked' : ''} onchange="localB2B = this.checked; render();" class="w-4 h-4 accent-red-500">
+                                            <span>🏠 ${localTeam || 'Local'} jugó ayer</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+                                            <input type="checkbox" ${awayB2B ? 'checked' : ''} onchange="awayB2B = this.checked; render();" class="w-4 h-4 accent-red-500">
+                                            <span>✈️ ${visitingTeam || 'Visitante'} jugó ayer</span>
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2 text-center">-1.25 pts por equipo</p>
+                                </div>
+                                
+                                <!-- Injuries -->
+                                <div class="bg-pink-500/10 rounded-lg p-3 border border-pink-500/20">
+                                    <p class="text-xs text-pink-400 font-bold mb-2 text-center">🏥 Estrella Lesionada</p>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+                                            <input type="checkbox" ${localInjury ? 'checked' : ''} onchange="localInjury = this.checked; render();" class="w-4 h-4 accent-pink-500">
+                                            <span>🏠 ${localTeam || 'Local'} sin estrella</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+                                            <input type="checkbox" ${awayInjury ? 'checked' : ''} onchange="awayInjury = this.checked; render();" class="w-4 h-4 accent-pink-500">
+                                            <span>✈️ ${visitingTeam || 'Visitante'} sin estrella</span>
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2 text-center">-3.5 pts por equipo</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Fila 2: Rest Days -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-green-500/10 rounded-lg p-3 border border-green-500/20">
+                                    <p class="text-xs text-green-400 font-bold mb-2 text-center">💪 Días de Descanso</p>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-300">🏠 ${localTeam || 'Local'}:</span>
+                                            <select onchange="localRestDays = parseInt(this.value); render();" class="bg-white/10 text-white text-xs rounded px-2 py-1 border border-white/20">
+                                                <option value="1" ${localRestDays === 1 ? 'selected' : ''}>1 día (normal)</option>
+                                                <option value="2" ${localRestDays === 2 ? 'selected' : ''}>2 días (+0.5)</option>
+                                                <option value="3" ${localRestDays === 3 ? 'selected' : ''}>3+ días (+1.5)</option>
+                                                <option value="4" ${localRestDays === 4 ? 'selected' : ''}>4+ días (+1.5)</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-300">✈️ ${visitingTeam || 'Visitante'}:</span>
+                                            <select onchange="awayRestDays = parseInt(this.value); render();" class="bg-white/10 text-white text-xs rounded px-2 py-1 border border-white/20">
+                                                <option value="1" ${awayRestDays === 1 ? 'selected' : ''}>1 día (normal)</option>
+                                                <option value="2" ${awayRestDays === 2 ? 'selected' : ''}>2 días (+0.5)</option>
+                                                <option value="3" ${awayRestDays === 3 ? 'selected' : ''}>3+ días (+1.5)</option>
+                                                <option value="4" ${awayRestDays === 4 ? 'selected' : ''}>4+ días (+1.5)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Streaks -->
+                                <div class="bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
+                                    <p class="text-xs text-orange-400 font-bold mb-2 text-center">🔥 Rachas (últimos 5)</p>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-300">🏠 ${localTeam || 'Local'}:</span>
+                                            <select onchange="localStreak = parseInt(this.value); render();" class="bg-white/10 text-white text-xs rounded px-2 py-1 border border-white/20">
+                                                <option value="-5" ${localStreak === -5 ? 'selected' : ''}>-5 (muy fría)</option>
+                                                <option value="-4" ${localStreak === -4 ? 'selected' : ''}>-4</option>
+                                                <option value="-3" ${localStreak === -3 ? 'selected' : ''}>-3</option>
+                                                <option value="-2" ${localStreak === -2 ? 'selected' : ''}>-2</option>
+                                                <option value="-1" ${localStreak === -1 ? 'selected' : ''}>-1</option>
+                                                <option value="0" ${localStreak === 0 ? 'selected' : ''}>0 (neutral)</option>
+                                                <option value="1" ${localStreak === 1 ? 'selected' : ''}>+1</option>
+                                                <option value="2" ${localStreak === 2 ? 'selected' : ''}>+2</option>
+                                                <option value="3" ${localStreak === 3 ? 'selected' : ''}>+3</option>
+                                                <option value="4" ${localStreak === 4 ? 'selected' : ''}>+4</option>
+                                                <option value="5" ${localStreak === 5 ? 'selected' : ''}>+5 (muy caliente)</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-300">✈️ ${visitingTeam || 'Visitante'}:</span>
+                                            <select onchange="awayStreak = parseInt(this.value); render();" class="bg-white/10 text-white text-xs rounded px-2 py-1 border border-white/20">
+                                                <option value="-5" ${awayStreak === -5 ? 'selected' : ''}>-5 (muy fría)</option>
+                                                <option value="-4" ${awayStreak === -4 ? 'selected' : ''}>-4</option>
+                                                <option value="-3" ${awayStreak === -3 ? 'selected' : ''}>-3</option>
+                                                <option value="-2" ${awayStreak === -2 ? 'selected' : ''}>-2</option>
+                                                <option value="-1" ${awayStreak === -1 ? 'selected' : ''}>-1</option>
+                                                <option value="0" ${awayStreak === 0 ? 'selected' : ''}>0 (neutral)</option>
+                                                <option value="1" ${awayStreak === 1 ? 'selected' : ''}>+1</option>
+                                                <option value="2" ${awayStreak === 2 ? 'selected' : ''}>+2</option>
+                                                <option value="3" ${awayStreak === 3 ? 'selected' : ''}>+3</option>
+                                                <option value="4" ${awayStreak === 4 ? 'selected' : ''}>+4</option>
+                                                <option value="5" ${awayStreak === 5 ? 'selected' : ''}>+5 (muy caliente)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2 text-center">±0.25 pts por partido</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Resumen de ajustes activos -->
+                            <div class="bg-white/5 rounded-lg p-2 text-center">
+                                <p class="text-xs text-gray-400">
+                                    <strong class="text-white">Ajustes activos:</strong>
+                                    ${localB2B || awayB2B ? `B2B: ${((localB2B ? -1.25 : 0) + (awayB2B ? -1.25 : 0)).toFixed(2)} pts | ` : ''}
+                                    ${localInjury || awayInjury ? `Lesiones: ${((localInjury ? -3.5 : 0) + (awayInjury ? -3.5 : 0)).toFixed(1)} pts | ` : ''}
+                                    ${localRestDays >= 2 || awayRestDays >= 2 ? `Descanso: +${((localRestDays >= 3 ? 1.5 : localRestDays === 2 ? 0.5 : 0) + (awayRestDays >= 3 ? 1.5 : awayRestDays === 2 ? 0.5 : 0)).toFixed(1)} pts | ` : ''}
+                                    ${localStreak !== 0 || awayStreak !== 0 ? `Rachas: ${((localStreak + awayStreak) * 0.25).toFixed(2)} pts` : ''}
+                                    ${!localB2B && !awayB2B && !localInjury && !awayInjury && localRestDays < 2 && awayRestDays < 2 && localStreak === 0 && awayStreak === 0 ? 'Ninguno' : ''}
+                                </p>
+                            </div>
+                        </div>
+                    </details>
                     
                     <!-- Mini-guía de interpretación -->
                     <div class="flex flex-wrap justify-center gap-3 text-xs text-gray-400 mb-3">
@@ -2653,27 +2860,57 @@ function renderTendencia() {
                             <!-- B2B Adjustment -->
                             <div class="bg-red-500/20 border border-red-500/30 rounded-lg p-2 mb-3">
                                 <div class="flex items-center justify-center gap-2 text-red-400 text-sm font-bold">
-                                    <span>⚠️ B2B Penalty:</span>
+                                    <span>😴 B2B Penalty:</span>
                                     <span class="text-lg">${advancedData.components?.full?.b2b?.toFixed(2) || '-2.50'} pts</span>
                                 </div>
-                                <p class="text-xs text-red-300 text-center mt-1">
-                                    ${localB2B ? `${localTeam} ` : ''}${localB2B && awayB2B ? 'y ' : ''}${awayB2B ? `${visitingTeam} ` : ''}jugó ayer (-1.25 pts c/u)
-                                </p>
+                            </div>
+                            ` : ''}
+                            
+                            ${(localRestDays >= 2 || awayRestDays >= 2) ? `
+                            <!-- Rest Days Bonus -->
+                            <div class="bg-green-500/20 border border-green-500/30 rounded-lg p-2 mb-3">
+                                <div class="flex items-center justify-center gap-2 text-green-400 text-sm font-bold">
+                                    <span>💪 Rest Bonus:</span>
+                                    <span class="text-lg">+${advancedData.components?.full?.rest?.toFixed(2) || '0'} pts</span>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${(localInjury || awayInjury) ? `
+                            <!-- Injury Penalty -->
+                            <div class="bg-pink-500/20 border border-pink-500/30 rounded-lg p-2 mb-3">
+                                <div class="flex items-center justify-center gap-2 text-pink-400 text-sm font-bold">
+                                    <span>🏥 Injury Penalty:</span>
+                                    <span class="text-lg">${advancedData.components?.full?.injury?.toFixed(2) || '-3.50'} pts</span>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${(localStreak !== 0 || awayStreak !== 0) ? `
+                            <!-- Streak Factor -->
+                            <div class="bg-orange-500/20 border border-orange-500/30 rounded-lg p-2 mb-3">
+                                <div class="flex items-center justify-center gap-2 text-orange-400 text-sm font-bold">
+                                    <span>🔥 Streak Factor:</span>
+                                    <span class="text-lg">${advancedData.components?.full?.streak >= 0 ? '+' : ''}${advancedData.components?.full?.streak?.toFixed(2) || '0'} pts</span>
+                                </div>
                             </div>
                             ` : ''}
                             
                             <!-- Explicación de cada componente -->
                             <div class="bg-blue-500/10 rounded-lg p-3 text-xs text-gray-300 space-y-2">
                                 <p><strong class="text-green-400">🏀 Ofensivo:</strong> Suma de puntos que anota ${localTeam} en casa + ${visitingTeam} de visita.</p>
-                                <p><strong class="text-red-400">🛡️ Defensivo:</strong> Suma de puntos que PERMITE cada defensa. Más alto = más puntos.</p>
-                                <p><strong class="text-blue-400">⚡ PACE adj:</strong> Ajuste por ritmo de juego. Positivo = rápido, negativo = lento.</p>
-                                <p><strong class="text-purple-400">🏠 Contexto:</strong> +2.5 pts HCA${advancedData.components?.full?.altitude ? ' + altitud' : ''}.</p>
-                                ${(localB2B || awayB2B) ? `<p><strong class="text-red-400">😴 B2B:</strong> -1.25 pts por equipo que jugó ayer (fatiga).</p>` : ''}
+                                <p><strong class="text-red-400">🛡️ Defensivo:</strong> Suma de puntos que PERMITE cada defensa.</p>
+                                <p><strong class="text-blue-400">⚡ PACE:</strong> Ajuste por ritmo de juego combinado.</p>
+                                <p><strong class="text-purple-400">🏠 Contexto:</strong> HCA +2.5 pts${advancedData.components?.full?.altitude ? ' + altitud' : ''}.</p>
+                                ${(localB2B || awayB2B) ? `<p><strong class="text-red-400">😴 B2B:</strong> -1.25 pts por equipo que jugó ayer.</p>` : ''}
+                                ${(localRestDays >= 2 || awayRestDays >= 2) ? `<p><strong class="text-green-400">💪 Descanso:</strong> +0.5/+1.5 pts por 2/3+ días de descanso.</p>` : ''}
+                                ${(localInjury || awayInjury) ? `<p><strong class="text-pink-400">🏥 Lesiones:</strong> -3.5 pts por estrella ausente.</p>` : ''}
+                                ${(localStreak !== 0 || awayStreak !== 0) ? `<p><strong class="text-orange-400">🔥 Rachas:</strong> ±0.25 pts por partido de racha (máx ±5).</p>` : ''}
                             </div>
                             
                             <!-- Fórmula simplificada -->
                             <div class="mt-2 bg-white/5 rounded-lg p-2 text-center text-xs text-gray-400">
-                                <strong>Fórmula:</strong> (Ofensivo×40% + Defensivo×35%) / 75% + PACE + Contexto${(localB2B || awayB2B) ? ' + B2B' : ''} + Regresión
+                                <strong>Fórmula:</strong> Base + PACE + Contexto${(localB2B || awayB2B) ? ' + B2B' : ''}${(localRestDays >= 2 || awayRestDays >= 2) ? ' + Rest' : ''}${(localInjury || awayInjury) ? ' + Injury' : ''}${(localStreak !== 0 || awayStreak !== 0) ? ' + Streak' : ''} + Regresión
                             </div>
                         </div>
                     </details>
