@@ -754,14 +754,19 @@ let typeQ1 = 'OVER', typeHalf = 'OVER', typeFull = 'OVER';
 let oddsQ1 = '', oddsHalf = '', oddsFull = '';
 // NUEVO: Variables para línea Vegas (comparación)
 let vegasLineQ1 = '', vegasLineHalf = '', vegasLineFull = '';
-// NUEVO: Variables para Back-to-Back
+// ═══════════════════════════════════════════════════════════════
+// VARIABLES DE AJUSTE CONTEXTUAL v2.5
+// ═══════════════════════════════════════════════════════════════
 let localB2B = false, awayB2B = false;
-// NUEVO: Variables para Rest Days (días de descanso)
-let localRestDays = 1, awayRestDays = 1; // 1 = ayer, 2 = anteayer, etc.
-// NUEVO: Variables para Injuries (lesiones de estrellas)
+let localRestDays = 1, awayRestDays = 1;
 let localInjury = false, awayInjury = false;
-// NUEVO: Variables para Streaks (rachas)
-let localStreak = 0, awayStreak = 0; // Positivo = ganando, Negativo = perdiendo
+let localStreak = 0, awayStreak = 0;
+// NUEVOS: Travel, Schedule Density, Division, Day of Week
+let awayTravel = 'none'; // 'none', 'moderate', 'crossCountry'
+let localScheduleDensity = 'normal', awayScheduleDensity = 'normal'; // 'normal', '3in4', '4in5'
+let isDivisionRivalry = false;
+let gameDay = 'weekday'; // 'weekday', 'friday', 'saturday', 'sunday'
+
 let ingestTeam1 = '', ingestTeam2 = '', ingestLocalTeam = '', ingestDate = '';
 let ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
 let firebaseConnected = false;
@@ -1658,7 +1663,7 @@ function formatRanking(rank, inverse = false) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// NIOSPORTS PRO v2.0 - MODELO PREDICTIVO AVANZADO
+// NIOSPORTS PRO v2.5 FINAL - MODELO PREDICTIVO AVANZADO
 // ═══════════════════════════════════════════════════════════════
 // Basado en investigación académica y mejores prácticas:
 // - XGBoost/SHAP studies (PLOS ONE 2024)
@@ -1696,35 +1701,77 @@ const ALTITUDE_TEAMS = {
     'Jazz': 1.0      // Utah: 4,226 pies - ventaja menor
 };
 
-// NUEVO: Back-to-Back penalty (investigación: -1.0 a -1.25 puntos)
-const B2B_PENALTY = {
-    full: -1.25,    // Penalización en partido completo
-    half: -0.6,     // Proporcionalmente en 1H
-    q1: -0.3        // Proporcionalmente en Q1
-};
+// ═══════════════════════════════════════════════════════════════
+// FACTORES DE AJUSTE DEL MODELO v2.5 FINAL
+// ═══════════════════════════════════════════════════════════════
 
-// NUEVO: Rest Days bonus (equipos descansados rinden mejor)
-// Investigación: +1.5 pts con 3+ días de descanso
+// Back-to-Back penalty (-1.25 pts)
+const B2B_PENALTY = { full: -1.25, half: -0.6, q1: -0.3 };
+
+// Rest Days bonus (+0.5 a +1.5 pts)
 const REST_BONUS = {
-    full: { days3plus: 1.5, days2: 0.5 },   // 3+ días = +1.5, 2 días = +0.5
+    full: { days3plus: 1.5, days2: 0.5 },
     half: { days3plus: 0.75, days2: 0.25 },
     q1: { days3plus: 0.4, days2: 0.1 }
 };
 
-// NUEVO: Injury penalty (estrella lesionada)
-// Investigación: -3 a -5 puntos dependiendo del jugador
-const INJURY_PENALTY = {
-    full: -3.5,     // Impacto significativo sin estrella
-    half: -1.75,
-    q1: -0.9
+// Injury penalty (-3.5 pts por estrella)
+const INJURY_PENALTY = { full: -3.5, half: -1.75, q1: -0.9 };
+
+// Streak factor (±0.25 pts por partido, max ±5)
+const STREAK_FACTOR = { full: 0.25, half: 0.12, q1: 0.06 };
+
+// Travel/Timezone factor (viajes largos afectan rendimiento)
+const TRAVEL_PENALTY = {
+    crossCountry: { full: -1.0, half: -0.5, q1: -0.25 },  // Costa a Costa (3+ zonas)
+    moderate: { full: -0.5, half: -0.25, q1: -0.1 }       // 1-2 zonas horarias
 };
 
-// NUEVO: Streak factor (momentum)
-// Investigación: Equipos en racha caliente/fría ±1 pt
-const STREAK_FACTOR = {
-    full: 0.25,     // Por cada partido de racha (max ±5 = ±1.25 pts)
-    half: 0.12,
-    q1: 0.06
+// Schedule density (fatiga acumulada)
+const SCHEDULE_DENSITY_PENALTY = {
+    // 4 juegos en 5 noches
+    fourInFive: { full: -1.5, half: -0.75, q1: -0.4 },
+    // 3 juegos en 4 noches
+    threeInFour: { full: -0.75, half: -0.4, q1: -0.2 }
+};
+
+// Division rivalry bonus (partidos más intensos)
+const DIVISION_RIVALRY_BONUS = { full: 2.0, half: 1.0, q1: 0.5 };
+
+// Day of week factor (investigación: más puntos en ciertos días)
+const DAY_OF_WEEK_FACTOR = {
+    // Viernes/Sábado: equipos más motivados, más público
+    friday: { full: 1.5, half: 0.75, q1: 0.4 },
+    saturday: { full: 1.5, half: 0.75, q1: 0.4 },
+    // Domingo: segundo de B2B frecuente, algo menos
+    sunday: { full: 0.5, half: 0.25, q1: 0.1 },
+    // Entre semana: normal
+    weekday: { full: 0, half: 0, q1: 0 }
+};
+
+// Timezone mapping para equipos
+const TEAM_TIMEZONE = {
+    // Eastern (-5)
+    "Celtics": -5, "Nets": -5, "Knicks": -5, "76ers": -5, "Raptors": -5,
+    "Bulls": -6, "Cavaliers": -5, "Pistons": -5, "Pacers": -5, "Bucks": -6,
+    "Hawks": -5, "Hornets": -5, "Heat": -5, "Magic": -5, "Wizards": -5,
+    // Central (-6)
+    "Mavericks": -6, "Rockets": -6, "Grizzlies": -6, "Pelicans": -6, "Spurs": -6,
+    "Timberwolves": -6, "Thunder": -6,
+    // Mountain (-7)
+    "Nuggets": -7, "Jazz": -7, "Suns": -7,
+    // Pacific (-8)
+    "Lakers": -8, "Clippers": -8, "Warriors": -8, "Kings": -8, "Trail Blazers": -8
+};
+
+// Divisiones NBA para rivalry bonus
+const NBA_DIVISIONS = {
+    atlantic: ["Celtics", "Nets", "Knicks", "76ers", "Raptors"],
+    central: ["Bulls", "Cavaliers", "Pistons", "Pacers", "Bucks"],
+    southeast: ["Hawks", "Hornets", "Heat", "Magic", "Wizards"],
+    northwest: ["Nuggets", "Timberwolves", "Thunder", "Trail Blazers", "Jazz"],
+    pacific: ["Warriors", "Clippers", "Lakers", "Kings", "Suns"],
+    southwest: ["Mavericks", "Rockets", "Grizzlies", "Pelicans", "Spurs"]
 };
 
 // Configuración del modelo avanzado
@@ -1773,6 +1820,47 @@ function isEarlySeason() {
     if (now < seasonStart) seasonStart.setFullYear(seasonStart.getFullYear() - 1);
     const weeksIntoSeason = Math.floor((now - seasonStart) / (7 * 24 * 60 * 60 * 1000));
     return weeksIntoSeason < EARLY_SEASON_BIAS.weeksAffected;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FUNCIONES AUXILIARES v2.5
+// ═══════════════════════════════════════════════════════════════
+
+// Detectar si dos equipos son de la misma división
+function areDivisionRivals(team1, team2) {
+    for (const division of Object.values(NBA_DIVISIONS)) {
+        if (division.includes(team1) && division.includes(team2)) return true;
+    }
+    return false;
+}
+
+// Calcular diferencia de timezone entre equipos
+function getTimezoneDiff(homeTeam, awayTeam) {
+    const homeTZ = TEAM_TIMEZONE[homeTeam] || -6;
+    const awayTZ = TEAM_TIMEZONE[awayTeam] || -6;
+    return Math.abs(homeTZ - awayTZ);
+}
+
+// Auto-detectar travel penalty basado en equipos
+function autoDetectTravel(homeTeam, awayTeam) {
+    const tzDiff = getTimezoneDiff(homeTeam, awayTeam);
+    if (tzDiff >= 3) return 'crossCountry';
+    if (tzDiff >= 1) return 'moderate';
+    return 'none';
+}
+
+// Auto-detectar rivalry
+function autoDetectRivalry(team1, team2) {
+    return areDivisionRivals(team1, team2);
+}
+
+// Obtener día de la semana actual
+function getCurrentGameDay() {
+    const day = new Date().getDay();
+    if (day === 5) return 'friday';
+    if (day === 6) return 'saturday';
+    if (day === 0) return 'sunday';
+    return 'weekday';
 }
 
 // SD dinámica ajustada por PACE
@@ -1922,29 +2010,84 @@ function calculateAdvancedTrend(localTeamName, awayTeamName, period = 'full') {
     
     // 4.8 AJUSTE POR STREAKS (rachas)
     let streakAdjust = 0;
-    // Local streak (limitado a ±5)
     const localStreakLimited = Math.max(-5, Math.min(5, localStreak));
     const awayStreakLimited = Math.max(-5, Math.min(5, awayStreak));
     
-    if (period === 'q1') {
-        streakAdjust = (localStreakLimited + awayStreakLimited) * STREAK_FACTOR.q1;
-    } else if (period === 'half') {
-        streakAdjust = (localStreakLimited + awayStreakLimited) * STREAK_FACTOR.half;
-    } else {
-        streakAdjust = (localStreakLimited + awayStreakLimited) * STREAK_FACTOR.full;
-    }
+    if (period === 'q1') streakAdjust = (localStreakLimited + awayStreakLimited) * STREAK_FACTOR.q1;
+    else if (period === 'half') streakAdjust = (localStreakLimited + awayStreakLimited) * STREAK_FACTOR.half;
+    else streakAdjust = (localStreakLimited + awayStreakLimited) * STREAK_FACTOR.full;
+    
     components.streak = streakAdjust;
-    if (localStreak >= 3) warnings.push(`🔥 ${localTeamName} en racha +${localStreak}`);
-    if (localStreak <= -3) warnings.push(`❄️ ${localTeamName} en racha ${localStreak}`);
-    if (awayStreak >= 3) warnings.push(`🔥 ${awayTeamName} en racha +${awayStreak}`);
-    if (awayStreak <= -3) warnings.push(`❄️ ${awayTeamName} en racha ${awayStreak}`);
+    if (localStreak >= 3) warnings.push(`🔥 ${localTeamName} racha +${localStreak}`);
+    if (localStreak <= -3) warnings.push(`❄️ ${localTeamName} racha ${localStreak}`);
+    if (awayStreak >= 3) warnings.push(`🔥 ${awayTeamName} racha +${awayStreak}`);
+    if (awayStreak <= -3) warnings.push(`❄️ ${awayTeamName} racha ${awayStreak}`);
+    
+    // 4.9 AJUSTE POR TRAVEL (viaje largo del visitante)
+    let travelAdjust = 0;
+    if (awayTravel === 'crossCountry') {
+        if (period === 'q1') travelAdjust = TRAVEL_PENALTY.crossCountry.q1;
+        else if (period === 'half') travelAdjust = TRAVEL_PENALTY.crossCountry.half;
+        else travelAdjust = TRAVEL_PENALTY.crossCountry.full;
+        warnings.push(`✈️ ${awayTeamName} viaje largo (-1.0 pts)`);
+    } else if (awayTravel === 'moderate') {
+        if (period === 'q1') travelAdjust = TRAVEL_PENALTY.moderate.q1;
+        else if (period === 'half') travelAdjust = TRAVEL_PENALTY.moderate.half;
+        else travelAdjust = TRAVEL_PENALTY.moderate.full;
+    }
+    components.travel = travelAdjust;
+    
+    // 4.10 AJUSTE POR SCHEDULE DENSITY (fatiga acumulada)
+    let scheduleAdjust = 0;
+    // Local
+    if (localScheduleDensity === '4in5') {
+        if (period === 'q1') scheduleAdjust += SCHEDULE_DENSITY_PENALTY.fourInFive.q1;
+        else if (period === 'half') scheduleAdjust += SCHEDULE_DENSITY_PENALTY.fourInFive.half;
+        else scheduleAdjust += SCHEDULE_DENSITY_PENALTY.fourInFive.full;
+        warnings.push(`😰 ${localTeamName} 4-en-5 (-1.5 pts)`);
+    } else if (localScheduleDensity === '3in4') {
+        if (period === 'q1') scheduleAdjust += SCHEDULE_DENSITY_PENALTY.threeInFour.q1;
+        else if (period === 'half') scheduleAdjust += SCHEDULE_DENSITY_PENALTY.threeInFour.half;
+        else scheduleAdjust += SCHEDULE_DENSITY_PENALTY.threeInFour.full;
+    }
+    // Away
+    if (awayScheduleDensity === '4in5') {
+        if (period === 'q1') scheduleAdjust += SCHEDULE_DENSITY_PENALTY.fourInFive.q1;
+        else if (period === 'half') scheduleAdjust += SCHEDULE_DENSITY_PENALTY.fourInFive.half;
+        else scheduleAdjust += SCHEDULE_DENSITY_PENALTY.fourInFive.full;
+        warnings.push(`😰 ${awayTeamName} 4-en-5 (-1.5 pts)`);
+    } else if (awayScheduleDensity === '3in4') {
+        if (period === 'q1') scheduleAdjust += SCHEDULE_DENSITY_PENALTY.threeInFour.q1;
+        else if (period === 'half') scheduleAdjust += SCHEDULE_DENSITY_PENALTY.threeInFour.half;
+        else scheduleAdjust += SCHEDULE_DENSITY_PENALTY.threeInFour.full;
+    }
+    components.schedule = scheduleAdjust;
+    
+    // 4.11 AJUSTE POR DIVISION RIVALRY (+puntos por intensidad)
+    let divisionAdjust = 0;
+    if (isDivisionRivalry) {
+        if (period === 'q1') divisionAdjust = DIVISION_RIVALRY_BONUS.q1;
+        else if (period === 'half') divisionAdjust = DIVISION_RIVALRY_BONUS.half;
+        else divisionAdjust = DIVISION_RIVALRY_BONUS.full;
+        warnings.push(`⚔️ Rivalidad división (+2.0 pts)`);
+    }
+    components.division = divisionAdjust;
+    
+    // 4.12 AJUSTE POR DÍA DE LA SEMANA
+    let dayAdjust = 0;
+    const dayFactor = DAY_OF_WEEK_FACTOR[gameDay] || DAY_OF_WEEK_FACTOR.weekday;
+    if (period === 'q1') dayAdjust = dayFactor.q1;
+    else if (period === 'half') dayAdjust = dayFactor.half;
+    else dayAdjust = dayFactor.full;
+    components.dayOfWeek = dayAdjust;
+    if (gameDay === 'friday' || gameDay === 'saturday') warnings.push(`🎉 Fin de semana (+1.5 pts)`);
     
     // 5. CÁLCULO FINAL
     const baseTotal = (components.offense * MODEL_CONFIG.weights.offense + 
                        components.defense * MODEL_CONFIG.weights.defense) / 
                       (MODEL_CONFIG.weights.offense + MODEL_CONFIG.weights.defense);
     
-    let finalTrend = baseTotal + components.pace + components.context + b2bAdjust + restAdjust + injuryAdjust + streakAdjust;
+    let finalTrend = baseTotal + components.pace + components.context + b2bAdjust + restAdjust + injuryAdjust + streakAdjust + travelAdjust + scheduleAdjust + divisionAdjust + dayAdjust;
     
     // 6. EARLY SEASON BIAS
     if (EARLY_SEASON_BIAS.active && isEarlySeason()) {
@@ -2392,7 +2535,7 @@ function renderHome() {
                     ${LOGO_SVG}
                     <div>
                         <h1 class="text-4xl md:text-5xl font-black text-white font-orbitron tracking-wider">NIOSPORTS</h1>
-                        <h2 class="text-xl font-bold gradient-text-animated font-orbitron">PRO v2.0</h2>
+                        <h2 class="text-xl font-bold gradient-text-animated font-orbitron">PRO v2.5 FINAL</h2>
                     </div>
                 </div>
                 <p class="text-gray-400 text-sm">Tu herramienta profesional de análisis NBA con IA</p>
@@ -2647,31 +2790,33 @@ function renderTendencia() {
         
         html += `
             <div class="glass rounded-2xl p-3 md:p-5 shadow-xl mb-6 border border-white/10">
-                <h2 class="text-lg md:text-xl font-bold text-white mb-1 text-center">📈 TENDENCIA v2.0 - MODELO AVANZADO</h2>
+                <h2 class="text-lg md:text-xl font-bold text-white mb-1 text-center">📈 TENDENCIA v2.5 - MODELO FINAL</h2>
                 <p class="text-center text-gray-400 text-xs md:text-sm mb-2">${localTeam} (HOME) + ${visitingTeam} (AWAY)</p>
                 
                 ${advancedData ? `
-                    <!-- Info del modelo avanzado -->
+                    <!-- Badges de factores activos -->
                     <div class="flex flex-wrap justify-center gap-2 mb-2">
-                        ${advancedData.combinedPace ? `<span class="badge-neon badge-neon-blue" title="Ritmo de juego combinado. >102 = rápido (más puntos), <98 = lento (menos puntos)">⚡ PACE: ${advancedData.combinedPace.toFixed(1)}</span>` : ''}
-                        ${advancedData.components?.full?.altitude ? `<span class="badge-neon badge-neon-yellow" title="Bonus por altitud (Denver/Utah)">🏔️ Altitud +${advancedData.components.full.altitude}</span>` : ''}
-                        ${advancedData.isEarlySeason ? `<span class="badge-neon badge-neon-yellow" title="Primeras semanas de temporada - datos limitados">⚠️ Early Season</span>` : ''}
-                        ${localB2B ? `<span class="badge-neon badge-neon-pink" title="Equipo local jugó ayer">🔴 ${localTeam} B2B</span>` : ''}
-                        ${awayB2B ? `<span class="badge-neon badge-neon-pink" title="Equipo visitante jugó ayer">🔴 ${visitingTeam} B2B</span>` : ''}
-                        ${localInjury ? `<span class="badge-neon badge-neon-pink" title="Estrella lesionada">🏥 ${localTeam} -Estrella</span>` : ''}
-                        ${awayInjury ? `<span class="badge-neon badge-neon-pink" title="Estrella lesionada">🏥 ${visitingTeam} -Estrella</span>` : ''}
-                        ${localRestDays >= 3 ? `<span class="badge-neon badge-neon-green" title="Equipo descansado">💪 ${localTeam} +${localRestDays}d</span>` : ''}
-                        ${awayRestDays >= 3 ? `<span class="badge-neon badge-neon-green" title="Equipo descansado">💪 ${visitingTeam} +${awayRestDays}d</span>` : ''}
-                        ${localStreak >= 3 ? `<span class="badge-neon badge-neon-green" title="En racha ganadora">🔥 ${localTeam} +${localStreak}W</span>` : ''}
-                        ${localStreak <= -3 ? `<span class="badge-neon badge-neon-pink" title="En racha perdedora">❄️ ${localTeam} ${localStreak}L</span>` : ''}
-                        ${awayStreak >= 3 ? `<span class="badge-neon badge-neon-green" title="En racha ganadora">🔥 ${visitingTeam} +${awayStreak}W</span>` : ''}
-                        ${awayStreak <= -3 ? `<span class="badge-neon badge-neon-pink" title="En racha perdedora">❄️ ${visitingTeam} ${awayStreak}L</span>` : ''}
-                        <span class="badge-neon ${advancedData.confidence >= 85 ? 'badge-neon-green' : advancedData.confidence >= 75 ? 'badge-neon-yellow' : 'badge-neon-pink'}" title="${advancedData.confidence >= 85 ? 'Datos completos y consistentes' : advancedData.confidence >= 75 ? 'Datos buenos pero con algunas limitaciones' : 'Datos limitados, usar con precaución'}">🎯 Confianza: ${advancedData.confidence}%</span>
+                        ${advancedData.combinedPace ? `<span class="badge-neon badge-neon-blue" title="Ritmo combinado">⚡ ${advancedData.combinedPace.toFixed(1)}</span>` : ''}
+                        ${advancedData.components?.full?.altitude ? `<span class="badge-neon badge-neon-yellow">🏔️ +${advancedData.components.full.altitude}</span>` : ''}
+                        ${localB2B ? `<span class="badge-neon badge-neon-pink">🔴 ${localTeam} B2B</span>` : ''}
+                        ${awayB2B ? `<span class="badge-neon badge-neon-pink">🔴 ${visitingTeam} B2B</span>` : ''}
+                        ${localInjury ? `<span class="badge-neon badge-neon-pink">🏥 ${localTeam}</span>` : ''}
+                        ${awayInjury ? `<span class="badge-neon badge-neon-pink">🏥 ${visitingTeam}</span>` : ''}
+                        ${localRestDays >= 3 ? `<span class="badge-neon badge-neon-green">💪 ${localTeam} +${localRestDays}d</span>` : ''}
+                        ${awayRestDays >= 3 ? `<span class="badge-neon badge-neon-green">💪 ${visitingTeam} +${awayRestDays}d</span>` : ''}
+                        ${localStreak >= 3 ? `<span class="badge-neon badge-neon-green">🔥 ${localTeam} +${localStreak}</span>` : ''}
+                        ${localStreak <= -3 ? `<span class="badge-neon badge-neon-pink">❄️ ${localTeam} ${localStreak}</span>` : ''}
+                        ${awayStreak >= 3 ? `<span class="badge-neon badge-neon-green">🔥 ${visitingTeam} +${awayStreak}</span>` : ''}
+                        ${awayStreak <= -3 ? `<span class="badge-neon badge-neon-pink">❄️ ${visitingTeam} ${awayStreak}</span>` : ''}
+                        ${awayTravel === 'crossCountry' ? `<span class="badge-neon badge-neon-blue">✈️ Costa-Costa</span>` : ''}
+                        ${isDivisionRivalry ? `<span class="badge-neon badge-neon-yellow">⚔️ División</span>` : ''}
+                        ${gameDay === 'friday' || gameDay === 'saturday' ? `<span class="badge-neon badge-neon-green">🎉 Fin de semana</span>` : ''}
+                        <span class="badge-neon ${advancedData.confidence >= 85 ? 'badge-neon-green' : advancedData.confidence >= 75 ? 'badge-neon-yellow' : 'badge-neon-pink'}">🎯 ${advancedData.confidence}%</span>
                     </div>
                     
-                    <!-- PANEL DE AJUSTES CONTEXTUALES -->
+                    <!-- PANEL DE AJUSTES CONTEXTUALES v2.5 -->
                     <details class="mb-3">
-                        <summary class="text-sm text-cyan-400 cursor-pointer hover:text-cyan-300 font-semibold text-center">⚙️ Ajustes Contextuales (B2B, Descanso, Lesiones, Rachas)</summary>
+                        <summary class="text-sm text-cyan-400 cursor-pointer hover:text-cyan-300 font-semibold text-center">⚙️ Ajustes Contextuales (8 factores disponibles)</summary>
                         <div class="mt-3 bg-white/5 rounded-xl p-4 space-y-4">
                             
                             <!-- Fila 1: B2B -->
@@ -2775,15 +2920,76 @@ function renderTendencia() {
                                 </div>
                             </div>
                             
+                            <!-- Fila 3: Travel, Schedule Density -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
+                                    <p class="text-xs text-blue-400 font-bold mb-2 text-center">✈️ Viaje Visitante</p>
+                                    <select onchange="awayTravel = this.value; render();" class="w-full bg-white/10 text-white text-xs rounded px-2 py-1 border border-white/20">
+                                        <option value="none" ${awayTravel === 'none' ? 'selected' : ''}>Normal (misma zona)</option>
+                                        <option value="moderate" ${awayTravel === 'moderate' ? 'selected' : ''}>Moderado 1-2 zonas (-0.5)</option>
+                                        <option value="crossCountry" ${awayTravel === 'crossCountry' ? 'selected' : ''}>Costa a Costa 3+ (-1.0)</option>
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-2 text-center">Fatiga por viaje largo</p>
+                                </div>
+                                
+                                <div class="bg-purple-500/10 rounded-lg p-3 border border-purple-500/20">
+                                    <p class="text-xs text-purple-400 font-bold mb-2 text-center">📅 Densidad Schedule</p>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-300">🏠:</span>
+                                            <select onchange="localScheduleDensity = this.value; render();" class="bg-white/10 text-white text-xs rounded px-2 py-1 border border-white/20">
+                                                <option value="normal" ${localScheduleDensity === 'normal' ? 'selected' : ''}>Normal</option>
+                                                <option value="3in4" ${localScheduleDensity === '3in4' ? 'selected' : ''}>3 en 4 días (-0.75)</option>
+                                                <option value="4in5" ${localScheduleDensity === '4in5' ? 'selected' : ''}>4 en 5 días (-1.5)</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-300">✈️:</span>
+                                            <select onchange="awayScheduleDensity = this.value; render();" class="bg-white/10 text-white text-xs rounded px-2 py-1 border border-white/20">
+                                                <option value="normal" ${awayScheduleDensity === 'normal' ? 'selected' : ''}>Normal</option>
+                                                <option value="3in4" ${awayScheduleDensity === '3in4' ? 'selected' : ''}>3 en 4 días (-0.75)</option>
+                                                <option value="4in5" ${awayScheduleDensity === '4in5' ? 'selected' : ''}>4 en 5 días (-1.5)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Fila 4: Division Rivalry, Day of Week -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/20">
+                                    <p class="text-xs text-yellow-400 font-bold mb-2 text-center">⚔️ Rivalidad División</p>
+                                    <label class="flex items-center justify-center gap-2 text-xs text-gray-300 cursor-pointer">
+                                        <input type="checkbox" ${isDivisionRivalry ? 'checked' : ''} onchange="isDivisionRivalry = this.checked; render();" class="w-4 h-4 accent-yellow-500">
+                                        <span>Misma división (+2.0 pts)</span>
+                                    </label>
+                                    <p class="text-xs text-gray-500 mt-2 text-center">Partidos más intensos</p>
+                                </div>
+                                
+                                <div class="bg-cyan-500/10 rounded-lg p-3 border border-cyan-500/20">
+                                    <p class="text-xs text-cyan-400 font-bold mb-2 text-center">📆 Día de Juego</p>
+                                    <select onchange="gameDay = this.value; render();" class="w-full bg-white/10 text-white text-xs rounded px-2 py-1 border border-white/20">
+                                        <option value="weekday" ${gameDay === 'weekday' ? 'selected' : ''}>Lun-Jue (normal)</option>
+                                        <option value="friday" ${gameDay === 'friday' ? 'selected' : ''}>Viernes (+1.5)</option>
+                                        <option value="saturday" ${gameDay === 'saturday' ? 'selected' : ''}>Sábado (+1.5)</option>
+                                        <option value="sunday" ${gameDay === 'sunday' ? 'selected' : ''}>Domingo (+0.5)</option>
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-2 text-center">Más puntos fines de semana</p>
+                                </div>
+                            </div>
+                            
                             <!-- Resumen de ajustes activos -->
                             <div class="bg-white/5 rounded-lg p-2 text-center">
                                 <p class="text-xs text-gray-400">
                                     <strong class="text-white">Ajustes activos:</strong>
-                                    ${localB2B || awayB2B ? `B2B: ${((localB2B ? -1.25 : 0) + (awayB2B ? -1.25 : 0)).toFixed(2)} pts | ` : ''}
-                                    ${localInjury || awayInjury ? `Lesiones: ${((localInjury ? -3.5 : 0) + (awayInjury ? -3.5 : 0)).toFixed(1)} pts | ` : ''}
-                                    ${localRestDays >= 2 || awayRestDays >= 2 ? `Descanso: +${((localRestDays >= 3 ? 1.5 : localRestDays === 2 ? 0.5 : 0) + (awayRestDays >= 3 ? 1.5 : awayRestDays === 2 ? 0.5 : 0)).toFixed(1)} pts | ` : ''}
-                                    ${localStreak !== 0 || awayStreak !== 0 ? `Rachas: ${((localStreak + awayStreak) * 0.25).toFixed(2)} pts` : ''}
-                                    ${!localB2B && !awayB2B && !localInjury && !awayInjury && localRestDays < 2 && awayRestDays < 2 && localStreak === 0 && awayStreak === 0 ? 'Ninguno' : ''}
+                                    ${localB2B || awayB2B ? `B2B: ${((localB2B ? -1.25 : 0) + (awayB2B ? -1.25 : 0)).toFixed(2)} | ` : ''}
+                                    ${localInjury || awayInjury ? `Lesiones: ${((localInjury ? -3.5 : 0) + (awayInjury ? -3.5 : 0)).toFixed(1)} | ` : ''}
+                                    ${localRestDays >= 2 || awayRestDays >= 2 ? `Descanso: +${((localRestDays >= 3 ? 1.5 : localRestDays === 2 ? 0.5 : 0) + (awayRestDays >= 3 ? 1.5 : awayRestDays === 2 ? 0.5 : 0)).toFixed(1)} | ` : ''}
+                                    ${localStreak !== 0 || awayStreak !== 0 ? `Rachas: ${((localStreak + awayStreak) * 0.25).toFixed(2)} | ` : ''}
+                                    ${awayTravel !== 'none' ? `Travel: ${awayTravel === 'crossCountry' ? '-1.0' : '-0.5'} | ` : ''}
+                                    ${localScheduleDensity !== 'normal' || awayScheduleDensity !== 'normal' ? `Schedule: ${((localScheduleDensity === '4in5' ? -1.5 : localScheduleDensity === '3in4' ? -0.75 : 0) + (awayScheduleDensity === '4in5' ? -1.5 : awayScheduleDensity === '3in4' ? -0.75 : 0)).toFixed(2)} | ` : ''}
+                                    ${isDivisionRivalry ? `División: +2.0 | ` : ''}
+                                    ${gameDay !== 'weekday' ? `Día: +${gameDay === 'sunday' ? '0.5' : '1.5'}` : ''}
                                 </p>
                             </div>
                         </div>
