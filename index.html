@@ -30,7 +30,9 @@
         * { font-family: 'Rajdhani', sans-serif; }
         .font-orbitron { font-family: 'Orbitron', sans-serif; }
         
-        /* TEMA OSCURO (default) */
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* TEMA OSCURO (default)                                           */
+        /* ═══════════════════════════════════════════════════════════════ */
         :root, [data-theme="dark"] {
             --bg-primary: #0a0a1a;
             --bg-secondary: #12122a;
@@ -52,67 +54,349 @@
             background: var(--bg-primary) !important;
             color: var(--text-primary);
             transition: background 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
         }
         
         [data-theme="light"] body {
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%) !important;
         }
         
-        [data-theme="dark"] body {
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0d0d1f 100%) !important;
+        /* Tema claro - ajustes */
+        [data-theme="light"] .text-white { color: #1e293b !important; }
+        [data-theme="light"] .text-gray-300, [data-theme="light"] .text-gray-400 { color: #475569 !important; }
+        [data-theme="light"] .text-gray-500 { color: #64748b !important; }
+        [data-theme="light"] .bg-white\/5, [data-theme="light"] .bg-white\/10 { background: rgba(0,0,0,0.05) !important; }
+        [data-theme="light"] .bg-black\/20, [data-theme="light"] .bg-black\/30 { background: rgba(255,255,255,0.7) !important; }
+        [data-theme="light"] .bg-white { background: #ffffff !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; border: 1px solid #e2e8f0 !important; }
+        [data-theme="light"] .animated-bg { opacity: 0.3; }
+        [data-theme="light"] .particles { opacity: 0.4; }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* FONDO ANIMADO PREMIUM                                           */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -2;
+            background: linear-gradient(125deg, #0a0a1a 0%, #1a0a2e 25%, #0a1a2e 50%, #1a0a2e 75%, #0a0a1a 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
         }
         
-        /* Tema claro - ajustes de texto */
-        [data-theme="light"] .text-white {
-            color: #1e293b !important;
-        }
-        [data-theme="light"] .text-gray-300,
-        [data-theme="light"] .text-gray-400 {
-            color: #475569 !important;
-        }
-        [data-theme="light"] .text-gray-500 {
-            color: #64748b !important;
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
-        /* Tema claro - fondos de tarjetas */
-        [data-theme="light"] .bg-white\/5,
-        [data-theme="light"] .bg-white\/10 {
-            background: rgba(0,0,0,0.05) !important;
-        }
-        [data-theme="light"] .bg-black\/20,
-        [data-theme="light"] .bg-black\/30 {
-            background: rgba(255,255,255,0.7) !important;
-        }
-        
-        /* Tema claro - gradientes de tarjetas principales */
-        [data-theme="light"] .from-emerald-600 {
-            --tw-gradient-from: #059669 !important;
-        }
-        [data-theme="light"] .from-orange-500 {
-            --tw-gradient-from: #f97316 !important;
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* PARTÍCULAS FLOTANTES                                            */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
         }
         
-        /* Tema claro - tarjetas blancas con mejor contraste */
-        [data-theme="light"] .bg-white {
-            background: #ffffff !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
-            border: 1px solid #e2e8f0 !important;
-        }
-        [data-theme="light"] .rounded-2xl.bg-white,
-        [data-theme="light"] .rounded-xl.bg-white {
-            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%) !important;
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, rgba(0, 200, 255, 0.8) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
         }
         
-        /* Tema claro - selects y inputs */
-        [data-theme="light"] select,
-        [data-theme="light"] input {
-            border: 1px solid #cbd5e1 !important;
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 25s; }
+        .particle:nth-child(2) { left: 20%; animation-delay: 2s; animation-duration: 20s; }
+        .particle:nth-child(3) { left: 30%; animation-delay: 4s; animation-duration: 28s; }
+        .particle:nth-child(4) { left: 40%; animation-delay: 1s; animation-duration: 22s; }
+        .particle:nth-child(5) { left: 50%; animation-delay: 3s; animation-duration: 24s; }
+        .particle:nth-child(6) { left: 60%; animation-delay: 5s; animation-duration: 26s; }
+        .particle:nth-child(7) { left: 70%; animation-delay: 2s; animation-duration: 21s; }
+        .particle:nth-child(8) { left: 80%; animation-delay: 4s; animation-duration: 23s; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 1s; animation-duration: 27s; }
+        .particle:nth-child(10) { left: 15%; animation-delay: 3s; animation-duration: 19s; }
+        .particle:nth-child(11) { left: 25%; animation-delay: 0s; animation-duration: 30s; }
+        .particle:nth-child(12) { left: 35%; animation-delay: 2s; animation-duration: 18s; }
+        .particle:nth-child(13) { left: 45%; animation-delay: 4s; animation-duration: 25s; }
+        .particle:nth-child(14) { left: 55%; animation-delay: 1s; animation-duration: 22s; }
+        .particle:nth-child(15) { left: 65%; animation-delay: 3s; animation-duration: 28s; }
+        .particle:nth-child(16) { left: 75%; animation-delay: 5s; animation-duration: 20s; }
+        .particle:nth-child(17) { left: 85%; animation-delay: 2s; animation-duration: 24s; }
+        .particle:nth-child(18) { left: 95%; animation-delay: 4s; animation-duration: 26s; }
+        .particle:nth-child(19) { left: 5%; animation-delay: 1s; animation-duration: 23s; }
+        .particle:nth-child(20) { left: 50%; animation-delay: 3s; animation-duration: 21s; }
+        
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
         }
         
-        .glass { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .gradient-text { background: linear-gradient(135deg, #00c8ff 0%, #ff3366 50%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .particle:nth-child(odd) {
+            background: radial-gradient(circle, rgba(255, 51, 102, 0.6) 0%, transparent 70%);
+            width: 6px;
+            height: 6px;
+        }
+        .particle:nth-child(3n) {
+            background: radial-gradient(circle, rgba(255, 107, 53, 0.5) 0%, transparent 70%);
+            width: 5px;
+            height: 5px;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* GLASSMORPHISM PREMIUM                                           */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 200, 255, 0.1);
+            border-color: rgba(0, 200, 255, 0.3);
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* LOGO ANIMADO CON GLOW                                           */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .logo-glow {
+            filter: drop-shadow(0 0 20px rgba(0, 200, 255, 0.5)) drop-shadow(0 0 40px rgba(255, 51, 102, 0.3));
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes logoPulse {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 200, 255, 0.5)) drop-shadow(0 0 40px rgba(255, 51, 102, 0.3)); }
+            50% { filter: drop-shadow(0 0 30px rgba(0, 200, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 51, 102, 0.5)); }
+        }
+        
+        /* Texto con gradiente animado */
+        .gradient-text-animated {
+            background: linear-gradient(90deg, #00c8ff, #ff3366, #ff6b35, #00c8ff);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientText 4s linear infinite;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #00c8ff 0%, #ff3366 50%, #ff6b35 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        @keyframes gradientText {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* BOTONES 3D PREMIUM                                              */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .btn-3d {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-3d::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: inherit;
+            border-radius: inherit;
+            filter: blur(15px);
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+        }
+        
+        .btn-3d:hover::before { opacity: 0.6; }
+        
+        .btn-3d:hover {
+            transform: translateY(-8px) rotateX(5deg);
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5), 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-3d:active { transform: translateY(-2px); }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* TARJETAS DE TENDENCIA CON SHIMMER                               */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .trend-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .trend-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%);
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+        
+        /* Números con glow */
+        .number-glow {
+            text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* BARRA LIVE CON EFECTO                                           */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .live-bar {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .live-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: liveShine 2s infinite;
+        }
+        
+        @keyframes liveShine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: livePulse 1.5s infinite;
+        }
+        
+        @keyframes livePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* BADGES NEÓN                                                     */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .badge-neon {
+            position: relative;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+        
+        .badge-neon-blue {
+            background: rgba(0, 200, 255, 0.15);
+            color: #00c8ff;
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 200, 255, 0.2);
+        }
+        
+        .badge-neon-green {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+        }
+        
+        .badge-neon-pink {
+            background: rgba(255, 51, 102, 0.15);
+            color: #ff3366;
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.2);
+        }
+        
+        .badge-neon-yellow {
+            background: rgba(234, 179, 8, 0.15);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.2);
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* SELECTORES PREMIUM                                              */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .select-premium {
+            appearance: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 40px 12px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300c8ff' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+        }
+        
+        .select-premium:hover, .select-premium:focus {
+            border-color: rgba(0, 200, 255, 0.5);
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.2);
+            outline: none;
+        }
+        
+        .select-premium option {
+            background: #1a1a2e;
+            color: white;
+        }
+        
+        [data-theme="light"] .select-premium {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1e293b;
+        }
+        
+        [data-theme="light"] .select-premium option {
+            background: white;
+            color: #1e293b;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* ANIMACIONES GENERALES                                           */
+        /* ═══════════════════════════════════════════════════════════════ */
         .slide-in { animation: slideIn 0.4s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
         .h2h-card { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%); }
         .score-input { background: #1a1a2e; border: 2px solid #4a4a6a; }
         .score-input:focus { border-color: #00c8ff; outline: none; }
@@ -243,6 +527,17 @@
     </style>
 </head>
 <body class="min-h-screen">
+    <!-- FONDO ANIMADO PREMIUM -->
+    <div class="animated-bg"></div>
+    
+    <!-- PARTÍCULAS FLOTANTES -->
+    <div class="particles">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
+    
     <!-- LOADING OVERLAY -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
@@ -304,7 +599,7 @@ const database = firebase.database();
 // LOGO SVG
 // ═══════════════════════════════════════════════════════════════
 const LOGO_SVG = `
-<svg class="logo-icon" width="50" height="50" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+<svg class="logo-icon logo-glow" width="50" height="50" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#00c8ff"/>
@@ -1972,12 +2267,13 @@ function renderHome() {
     
     return `
         <div class="p-4 max-w-4xl mx-auto">
-            <div class="rounded-lg p-3 mb-6 ${apiConnected ? 'bg-green-500/20 border border-green-500/30' : 'bg-yellow-500/20 border border-yellow-500/30'}">
-                <div class="flex flex-col items-center text-center">
+            <div class="live-bar glass rounded-2xl p-3 mb-6 ${apiConnected ? 'border border-green-500/30' : 'border border-yellow-500/30'}">
+                <div class="flex items-center justify-center gap-3">
+                    ${apiConnected ? '<div class="live-dot"></div>' : ''}
                     <span class="font-semibold text-sm ${apiConnected ? 'text-green-400' : 'text-yellow-400'}">
-                        ${apiConnected ? '🔄 Datos en TIEMPO REAL' : '⚠️ Usando datos de respaldo'}
+                        ${apiConnected ? 'Datos en TIEMPO REAL' : '⚠️ Usando datos de respaldo'}
                     </span>
-                    <span class="text-xs text-gray-400 mt-1">
+                    <span class="text-xs text-gray-400">
                         Fuente: ${statsSource}
                         ${statsLastUpdated ? ' • Actualizado: ' + new Date(statsLastUpdated).toLocaleString('es-ES', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) : ''}
                     </span>
@@ -1989,53 +2285,53 @@ function renderHome() {
                 <div class="logo-container mb-4">
                     ${LOGO_SVG}
                     <div>
-                        <h1 class="text-4xl md:text-5xl font-black text-white font-orbitron">NIOSPORTS</h1>
-                        <h2 class="text-xl font-bold gradient-text font-orbitron">PRO v2.0</h2>
+                        <h1 class="text-4xl md:text-5xl font-black text-white font-orbitron tracking-wider">NIOSPORTS</h1>
+                        <h2 class="text-xl font-bold gradient-text-animated font-orbitron">PRO v2.0</h2>
                     </div>
                 </div>
                 <p class="text-gray-400 text-sm">Tu herramienta profesional de análisis NBA con IA</p>
             </div>
             
-            <!-- BOTONES PRINCIPALES -->
-            <button onclick="navigateTo('tendencia')" class="w-full bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-2xl hover:scale-[1.02] transition mb-4">
+            <!-- BOTONES PRINCIPALES PREMIUM -->
+            <button onclick="navigateTo('tendencia')" class="btn-3d w-full bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-2xl mb-4">
                 <div class="flex flex-col items-center">
                     <div class="text-5xl mb-3">📈</div>
                     <h3 class="text-xl font-bold text-white mb-1">Tendencia + H2H</h3>
-                    <p class="text-yellow-200 text-xs mt-2">1Q • 1H • Full Game • IA Predictor</p>
+                    <p class="text-emerald-100 text-xs mt-2">1Q • 1H • Full Game • IA Predictor</p>
                 </div>
             </button>
             
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <button onclick="navigateTo('bestPicks')" class="bg-gradient-to-br from-yellow-500 to-orange-600 p-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition">
+                <button onclick="navigateTo('bestPicks')" class="btn-3d glass-card bg-gradient-to-br from-yellow-500/90 to-orange-600/90 p-5 rounded-2xl shadow-2xl">
                     <div class="text-3xl mb-2">🔥</div>
                     <h3 class="text-lg font-bold text-white">Mejores Picks</h3>
                     <p class="text-yellow-100 text-xs">Algoritmo sugiere</p>
                 </button>
                 
-                <button onclick="navigateTo('picks')" class="bg-gradient-to-br from-pink-500 to-rose-600 p-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition">
+                <button onclick="navigateTo('picks')" class="btn-3d glass-card bg-gradient-to-br from-pink-500/90 to-rose-600/90 p-5 rounded-2xl shadow-2xl">
                     <div class="text-3xl mb-2">📊</div>
                     <h3 class="text-lg font-bold text-white">Mis Picks</h3>
                     <p class="text-pink-100 text-xs">Historial completo</p>
                 </button>
             </div>
             
-            <!-- NUEVO: Dashboard de Rendimiento -->
-            <button onclick="navigateTo('dashboard')" class="w-full bg-gradient-to-br from-cyan-500 to-blue-600 p-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition mb-4 border-2 border-cyan-400/50">
+            <!-- Dashboard de Rendimiento -->
+            <button onclick="navigateTo('dashboard')" class="btn-3d w-full glass-card bg-gradient-to-br from-cyan-500/90 to-blue-600/90 p-5 rounded-2xl shadow-2xl mb-4 border border-cyan-400/30">
                 <div class="flex items-center justify-center gap-4">
                     <div class="text-4xl">📉</div>
                     <div class="text-left">
                         <h3 class="text-xl font-bold text-white">Dashboard Pro</h3>
-                        <p class="text-cyan-200 text-sm">Gráficos • CLV • Análisis Avanzado</p>
+                        <p class="text-cyan-100 text-sm">Gráficos • CLV • Backtesting</p>
                     </div>
                 </div>
             </button>
             
-            <button onclick="navigateTo('ingesta')" class="w-full bg-gradient-to-br from-purple-600 to-indigo-700 p-5 rounded-2xl shadow-2xl hover:scale-[1.02] transition mb-6 border-2 border-purple-400/50">
+            <button onclick="navigateTo('ingesta')" class="btn-3d w-full glass-card bg-gradient-to-br from-purple-600/90 to-indigo-700/90 p-5 rounded-2xl shadow-2xl mb-6 border border-purple-400/30">
                 <div class="flex items-center justify-center gap-4">
                     <div class="text-4xl">📝</div>
                     <div class="text-left">
                         <h3 class="text-xl font-bold text-white">Ingesta de Datos H2H</h3>
-                        <p class="text-purple-200 text-sm">Agregar partidos manualmente</p>
+                        <p class="text-purple-100 text-sm">Agregar partidos manualmente</p>
                     </div>
                 </div>
             </button>
@@ -2251,12 +2547,12 @@ function renderTendencia() {
                 ${advancedData ? `
                     <!-- Info del modelo avanzado -->
                     <div class="flex flex-wrap justify-center gap-2 mb-2">
-                        ${advancedData.combinedPace ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-bold" title="Ritmo de juego combinado. >102 = rápido (más puntos), <98 = lento (menos puntos)">⚡ PACE: ${advancedData.combinedPace.toFixed(1)}</span>` : ''}
-                        ${advancedData.components?.full?.altitude ? `<span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-bold" title="Bonus por altitud (Denver/Utah)">🏔️ Altitud +${advancedData.components.full.altitude}</span>` : ''}
-                        ${advancedData.isEarlySeason ? `<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold" title="Primeras semanas de temporada - datos limitados">⚠️ Early Season</span>` : ''}
-                        ${localB2B ? `<span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold" title="Equipo local jugó ayer">🔴 ${localTeam} B2B</span>` : ''}
-                        ${awayB2B ? `<span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold" title="Equipo visitante jugó ayer">🔴 ${visitingTeam} B2B</span>` : ''}
-                        <span class="${advancedData.confidence >= 85 ? 'bg-green-100 text-green-800' : advancedData.confidence >= 75 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'} px-2 py-1 rounded-full text-xs font-bold" title="${advancedData.confidence >= 85 ? 'Datos completos y consistentes' : advancedData.confidence >= 75 ? 'Datos buenos pero con algunas limitaciones' : 'Datos limitados, usar con precaución'}">🎯 Confianza: ${advancedData.confidence}%</span>
+                        ${advancedData.combinedPace ? `<span class="badge-neon badge-neon-blue" title="Ritmo de juego combinado. >102 = rápido (más puntos), <98 = lento (menos puntos)">⚡ PACE: ${advancedData.combinedPace.toFixed(1)}</span>` : ''}
+                        ${advancedData.components?.full?.altitude ? `<span class="badge-neon badge-neon-yellow" title="Bonus por altitud (Denver/Utah)">🏔️ Altitud +${advancedData.components.full.altitude}</span>` : ''}
+                        ${advancedData.isEarlySeason ? `<span class="badge-neon badge-neon-yellow" title="Primeras semanas de temporada - datos limitados">⚠️ Early Season</span>` : ''}
+                        ${localB2B ? `<span class="badge-neon badge-neon-pink" title="Equipo local jugó ayer">🔴 ${localTeam} B2B</span>` : ''}
+                        ${awayB2B ? `<span class="badge-neon badge-neon-pink" title="Equipo visitante jugó ayer">🔴 ${visitingTeam} B2B</span>` : ''}
+                        <span class="badge-neon ${advancedData.confidence >= 85 ? 'badge-neon-green' : advancedData.confidence >= 75 ? 'badge-neon-yellow' : 'badge-neon-pink'}" title="${advancedData.confidence >= 85 ? 'Datos completos y consistentes' : advancedData.confidence >= 75 ? 'Datos buenos pero con algunas limitaciones' : 'Datos limitados, usar con precaución'}">🎯 Confianza: ${advancedData.confidence}%</span>
                     </div>
                     
                     <!-- Checkboxes B2B -->
@@ -2289,19 +2585,19 @@ function renderTendencia() {
                 ` : ''}
                 
                 <div class="grid grid-cols-3 gap-2 md:gap-4">
-                    <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl p-3 md:p-4 text-center">
+                    <div class="trend-card bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl p-3 md:p-4 text-center">
                         <p class="text-xs md:text-sm font-bold text-white/90">1Q</p>
-                        <p class="text-2xl md:text-4xl font-black text-white">${trends.q1}</p>
+                        <p class="text-2xl md:text-4xl font-black text-white number-glow">${trends.q1}</p>
                         <p class="text-xs text-white/70 mt-1">Línea: ${suggestedQ1}</p>
                     </div>
-                    <div class="bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl p-3 md:p-4 text-center">
+                    <div class="trend-card bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl p-3 md:p-4 text-center">
                         <p class="text-xs md:text-sm font-bold text-white/90">1H</p>
-                        <p class="text-2xl md:text-4xl font-black text-white">${trends.half}</p>
+                        <p class="text-2xl md:text-4xl font-black text-white number-glow">${trends.half}</p>
                         <p class="text-xs text-white/70 mt-1">Línea: ${suggestedHalf}</p>
                     </div>
-                    <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-3 md:p-4 text-center">
+                    <div class="trend-card bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-3 md:p-4 text-center">
                         <p class="text-xs md:text-sm font-bold text-white/90">FULL</p>
-                        <p class="text-2xl md:text-4xl font-black text-white">${trends.full}</p>
+                        <p class="text-2xl md:text-4xl font-black text-white number-glow">${trends.full}</p>
                         <p class="text-xs text-white/70 mt-1">Línea: ${suggestedFull}</p>
                     </div>
                 </div>
