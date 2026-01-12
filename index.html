@@ -92,6 +92,23 @@
             --tw-gradient-from: #f97316 !important;
         }
         
+        /* Tema claro - tarjetas blancas con mejor contraste */
+        [data-theme="light"] .bg-white {
+            background: #ffffff !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        [data-theme="light"] .rounded-2xl.bg-white,
+        [data-theme="light"] .rounded-xl.bg-white {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%) !important;
+        }
+        
+        /* Tema claro - selects y inputs */
+        [data-theme="light"] select,
+        [data-theme="light"] input {
+            border: 1px solid #cbd5e1 !important;
+        }
+        
         .glass { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
         .gradient-text { background: linear-gradient(135deg, #00c8ff 0%, #ff3366 50%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .slide-in { animation: slideIn 0.4s ease-out; }
