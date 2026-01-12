@@ -57,20 +57,6 @@
             overflow-x: hidden;
         }
         
-        [data-theme="light"] body {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%) !important;
-        }
-        
-        /* Tema claro - ajustes */
-        [data-theme="light"] .text-white { color: #1e293b !important; }
-        [data-theme="light"] .text-gray-300, [data-theme="light"] .text-gray-400 { color: #475569 !important; }
-        [data-theme="light"] .text-gray-500 { color: #64748b !important; }
-        [data-theme="light"] .bg-white\/5, [data-theme="light"] .bg-white\/10 { background: rgba(0,0,0,0.05) !important; }
-        [data-theme="light"] .bg-black\/20, [data-theme="light"] .bg-black\/30 { background: rgba(255,255,255,0.7) !important; }
-        [data-theme="light"] .bg-white { background: #ffffff !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; border: 1px solid #e2e8f0 !important; }
-        [data-theme="light"] .animated-bg { opacity: 0.3; }
-        [data-theme="light"] .particles { opacity: 0.4; }
-        
         /* ═══════════════════════════════════════════════════════════════ */
         /* FONDO ANIMADO PREMIUM                                           */
         /* ═══════════════════════════════════════════════════════════════ */
@@ -269,9 +255,38 @@
             100% { transform: translateX(100%) rotate(45deg); }
         }
         
-        /* Números con glow sutil */
+        /* Números limpios - sin efectos */
         .number-glow {
-            text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+            /* Sin efectos - texto limpio */
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* TEMA CLARO - PROFESIONAL                                        */
+        /* ═══════════════════════════════════════════════════════════════ */
+        [data-theme="light"] body {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 50%, #1a3050 100%) !important;
+        }
+        
+        [data-theme="light"] .animated-bg {
+            background: linear-gradient(125deg, #1e3a5f 0%, #2d5a7f 25%, #1e4a6f 50%, #2d5a7f 75%, #1e3a5f 100%);
+            background-size: 400% 400%;
+        }
+        
+        [data-theme="light"] .particles { opacity: 0.5; }
+        
+        /* En tema claro, mantener textos blancos */
+        [data-theme="light"] .text-white { color: #ffffff !important; }
+        [data-theme="light"] .text-gray-300, [data-theme="light"] .text-gray-400 { color: #cbd5e1 !important; }
+        [data-theme="light"] .text-gray-500 { color: #94a3b8 !important; }
+        
+        /* Tarjetas con fondo semitransparente en tema claro */
+        [data-theme="light"] .bg-white {
+            background: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+        }
+        
+        [data-theme="light"] .bg-white\/5, [data-theme="light"] .bg-white\/10 {
+            background: rgba(255,255,255,0.1) !important;
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
@@ -381,14 +396,14 @@
         }
         
         [data-theme="light"] .select-premium {
-            background: rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            color: #1e293b;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
         }
         
         [data-theme="light"] .select-premium option {
-            background: white;
-            color: #1e293b;
+            background: #1e3a5f;
+            color: white;
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
