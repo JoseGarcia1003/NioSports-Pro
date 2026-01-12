@@ -32,35 +32,67 @@
         
         /* TEMA OSCURO (default) */
         :root, [data-theme="dark"] {
-            --bg-primary: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d0d1a 100%);
-            --bg-card: rgba(255,255,255,0.05);
-            --text-primary: white;
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #12122a;
+            --text-primary: #ffffff;
             --text-secondary: #9ca3af;
+            --card-bg: rgba(255,255,255,0.05);
         }
         
         /* TEMA CLARO */
         [data-theme="light"] {
-            --bg-primary: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 50%, #bcccdc 100%);
-            --bg-card: rgba(0,0,0,0.05);
-            --text-primary: #1a202c;
-            --text-secondary: #4a5568;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --card-bg: rgba(0,0,0,0.05);
         }
         
         body {
-            background: var(--bg-primary);
-            min-height: 100vh;
-        }
-        
-        [data-theme="light"] .glass {
-            background: rgba(255,255,255,0.8);
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-        
-        [data-theme="light"] .text-white {
+            background: var(--bg-primary) !important;
             color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
         }
         
-        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        [data-theme="light"] body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%) !important;
+        }
+        
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0d0d1f 100%) !important;
+        }
+        
+        /* Tema claro - ajustes de texto */
+        [data-theme="light"] .text-white {
+            color: #1e293b !important;
+        }
+        [data-theme="light"] .text-gray-300,
+        [data-theme="light"] .text-gray-400 {
+            color: #475569 !important;
+        }
+        [data-theme="light"] .text-gray-500 {
+            color: #64748b !important;
+        }
+        
+        /* Tema claro - fondos de tarjetas */
+        [data-theme="light"] .bg-white\/5,
+        [data-theme="light"] .bg-white\/10 {
+            background: rgba(0,0,0,0.05) !important;
+        }
+        [data-theme="light"] .bg-black\/20,
+        [data-theme="light"] .bg-black\/30 {
+            background: rgba(255,255,255,0.7) !important;
+        }
+        
+        /* Tema claro - gradientes de tarjetas principales */
+        [data-theme="light"] .from-emerald-600 {
+            --tw-gradient-from: #059669 !important;
+        }
+        [data-theme="light"] .from-orange-500 {
+            --tw-gradient-from: #f97316 !important;
+        }
+        
+        .glass { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
         .gradient-text { background: linear-gradient(135deg, #00c8ff 0%, #ff3366 50%, #ff6b35 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .slide-in { animation: slideIn 0.4s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -193,7 +225,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+<body class="min-h-screen">
     <!-- LOADING OVERLAY -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
@@ -1941,7 +1973,7 @@ function renderHome() {
                     ${LOGO_SVG}
                     <div>
                         <h1 class="text-4xl md:text-5xl font-black text-white font-orbitron">NIOSPORTS</h1>
-                        <h2 class="text-xl font-bold gradient-text font-orbitron">PRO v1.2</h2>
+                        <h2 class="text-xl font-bold gradient-text font-orbitron">PRO v2.0</h2>
                     </div>
                 </div>
                 <p class="text-gray-400 text-sm">Tu herramienta profesional de análisis NBA con IA</p>
