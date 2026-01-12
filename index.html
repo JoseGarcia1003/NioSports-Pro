@@ -2499,7 +2499,7 @@ function renderTendencia() {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-6">
                 <div class="bg-gradient-to-br from-cyan-600 to-blue-700 p-3 md:p-4 rounded-xl">
                     <h2 class="text-base md:text-lg font-bold text-white mb-2 text-center">🏠 LOCAL</h2>
-                    <select id="localSelect" class="w-full p-2 md:p-3 font-bold rounded-lg text-gray-800 bg-white text-sm md:text-base">
+                    <select id="localSelect" class="select-premium w-full">
                         ${opts.replace(`value="${localTeam}"`, `value="${localTeam}" selected`)}
                     </select>
                     ${lD && lR ? `
@@ -2523,7 +2523,7 @@ function renderTendencia() {
                 </div>
                 <div class="bg-gradient-to-br from-orange-600 to-red-700 p-3 md:p-4 rounded-xl">
                     <h2 class="text-base md:text-lg font-bold text-white mb-2 text-center">✈️ VISITANTE</h2>
-                    <select id="visitingSelect" class="w-full p-2 md:p-3 font-bold rounded-lg text-gray-800 bg-white text-sm md:text-base">
+                    <select id="visitingSelect" class="select-premium w-full">
                         ${opts.replace(`value="${visitingTeam}"`, `value="${visitingTeam}" selected`)}
                     </select>
                     ${vD && vR ? `
@@ -2555,9 +2555,9 @@ function renderTendencia() {
         const suggestedFull = (Math.round(parseFloat(trends.full) * 2) / 2).toFixed(1);
         
         html += `
-            <div class="bg-white rounded-2xl p-3 md:p-5 shadow-xl mb-6">
-                <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-1 text-center">📈 TENDENCIA v2.0 - MODELO AVANZADO</h2>
-                <p class="text-center text-gray-500 text-xs md:text-sm mb-2">${localTeam} (HOME) + ${visitingTeam} (AWAY)</p>
+            <div class="glass rounded-2xl p-3 md:p-5 shadow-xl mb-6 border border-white/10">
+                <h2 class="text-lg md:text-xl font-bold text-white mb-1 text-center">📈 TENDENCIA v2.0 - MODELO AVANZADO</h2>
+                <p class="text-center text-gray-400 text-xs md:text-sm mb-2">${localTeam} (HOME) + ${visitingTeam} (AWAY)</p>
                 
                 ${advancedData ? `
                     <!-- Info del modelo avanzado -->
@@ -2572,28 +2572,28 @@ function renderTendencia() {
                     
                     <!-- Checkboxes B2B -->
                     <div class="flex justify-center gap-4 mb-3">
-                        <label class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer hover:text-gray-800">
+                        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white">
                             <input type="checkbox" id="localB2B" ${localB2B ? 'checked' : ''} onchange="localB2B = this.checked; render();" class="w-4 h-4 accent-red-500">
                             <span>🏠 ${localTeam || 'Local'} jugó ayer (B2B)</span>
                         </label>
-                        <label class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer hover:text-gray-800">
+                        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white">
                             <input type="checkbox" id="awayB2B" ${awayB2B ? 'checked' : ''} onchange="awayB2B = this.checked; render();" class="w-4 h-4 accent-red-500">
                             <span>✈️ ${visitingTeam || 'Visitante'} jugó ayer (B2B)</span>
                         </label>
                     </div>
                     
                     <!-- Mini-guía de interpretación -->
-                    <div class="flex flex-wrap justify-center gap-3 text-xs text-gray-500 mb-3">
-                        ${advancedData.components?.full?.pace !== undefined ? `<span class="${(advancedData.components.full.pace || 0) > 0.3 ? 'text-green-600' : (advancedData.components.full.pace || 0) < -0.3 ? 'text-red-600' : 'text-gray-500'}">
+                    <div class="flex flex-wrap justify-center gap-3 text-xs text-gray-400 mb-3">
+                        ${advancedData.components?.full?.pace !== undefined ? `<span class="${(advancedData.components.full.pace || 0) > 0.3 ? 'text-green-400' : (advancedData.components.full.pace || 0) < -0.3 ? 'text-red-400' : 'text-gray-400'}">
                             ${(advancedData.components.full.pace || 0) > 0.3 ? '↑ Ritmo rápido (+pts)' : (advancedData.components.full.pace || 0) < -0.3 ? '↓ Ritmo lento (-pts)' : '→ Ritmo promedio'}
                         </span>` : ''}
-                        <span class="${advancedData.confidence >= 85 ? 'text-green-600' : advancedData.confidence >= 75 ? 'text-yellow-600' : 'text-red-600'}">
+                        <span class="${advancedData.confidence >= 85 ? 'text-green-400' : advancedData.confidence >= 75 ? 'text-yellow-400' : 'text-red-400'}">
                             ${advancedData.confidence >= 85 ? '✓ Alta fiabilidad' : advancedData.confidence >= 75 ? '~ Fiabilidad moderada' : '⚠ Usar con cautela'}
                         </span>
                     </div>
                     
                     ${advancedData.warnings.length > 0 ? `
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-3 text-xs text-yellow-700 text-center">
+                        <div class="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-2 mb-3 text-xs text-yellow-400 text-center">
                             ${advancedData.warnings.join(' | ')}
                         </div>
                     ` : ''}
@@ -2620,59 +2620,59 @@ function renderTendencia() {
                 ${advancedData ? `
                     <!-- Desglose del modelo con explicaciones -->
                     <details class="mt-3">
-                        <summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-700 font-semibold">🔬 Ver desglose del cálculo (clic para entender cada número)</summary>
-                        <div class="mt-2 bg-gray-50 rounded-lg p-3 text-xs">
+                        <summary class="text-xs text-gray-400 cursor-pointer hover:text-white font-semibold">🔬 Ver desglose del cálculo (clic para entender cada número)</summary>
+                        <div class="mt-2 bg-white/5 rounded-lg p-3 text-xs">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                                <div class="text-center bg-white p-2 rounded-lg shadow-sm">
-                                    <div class="font-bold text-gray-700">Ofensivo</div>
-                                    <div class="text-green-600 text-lg font-bold">${advancedData.components?.full?.offense?.toFixed(1) || '-'}</div>
+                                <div class="text-center bg-white/10 p-2 rounded-lg">
+                                    <div class="font-bold text-white">Ofensivo</div>
+                                    <div class="text-green-400 text-lg font-bold">${advancedData.components?.full?.offense?.toFixed(1) || '-'}</div>
                                     <div class="text-gray-400 text-xs mt-1">PPG combinado</div>
                                 </div>
-                                <div class="text-center bg-white p-2 rounded-lg shadow-sm">
-                                    <div class="font-bold text-gray-700">Defensivo</div>
-                                    <div class="text-red-600 text-lg font-bold">${advancedData.components?.full?.defense?.toFixed(1) || '-'}</div>
+                                <div class="text-center bg-white/10 p-2 rounded-lg">
+                                    <div class="font-bold text-white">Defensivo</div>
+                                    <div class="text-red-400 text-lg font-bold">${advancedData.components?.full?.defense?.toFixed(1) || '-'}</div>
                                     <div class="text-gray-400 text-xs mt-1">Pts permitidos</div>
                                 </div>
-                                <div class="text-center bg-white p-2 rounded-lg shadow-sm">
-                                    <div class="font-bold text-gray-700">PACE adj.</div>
-                                    <div class="text-blue-600 text-lg font-bold">${advancedData.components?.full?.pace?.toFixed(2) || '0'}</div>
+                                <div class="text-center bg-white/10 p-2 rounded-lg">
+                                    <div class="font-bold text-white">PACE adj.</div>
+                                    <div class="text-blue-400 text-lg font-bold">${advancedData.components?.full?.pace?.toFixed(2) || '0'}</div>
                                     <div class="text-gray-400 text-xs mt-1">${
                                         (advancedData.components?.full?.pace || 0) > 0.3 ? '↑ Rápido (+pts)' : 
                                         (advancedData.components?.full?.pace || 0) < -0.3 ? '↓ Lento (-pts)' : 
                                         '→ Normal'
                                     }</div>
                                 </div>
-                                <div class="text-center bg-white p-2 rounded-lg shadow-sm">
-                                    <div class="font-bold text-gray-700">Contexto</div>
-                                    <div class="text-purple-600 text-lg font-bold">+${advancedData.components?.full?.context?.toFixed(1) || '2.5'}</div>
+                                <div class="text-center bg-white/10 p-2 rounded-lg">
+                                    <div class="font-bold text-white">Contexto</div>
+                                    <div class="text-purple-400 text-lg font-bold">+${advancedData.components?.full?.context?.toFixed(1) || '2.5'}</div>
                                     <div class="text-gray-400 text-xs mt-1">HCA${advancedData.components?.full?.altitude ? ' + Alt' : ''}</div>
                                 </div>
                             </div>
                             
                             ${(localB2B || awayB2B) ? `
                             <!-- B2B Adjustment -->
-                            <div class="bg-red-50 border border-red-200 rounded-lg p-2 mb-3">
-                                <div class="flex items-center justify-center gap-2 text-red-700 text-sm font-bold">
+                            <div class="bg-red-500/20 border border-red-500/30 rounded-lg p-2 mb-3">
+                                <div class="flex items-center justify-center gap-2 text-red-400 text-sm font-bold">
                                     <span>⚠️ B2B Penalty:</span>
                                     <span class="text-lg">${advancedData.components?.full?.b2b?.toFixed(2) || '-2.50'} pts</span>
                                 </div>
-                                <p class="text-xs text-red-600 text-center mt-1">
+                                <p class="text-xs text-red-300 text-center mt-1">
                                     ${localB2B ? `${localTeam} ` : ''}${localB2B && awayB2B ? 'y ' : ''}${awayB2B ? `${visitingTeam} ` : ''}jugó ayer (-1.25 pts c/u)
                                 </p>
                             </div>
                             ` : ''}
                             
                             <!-- Explicación de cada componente -->
-                            <div class="bg-blue-50 rounded-lg p-3 text-xs text-gray-600 space-y-2">
-                                <p><strong class="text-green-700">🏀 Ofensivo:</strong> Suma de puntos que anota ${localTeam} en casa + ${visitingTeam} de visita.</p>
-                                <p><strong class="text-red-700">🛡️ Defensivo:</strong> Suma de puntos que PERMITE cada defensa. Más alto = más puntos.</p>
-                                <p><strong class="text-blue-700">⚡ PACE adj:</strong> Ajuste por ritmo de juego. Positivo = rápido, negativo = lento.</p>
-                                <p><strong class="text-purple-700">🏠 Contexto:</strong> +2.5 pts HCA${advancedData.components?.full?.altitude ? ' + altitud' : ''}.</p>
-                                ${(localB2B || awayB2B) ? `<p><strong class="text-red-700">😴 B2B:</strong> -1.25 pts por equipo que jugó ayer (fatiga).</p>` : ''}
+                            <div class="bg-blue-500/10 rounded-lg p-3 text-xs text-gray-300 space-y-2">
+                                <p><strong class="text-green-400">🏀 Ofensivo:</strong> Suma de puntos que anota ${localTeam} en casa + ${visitingTeam} de visita.</p>
+                                <p><strong class="text-red-400">🛡️ Defensivo:</strong> Suma de puntos que PERMITE cada defensa. Más alto = más puntos.</p>
+                                <p><strong class="text-blue-400">⚡ PACE adj:</strong> Ajuste por ritmo de juego. Positivo = rápido, negativo = lento.</p>
+                                <p><strong class="text-purple-400">🏠 Contexto:</strong> +2.5 pts HCA${advancedData.components?.full?.altitude ? ' + altitud' : ''}.</p>
+                                ${(localB2B || awayB2B) ? `<p><strong class="text-red-400">😴 B2B:</strong> -1.25 pts por equipo que jugó ayer (fatiga).</p>` : ''}
                             </div>
                             
                             <!-- Fórmula simplificada -->
-                            <div class="mt-2 bg-gray-100 rounded-lg p-2 text-center text-xs text-gray-500">
+                            <div class="mt-2 bg-white/5 rounded-lg p-2 text-center text-xs text-gray-400">
                                 <strong>Fórmula:</strong> (Ofensivo×40% + Defensivo×35%) / 75% + PACE + Contexto${(localB2B || awayB2B) ? ' + B2B' : ''} + Regresión
                             </div>
                         </div>
@@ -2796,7 +2796,7 @@ function renderTendencia() {
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-white/80 text-sm">Cuota Combinada:</span>
                                 <input type="number" step="0.01" id="combo_odds" placeholder="ej: 2.05" 
-                                    class="w-24 p-2 rounded-lg text-center font-bold bg-white text-gray-800">
+                                    class="w-24 p-2 rounded-lg text-center font-bold bg-white/10 text-white border border-white/20">
                             </div>
                             <p class="text-white/60 text-xs">Ingresa la cuota total del Bet Builder de tu casa de apuestas</p>
                         </div>
@@ -2973,32 +2973,32 @@ function renderCalc(id, label, trend, prob, type, line, odds) {
                 </div>
                 
                 <!-- Probabilidad -->
-                <div class="flex justify-between items-center bg-gray-100 rounded-lg px-3 py-2">
-                    <span class="text-xs text-gray-600">Prob. Ganar</span>
-                    <span class="font-black text-lg ${analysis.prob >= 55 ? 'text-green-600' : analysis.prob >= 45 ? 'text-yellow-600' : 'text-red-600'}">${analysis.prob}%</span>
+                <div class="flex justify-between items-center bg-white/10 rounded-lg px-3 py-2">
+                    <span class="text-xs text-gray-400">Prob. Ganar</span>
+                    <span class="font-black text-lg ${analysis.prob >= 55 ? 'text-green-400' : analysis.prob >= 45 ? 'text-yellow-400' : 'text-red-400'}">${analysis.prob}%</span>
                 </div>
                 
                 <!-- Cuota Justa -->
-                <div class="flex justify-between items-center bg-gray-50 rounded-lg px-3 py-1">
-                    <span class="text-xs text-gray-500">Cuota Justa</span>
-                    <span class="font-bold text-sm text-gray-700">${analysis.fairOdds}</span>
+                <div class="flex justify-between items-center bg-white/5 rounded-lg px-3 py-1">
+                    <span class="text-xs text-gray-400">Cuota Justa</span>
+                    <span class="font-bold text-sm text-white">${analysis.fairOdds}</span>
                 </div>
                 
                 ${hasOdds ? `
                     <!-- EV% -->
-                    <div class="flex justify-between items-center ${parseFloat(analysis.ev) >= 0 ? 'bg-green-100' : 'bg-red-100'} rounded-lg px-3 py-2">
-                        <span class="text-xs ${parseFloat(analysis.ev) >= 0 ? 'text-green-700' : 'text-red-700'}">Expected Value</span>
-                        <span class="font-black text-lg ${parseFloat(analysis.ev) >= 0 ? 'text-green-600' : 'text-red-600'}">${parseFloat(analysis.ev) >= 0 ? '+' : ''}${analysis.ev}%</span>
+                    <div class="flex justify-between items-center ${parseFloat(analysis.ev) >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'} rounded-lg px-3 py-2">
+                        <span class="text-xs ${parseFloat(analysis.ev) >= 0 ? 'text-green-400' : 'text-red-400'}">Expected Value</span>
+                        <span class="font-black text-lg ${parseFloat(analysis.ev) >= 0 ? 'text-green-400' : 'text-red-400'}">${parseFloat(analysis.ev) >= 0 ? '+' : ''}${analysis.ev}%</span>
                     </div>
                     
                     <!-- Edge -->
-                    <div class="flex justify-between items-center bg-gray-50 rounded-lg px-3 py-1">
-                        <span class="text-xs text-gray-500">Edge vs Casa</span>
-                        <span class="font-bold text-sm ${parseFloat(analysis.edge) >= 0 ? 'text-green-600' : 'text-red-600'}">${parseFloat(analysis.edge) >= 0 ? '+' : ''}${analysis.edge}%</span>
+                    <div class="flex justify-between items-center bg-white/5 rounded-lg px-3 py-1">
+                        <span class="text-xs text-gray-400">Edge vs Casa</span>
+                        <span class="font-bold text-sm ${parseFloat(analysis.edge) >= 0 ? 'text-green-400' : 'text-red-400'}">${parseFloat(analysis.edge) >= 0 ? '+' : ''}${analysis.edge}%</span>
                     </div>
                 ` : `
-                    <div class="bg-blue-50 rounded-lg px-3 py-2 text-center">
-                        <span class="text-xs text-blue-600">⬇️ Ingresa la cuota para ver EV</span>
+                    <div class="bg-blue-500/20 rounded-lg px-3 py-2 text-center">
+                        <span class="text-xs text-blue-400">⬇️ Ingresa la cuota para ver EV</span>
                     </div>
                 `}
                 
@@ -3019,28 +3019,28 @@ function renderCalc(id, label, trend, prob, type, line, odds) {
     }
     
     return `
-        <div class="bg-white rounded-xl p-3 shadow-lg">
-            <p class="text-sm font-black text-center text-gray-800 mb-1">${label}: <span class="text-purple-600">${trend}</span></p>
+        <div class="glass rounded-xl p-3 border border-white/10">
+            <p class="text-sm font-black text-center text-white mb-1">${label}: <span class="text-purple-400">${trend}</span></p>
             
             <!-- Selector Over/Under -->
             <div class="flex gap-1 my-2">
-                <button onclick="setType('${id}','OVER')" class="flex-1 py-2 text-xs rounded-lg font-bold transition-all ${type==='OVER'?'bg-green-600 text-white shadow-md':'bg-gray-200 hover:bg-gray-300'}">OVER</button>
-                <button onclick="setType('${id}','UNDER')" class="flex-1 py-2 text-xs rounded-lg font-bold transition-all ${type==='UNDER'?'bg-red-600 text-white shadow-md':'bg-gray-200 hover:bg-gray-300'}">UNDER</button>
+                <button onclick="setType('${id}','OVER')" class="flex-1 py-2 text-xs rounded-lg font-bold transition-all ${type==='OVER'?'bg-green-600 text-white shadow-md':'bg-white/10 hover:bg-white/20 text-white'}">OVER</button>
+                <button onclick="setType('${id}','UNDER')" class="flex-1 py-2 text-xs rounded-lg font-bold transition-all ${type==='UNDER'?'bg-red-600 text-white shadow-md':'bg-white/10 hover:bg-white/20 text-white'}">UNDER</button>
             </div>
             
             <!-- Input Línea -->
             <div class="mb-2">
-                <label class="text-xs text-gray-500 block mb-1">📏 Línea</label>
+                <label class="text-xs text-gray-400 block mb-1">📏 Línea</label>
                 <input type="number" step="0.5" value="${line}" placeholder="ej: ${label === '1Q' ? '53.5' : label === '1H' ? '104.5' : '221.5'}" 
-                    class="w-full p-2 border-2 border-gray-200 rounded-lg text-center text-sm font-bold focus:border-purple-500 focus:outline-none" 
+                    class="w-full p-2 border border-white/20 rounded-lg text-center text-sm font-bold bg-white/10 text-white focus:border-purple-500 focus:outline-none" 
                     onchange="updateLine('${id}',this.value)">
             </div>
             
             <!-- Input Cuota -->
             <div class="mb-2">
-                <label class="text-xs text-gray-500 block mb-1">💰 Cuota (decimal)</label>
+                <label class="text-xs text-gray-400 block mb-1">💰 Cuota (decimal)</label>
                 <input type="number" step="0.01" value="${odds || ''}" placeholder="ej: 1.85" 
-                    class="w-full p-2 border-2 border-amber-200 rounded-lg text-center text-sm font-bold bg-amber-50 focus:border-amber-500 focus:outline-none" 
+                    class="w-full p-2 border border-amber-500/30 rounded-lg text-center text-sm font-bold bg-amber-500/10 text-white focus:border-amber-500 focus:outline-none" 
                     onchange="updateOdds('${id}',this.value)">
             </div>
             
@@ -3945,11 +3945,11 @@ function renderIngesta() {
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-gray-400 text-sm mb-1 block">Equipo 1</label>
-                        <select id="ingestTeam1" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">${o1}</select>
+                        <select id="ingestTeam1" class="w-full p-3 font-bold rounded-lg text-white bg-white/10 border border-white/20">${o1}</select>
                     </div>
                     <div>
                         <label class="text-gray-400 text-sm mb-1 block">Equipo 2</label>
-                        <select id="ingestTeam2" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">${o2}</select>
+                        <select id="ingestTeam2" class="w-full p-3 font-bold rounded-lg text-white bg-white/10 border border-white/20">${o2}</select>
                     </div>
                 </div>
             </div>
@@ -3962,11 +3962,11 @@ function renderIngesta() {
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-gray-400 text-sm mb-1 block">Fecha del Partido</label>
-                        <input type="date" id="ingestDate" value="${ingestDate}" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">
+                        <input type="date" id="ingestDate" value="${ingestDate}" class="w-full p-3 font-bold rounded-lg text-white bg-white/10 border border-white/20">
                     </div>
                     <div>
                         <label class="text-gray-400 text-sm mb-1 block">¿Quién es LOCAL? 🏠</label>
-                        <select id="ingestLocal" class="w-full p-3 font-bold rounded-lg text-gray-800 bg-white">
+                        <select id="ingestLocal" class="w-full p-3 font-bold rounded-lg text-white bg-white/10 border border-white/20">
                             <option value="">Seleccionar...</option>
                             <option value="${ingestTeam1}"${ingestLocalTeam===ingestTeam1?' selected':''}>${ingestTeam1}</option>
                             <option value="${ingestTeam2}"${ingestLocalTeam===ingestTeam2?' selected':''}>${ingestTeam2}</option>
