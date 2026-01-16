@@ -7,7 +7,7 @@
     
     <!-- PWA Meta Tags -->
     <meta name="description" content="Sistema predictivo avanzado para totales NBA con backtesting, B2B, PACE y calibración">
-    <meta name="theme-color" content="#1a1a2e">
+    <meta name="theme-color" content="#0d1b2a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NioSports">
@@ -15,50 +15,46 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22NioSports%20Pro%22%2C%22short_name%22%3A%22NioSports%22%2C%22description%22%3A%22Sistema%20predictivo%20NBA%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231a1a2e%22%2C%22theme_color%22%3A%22%231a1a2e%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%2520viewBox%3D%270%25200%252064%252064%27%253E%253Ccircle%2520cx%3D%2732%27%2520cy%3D%2732%27%2520r%3D%2730%27%2520fill%3D%27%25231a1a2e%27%2F%253E%253Ctext%2520x%3D%2732%27%2520y%3D%2742%27%2520text-anchor%3D%27middle%27%2520font-size%3D%2730%27%2520fill%3D%27white%27%253EN%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
     
-    <!-- FAVICON - Logo NioSports -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2300c8ff'/%3E%3Cstop offset='50%25' style='stop-color:%23ff3366'/%3E%3Cstop offset='100%25' style='stop-color:%23ff6b35'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%231a1a2e'/%3E%3Ccircle cx='32' cy='32' r='28' fill='none' stroke='url(%23g1)' stroke-width='3'/%3E%3Cpath d='M32 12c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20zm0 36c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16z' fill='%23ff6b35'/%3E%3Cpath d='M32 18c-7.7 0-14 6.3-14 14h4c0-5.5 4.5-10 10-10V18z' fill='%2300c8ff'/%3E%3Cpath d='M32 18v4c5.5 0 10 4.5 10 10h4c0-7.7-6.3-14-14-14z' fill='%23ff3366'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-family='Arial Black' font-size='14' font-weight='bold' fill='white'%3EN%3C/text%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231a1a2e'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='30' fill='white'%3EN%3C/text%3E%3C/svg%3E">
+    <!-- FAVICON - Logo NioSports NUEVO -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FFD700'/%3E%3Cstop offset='100%25' style='stop-color:%23F59E0B'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%230d1b2a'/%3E%3Ccircle cx='32' cy='32' r='28' fill='none' stroke='url(%23g1)' stroke-width='3'/%3E%3Ccircle cx='32' cy='26' r='10' fill='%23f97316'/%3E%3Ctext x='32' y='50' text-anchor='middle' font-family='Arial Black' font-size='12' font-weight='bold' fill='%23FFD700'%3EN%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230d1b2a'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='30' fill='%23FFD700'%3EN%3C/text%3E%3C/svg%3E">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <!-- Chart.js para gráficos del Dashboard -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * { font-family: 'Rajdhani', sans-serif; }
-        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        * { font-family: 'Poppins', sans-serif; }
+        .font-display { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* TEMA OSCURO (default)                                           */
+        /* NUEVA PALETA: AZUL MARINO + AMARILLO + BLANCO                  */
         /* ═══════════════════════════════════════════════════════════════ */
-        :root, [data-theme="dark"] {
-            --bg-primary: #0a0a1a;
-            --bg-secondary: #12122a;
-            --text-primary: #ffffff;
-            --text-secondary: #9ca3af;
-            --card-bg: rgba(255,255,255,0.05);
-        }
-        
-        /* TEMA CLARO */
-        [data-theme="light"] {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #e2e8f0;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --card-bg: rgba(0,0,0,0.05);
+        :root {
+            --navy-dark: #0a1628;
+            --navy-primary: #0d1b2a;
+            --navy-light: #1b263b;
+            --navy-lighter: #22354a;
+            --gold-primary: #FFD700;
+            --gold-light: #FFEB3B;
+            --gold-dark: #F59E0B;
+            --white: #ffffff;
+            --white-soft: #f0f4f8;
+            --text-muted: #94a3b8;
         }
         
         body {
-            background: var(--bg-primary) !important;
-            color: var(--text-primary);
-            transition: background 0.3s ease, color 0.3s ease;
+            background: var(--navy-dark);
+            color: var(--white);
             overflow-x: hidden;
+            min-height: 100vh;
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* FONDO ANIMADO PREMIUM                                           */
+        /* FONDO CON CANCHA DE BASKETBALL SUTIL                           */
         /* ═══════════════════════════════════════════════════════════════ */
         .animated-bg {
             position: fixed;
@@ -67,19 +63,41 @@
             right: 0;
             bottom: 0;
             z-index: -2;
-            background: linear-gradient(125deg, #0a0a1a 0%, #1a0a2e 25%, #0a1a2e 50%, #1a0a2e 75%, #0a0a1a 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% 100%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+                linear-gradient(180deg, var(--navy-dark) 0%, var(--navy-primary) 50%, var(--navy-light) 100%);
         }
         
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* Líneas de cancha sutiles */
+        .animated-bg::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(255, 215, 0, 0.05);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .animated-bg::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 100px;
+            border: 2px solid rgba(255, 215, 0, 0.05);
+            border-bottom: none;
+            border-radius: 200px 200px 0 0;
+            pointer-events: none;
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* PARTÍCULAS FLOTANTES                                            */
+        /* PARTÍCULAS DORADAS FLOTANTES                                   */
         /* ═══════════════════════════════════════════════════════════════ */
         .particles {
             position: fixed;
@@ -96,146 +114,133 @@
             position: absolute;
             width: 4px;
             height: 4px;
-            background: radial-gradient(circle, rgba(0, 200, 255, 0.8) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%);
             border-radius: 50%;
-            animation: float 20s infinite ease-in-out;
+            animation: floatGold 20s infinite ease-in-out;
         }
         
-        .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 25s; }
-        .particle:nth-child(2) { left: 20%; animation-delay: 2s; animation-duration: 20s; }
-        .particle:nth-child(3) { left: 30%; animation-delay: 4s; animation-duration: 28s; }
-        .particle:nth-child(4) { left: 40%; animation-delay: 1s; animation-duration: 22s; }
-        .particle:nth-child(5) { left: 50%; animation-delay: 3s; animation-duration: 24s; }
-        .particle:nth-child(6) { left: 60%; animation-delay: 5s; animation-duration: 26s; }
-        .particle:nth-child(7) { left: 70%; animation-delay: 2s; animation-duration: 21s; }
-        .particle:nth-child(8) { left: 80%; animation-delay: 4s; animation-duration: 23s; }
-        .particle:nth-child(9) { left: 90%; animation-delay: 1s; animation-duration: 27s; }
-        .particle:nth-child(10) { left: 15%; animation-delay: 3s; animation-duration: 19s; }
-        .particle:nth-child(11) { left: 25%; animation-delay: 0s; animation-duration: 30s; }
-        .particle:nth-child(12) { left: 35%; animation-delay: 2s; animation-duration: 18s; }
-        .particle:nth-child(13) { left: 45%; animation-delay: 4s; animation-duration: 25s; }
-        .particle:nth-child(14) { left: 55%; animation-delay: 1s; animation-duration: 22s; }
-        .particle:nth-child(15) { left: 65%; animation-delay: 3s; animation-duration: 28s; }
-        .particle:nth-child(16) { left: 75%; animation-delay: 5s; animation-duration: 20s; }
-        .particle:nth-child(17) { left: 85%; animation-delay: 2s; animation-duration: 24s; }
-        .particle:nth-child(18) { left: 95%; animation-delay: 4s; animation-duration: 26s; }
-        .particle:nth-child(19) { left: 5%; animation-delay: 1s; animation-duration: 23s; }
-        .particle:nth-child(20) { left: 50%; animation-delay: 3s; animation-duration: 21s; }
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 20%; animation-delay: 2s; }
+        .particle:nth-child(3) { left: 30%; animation-delay: 4s; }
+        .particle:nth-child(4) { left: 40%; animation-delay: 1s; }
+        .particle:nth-child(5) { left: 50%; animation-delay: 3s; }
+        .particle:nth-child(6) { left: 60%; animation-delay: 5s; }
+        .particle:nth-child(7) { left: 70%; animation-delay: 2s; }
+        .particle:nth-child(8) { left: 80%; animation-delay: 4s; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 1s; }
+        .particle:nth-child(10) { left: 15%; animation-delay: 3s; }
+        .particle:nth-child(11) { left: 25%; animation-delay: 0s; width: 6px; height: 6px; }
+        .particle:nth-child(12) { left: 35%; animation-delay: 2s; }
+        .particle:nth-child(13) { left: 45%; animation-delay: 4s; width: 5px; height: 5px; }
+        .particle:nth-child(14) { left: 55%; animation-delay: 1s; }
+        .particle:nth-child(15) { left: 65%; animation-delay: 3s; width: 6px; height: 6px; }
+        .particle:nth-child(16) { left: 75%; animation-delay: 5s; }
+        .particle:nth-child(17) { left: 85%; animation-delay: 2s; }
+        .particle:nth-child(18) { left: 95%; animation-delay: 4s; }
+        .particle:nth-child(19) { left: 5%; animation-delay: 1s; width: 5px; height: 5px; }
+        .particle:nth-child(20) { left: 50%; animation-delay: 3s; }
         
-        @keyframes float {
-            0% { transform: translateY(100vh) scale(0); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
-        }
-        
-        .particle:nth-child(odd) {
-            background: radial-gradient(circle, rgba(255, 51, 102, 0.6) 0%, transparent 70%);
-            width: 6px;
-            height: 6px;
-        }
-        .particle:nth-child(3n) {
-            background: radial-gradient(circle, rgba(255, 107, 53, 0.5) 0%, transparent 70%);
-            width: 5px;
-            height: 5px;
+        @keyframes floatGold {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* GLASSMORPHISM PREMIUM                                           */
+        /* GLASSMORPHISM MODERNO                                          */
         /* ═══════════════════════════════════════════════════════════════ */
         .glass {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(27, 38, 59, 0.7);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
         
         .glass-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(27, 38, 59, 0.6);
             backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            border-radius: 16px;
         }
         
         .glass-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 200, 255, 0.1);
-            border-color: rgba(0, 200, 255, 0.3);
+            transform: translateY(-4px);
+            border-color: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.1);
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* LOGO ANIMADO CON GLOW                                           */
+        /* LOGO Y BRANDING                                                */
         /* ═══════════════════════════════════════════════════════════════ */
         .logo-glow {
-            filter: drop-shadow(0 0 20px rgba(0, 200, 255, 0.5)) drop-shadow(0 0 40px rgba(255, 51, 102, 0.3));
-            animation: logoPulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes logoPulse {
-            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 200, 255, 0.5)) drop-shadow(0 0 40px rgba(255, 51, 102, 0.3)); }
-            50% { filter: drop-shadow(0 0 30px rgba(0, 200, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 51, 102, 0.5)); }
-        }
-        
-        /* Texto con gradiente animado */
-        .gradient-text-animated {
-            background: linear-gradient(90deg, #00c8ff, #ff3366, #ff6b35, #00c8ff);
-            background-size: 300% 100%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradientText 4s linear infinite;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
         }
         
         .gradient-text {
-            background: linear-gradient(135deg, #00c8ff 0%, #ff3366 50%, #ff6b35 100%);
+            background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-light) 50%, var(--gold-dark) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         
-        @keyframes gradientText {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 300% 50%; }
+        .gradient-text-animated {
+            background: linear-gradient(90deg, var(--gold-primary), var(--white), var(--gold-primary));
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmerText 3s linear infinite;
+        }
+        
+        @keyframes shimmerText {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* BOTONES 3D PREMIUM                                              */
+        /* BOTONES PROFESIONALES                                          */
         /* ═══════════════════════════════════════════════════════════════ */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
+            color: var(--navy-dark);
+            font-weight: 600;
+            padding: 12px 28px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+        
         .btn-3d {
             position: relative;
-            transform-style: preserve-3d;
             transition: all 0.3s ease;
         }
         
-        .btn-3d::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: inherit;
-            border-radius: inherit;
-            filter: blur(15px);
-            opacity: 0;
-            z-index: -1;
-            transition: opacity 0.3s ease;
-        }
-        
-        .btn-3d:hover::before { opacity: 0.6; }
-        
         .btn-3d:hover {
-            transform: translateY(-8px) rotateX(5deg);
-            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5), 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+            transform: translateY(-3px);
         }
         
-        .btn-3d:active { transform: translateY(-2px); }
+        .btn-3d:active { transform: translateY(-1px); }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* TARJETAS DE TENDENCIA CON SHIMMER                               */
+        /* TARJETAS CON EFECTO SHIMMER                                    */
         /* ═══════════════════════════════════════════════════════════════ */
         .trend-card {
             position: relative;
             overflow: hidden;
+            background: linear-gradient(135deg, var(--navy-light) 0%, var(--navy-lighter) 100%);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            border-radius: 16px;
         }
         
         .trend-card::before {
@@ -245,8 +250,8 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%);
-            animation: shimmer 3s infinite;
+            background: linear-gradient(45deg, transparent 40%, rgba(255, 215, 0, 0.05) 50%, transparent 60%);
+            animation: shimmer 4s infinite;
             pointer-events: none;
         }
         
@@ -255,62 +260,138 @@
             100% { transform: translateX(100%) rotate(45deg); }
         }
         
-        /* Números limpios - sin efectos */
-        .number-glow {
-            /* Sin efectos - texto limpio */
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* BADGES MODERNOS                                                */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .badge-neon {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .badge-neon-blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .badge-neon-green {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .badge-neon-pink {
+            background: rgba(244, 63, 94, 0.15);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+        
+        .badge-neon-yellow {
+            background: rgba(255, 215, 0, 0.15);
+            color: var(--gold-primary);
+            border: 1px solid rgba(255, 215, 0, 0.3);
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* TEMA CLARO - PROFESIONAL                                        */
+        /* SELECTORES PROFESIONALES                                       */
         /* ═══════════════════════════════════════════════════════════════ */
-        [data-theme="light"] body {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 50%, #1a3050 100%) !important;
+        .select-premium {
+            appearance: none;
+            background: var(--navy-lighter);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 40px 12px 16px;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23FFD700' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 18px;
         }
         
-        [data-theme="light"] .animated-bg {
-            background: linear-gradient(125deg, #1e3a5f 0%, #2d5a7f 25%, #1e4a6f 50%, #2d5a7f 75%, #1e3a5f 100%);
-            background-size: 400% 400%;
+        .select-premium:hover, .select-premium:focus {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
+            outline: none;
         }
         
-        [data-theme="light"] .particles { opacity: 0.5; }
-        
-        /* En tema claro, mantener textos blancos */
-        [data-theme="light"] .text-white { color: #ffffff !important; }
-        [data-theme="light"] .text-gray-300, [data-theme="light"] .text-gray-400 { color: #cbd5e1 !important; }
-        [data-theme="light"] .text-gray-500 { color: #94a3b8 !important; }
-        
-        /* Tarjetas con fondo semitransparente en tema claro */
-        [data-theme="light"] .bg-white {
-            background: rgba(255, 255, 255, 0.95) !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+        .select-premium option {
+            background: var(--navy-light);
+            color: white;
         }
         
-        [data-theme="light"] .bg-white\/5, [data-theme="light"] .bg-white\/10 {
-            background: rgba(255,255,255,0.1) !important;
+        select {
+            background-color: var(--navy-lighter) !important;
+            color: white !important;
+        }
+        
+        select option {
+            background-color: var(--navy-light) !important;
+            color: white !important;
+            padding: 8px;
+        }
+        
+        select option:hover,
+        select option:checked {
+            background-color: var(--gold-dark) !important;
+            color: var(--navy-dark) !important;
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* BARRA LIVE CON EFECTO                                           */
+        /* INPUTS MODERNOS                                                */
+        /* ═══════════════════════════════════════════════════════════════ */
+        input[type="text"], input[type="number"], input[type="date"] {
+            background: var(--navy-lighter);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 10px;
+            padding: 10px 14px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
+            outline: none;
+        }
+        
+        input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* NAVEGACIÓN SUPERIOR                                            */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .nav-item {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+        }
+        
+        .nav-item:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-item.active {
+            color: var(--navy-dark);
+            background: var(--gold-primary);
+            font-weight: 600;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* LIVE BAR                                                       */
         /* ═══════════════════════════════════════════════════════════════ */
         .live-bar {
             position: relative;
             overflow: hidden;
-        }
-        
-        .live-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            animation: liveShine 2s infinite;
-        }
-        
-        @keyframes liveShine {
-            0% { left: -100%; }
-            100% { left: 100%; }
+            background: linear-gradient(90deg, var(--navy-light), var(--navy-lighter));
         }
         
         .live-dot {
@@ -323,131 +404,237 @@
         
         @keyframes livePulse {
             0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-            50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* BADGES NEÓN                                                     */
+        /* ELEMENTOS NBA DECORATIVOS                                      */
         /* ═══════════════════════════════════════════════════════════════ */
-        .badge-neon {
+        .basketball-icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            border-radius: 50%;
             position: relative;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 12px;
+            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.3), inset 2px 2px 4px rgba(255,255,255,0.2);
         }
         
-        .badge-neon-blue {
-            background: rgba(0, 200, 255, 0.15);
-            color: #00c8ff;
-            border: 1px solid rgba(0, 200, 255, 0.3);
-            box-shadow: 0 0 15px rgba(0, 200, 255, 0.2);
+        .basketball-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #1a1a1a;
+            transform: translateY(-50%);
         }
         
-        .badge-neon-green {
-            background: rgba(34, 197, 94, 0.15);
-            color: #22c55e;
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
-        }
-        
-        .badge-neon-pink {
-            background: rgba(255, 51, 102, 0.15);
-            color: #ff3366;
-            border: 1px solid rgba(255, 51, 102, 0.3);
-            box-shadow: 0 0 15px rgba(255, 51, 102, 0.2);
-        }
-        
-        .badge-neon-yellow {
-            background: rgba(234, 179, 8, 0.15);
-            color: #eab308;
-            border: 1px solid rgba(234, 179, 8, 0.3);
-            box-shadow: 0 0 15px rgba(234, 179, 8, 0.2);
+        .basketball-icon::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #1a1a1a;
+            transform: translateX(-50%);
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* SELECTORES PREMIUM                                              */
+        /* SECCIÓN HERO CON ESTADIO                                       */
         /* ═══════════════════════════════════════════════════════════════ */
-        .select-premium {
-            appearance: none;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 12px 40px 12px 16px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300c8ff' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 20px;
+        .hero-section {
+            position: relative;
+            padding: 40px 20px;
+            text-align: center;
         }
         
-        .select-premium:hover, .select-premium:focus {
-            border-color: rgba(0, 200, 255, 0.5);
-            box-shadow: 0 0 20px rgba(0, 200, 255, 0.2);
-            outline: none;
-        }
-        
-        .select-premium option {
-            background: #1a1a2e;
-            color: white;
-        }
-        
-        [data-theme="light"] .select-premium {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-        
-        [data-theme="light"] .select-premium option {
-            background: #1e3a5f;
-            color: white;
-        }
-        
-        /* ESTILOS GLOBALES PARA TODOS LOS SELECT/OPTION */
-        select {
-            background-color: #1a1a2e !important;
-            color: white !important;
-        }
-        
-        select option {
-            background-color: #1a1a2e !important;
-            color: white !important;
-            padding: 8px;
-        }
-        
-        select option:hover,
-        select option:checked {
-            background-color: #3b82f6 !important;
-            color: white !important;
+        .hero-section::before {
+            content: '🏀';
+            position: absolute;
+            font-size: 120px;
+            opacity: 0.03;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* ANIMACIONES GENERALES                                           */
+        /* ANIMACIONES                                                    */
         /* ═══════════════════════════════════════════════════════════════ */
         .slide-in { animation: slideIn 0.4s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        .h2h-card { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%); }
-        .score-input { background: #1a1a2e; border: 2px solid #4a4a6a; }
-        .score-input:focus { border-color: #00c8ff; outline: none; }
-        .ot-input { border-color: #eab308 !important; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* COMPONENTES ESPECÍFICOS                                        */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .h2h-card { 
+            background: linear-gradient(135deg, var(--navy-light) 0%, var(--navy-lighter) 100%);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+        
+        .score-input { 
+            background: var(--navy-dark); 
+            border: 2px solid var(--navy-lighter); 
+        }
+        .score-input:focus { border-color: var(--gold-primary); outline: none; }
+        .ot-input { border-color: var(--gold-dark) !important; }
+        
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
-        .firebase-status { position: fixed; bottom: 10px; left: 10px; padding: 5px 10px; border-radius: 20px; font-size: 11px; z-index: 1000; }
+        
+        .firebase-status { position: fixed; bottom: 10px; left: 10px; padding: 6px 12px; border-radius: 20px; font-size: 11px; z-index: 1000; font-weight: 500; }
         .firebase-connected { background: #22c55e; color: white; }
         .firebase-disconnected { background: #ef4444; color: white; }
-        .firebase-loading { background: #f59e0b; color: white; }
+        .firebase-loading { background: var(--gold-dark); color: var(--navy-dark); }
         
-        /* LOADING SPINNER */
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* LOADING SPINNER                                                */
+        /* ═══════════════════════════════════════════════════════════════ */
         .loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
+            bottom: 0;
+            background: rgba(10, 22, 40, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--navy-lighter);
+            border-top-color: var(--gold-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .loading-text {
+            margin-top: 20px;
+            color: var(--gold-primary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* NOTIFICACIONES                                                 */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .notification {
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            animation: slideInRight 0.3s ease-out;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .notification.success { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+        .notification.error { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .notification.info { background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark)); color: var(--navy-dark); }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* SCROLLBAR PERSONALIZADO                                        */
+        /* ═══════════════════════════════════════════════════════════════ */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--navy-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--navy-lighter); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold-dark); }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* TEMA CLARO (Opcional - mantenemos dark por defecto)            */
+        /* ═══════════════════════════════════════════════════════════════ */
+        [data-theme="light"] body {
+            background: linear-gradient(180deg, #1e3a5f 0%, #0d1b2a 100%);
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* ESTADÍSTICAS Y MÉTRICAS                                        */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gold-primary);
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* TABLAS MODERNAS                                                */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .table-modern {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        
+        .table-modern th {
+            background: var(--navy-lighter);
+            color: var(--gold-primary);
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .table-modern td {
+            background: var(--navy-light);
+            padding: 12px 16px;
+            border: none;
+        }
+        
+        .table-modern tr:hover td {
+            background: var(--navy-lighter);
+        }
+        
+        .table-modern tr td:first-child { border-radius: 8px 0 0 8px; }
+        .table-modern tr td:last-child { border-radius: 0 8px 8px 0; }
+        
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* RESPONSIVE                                                     */
+        /* ═══════════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            .hero-section { padding: 20px 10px; }
+            .stat-value { font-size: 1.5rem; }
+        }
+
+        /* Ocultar tema claro toggle - solo oscuro */
+        .font-orbitron { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
             bottom: 0;
             background: rgba(15, 15, 35, 0.95);
             display: flex;
@@ -465,8 +652,8 @@
             width: 60px;
             height: 60px;
             border: 4px solid rgba(255,255,255,0.1);
-            border-top: 4px solid #00c8ff;
-            border-right: 4px solid #ff3366;
+            border-top: 4px solid #FFD700;
+            border-right: 4px solid #F59E0B;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -629,23 +816,33 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
 // ═══════════════════════════════════════════════════════════════
-// LOGO SVG
+// LOGO SVG - NUEVO DISEÑO AZUL MARINO + DORADO + BASKETBALL
 // ═══════════════════════════════════════════════════════════════
 const LOGO_SVG = `
-<svg class="logo-icon logo-glow" width="50" height="50" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+<svg class="logo-icon logo-glow" width="60" height="60" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#00c8ff"/>
-            <stop offset="50%" style="stop-color:#ff3366"/>
-            <stop offset="100%" style="stop-color:#ff6b35"/>
+            <stop offset="0%" style="stop-color:#FFD700"/>
+            <stop offset="50%" style="stop-color:#FFC107"/>
+            <stop offset="100%" style="stop-color:#F59E0B"/>
+        </linearGradient>
+        <linearGradient id="ballGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f97316"/>
+            <stop offset="100%" style="stop-color:#ea580c"/>
         </linearGradient>
     </defs>
-    <circle cx="32" cy="32" r="30" fill="#1a1a2e"/>
+    <!-- Fondo azul marino -->
+    <circle cx="32" cy="32" r="30" fill="#0d1b2a"/>
+    <!-- Aro dorado -->
     <circle cx="32" cy="32" r="28" fill="none" stroke="url(#logoGrad)" stroke-width="3"/>
-    <path d="M32 12c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20zm0 36c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16z" fill="#ff6b35"/>
-    <path d="M32 18c-7.7 0-14 6.3-14 14h4c0-5.5 4.5-10 10-10V18z" fill="#00c8ff"/>
-    <path d="M32 18v4c5.5 0 10 4.5 10 10h4c0-7.7-6.3-14-14-14z" fill="#ff3366"/>
-    <text x="32" y="38" text-anchor="middle" font-family="Arial Black" font-size="14" font-weight="bold" fill="white">N</text>
+    <!-- Balón pequeño -->
+    <circle cx="32" cy="28" r="10" fill="url(#ballGrad)"/>
+    <path d="M22 28 L42 28" stroke="#1a1a1a" stroke-width="1.5"/>
+    <path d="M32 18 L32 38" stroke="#1a1a1a" stroke-width="1.5"/>
+    <path d="M24 22 Q32 28 24 34" stroke="#1a1a1a" stroke-width="1" fill="none"/>
+    <path d="M40 22 Q32 28 40 34" stroke="#1a1a1a" stroke-width="1" fill="none"/>
+    <!-- Letra N dorada -->
+    <text x="32" y="52" text-anchor="middle" font-family="Arial Black" font-size="12" font-weight="bold" fill="#FFD700">N</text>
 </svg>`;
 
 // ═══════════════════════════════════════════════════════════════
@@ -2764,7 +2961,7 @@ function renderHome() {
     const picksStats = getPicksStats();
     
     let topH = top5.map((t,i) => `
-        <div class="flex justify-between items-center bg-white/5 rounded-lg p-3 mb-2">
+        <div class="flex justify-between items-center bg-white/5 hover:bg-white/10 rounded-xl p-3 mb-2 transition-all border border-transparent hover:border-yellow-500/30">
             <span class="text-white font-semibold">${i+1}. ${t}</span>
             <div class="text-right">
                 <span class="text-yellow-400 font-bold text-lg">${TEAM_STATS[t]?.full?.toFixed(1)}</span>
@@ -2775,139 +2972,165 @@ function renderHome() {
     
     return `
         <div class="p-4 max-w-4xl mx-auto">
-            <div class="live-bar glass rounded-2xl p-3 mb-6 ${apiConnected ? 'border border-green-500/30' : 'border border-yellow-500/30'}">
-                <div class="flex items-center justify-center gap-3">
-                    ${apiConnected ? '<div class="live-dot"></div>' : ''}
-                    <span class="font-semibold text-sm ${apiConnected ? 'text-green-400' : 'text-yellow-400'}">
-                        ${apiConnected ? 'Datos en TIEMPO REAL' : '⚠️ Usando datos de respaldo'}
-                    </span>
-                    <span class="text-xs text-gray-400">
-                        Fuente: ${statsSource}
-                        ${statsLastUpdated ? ' • Actualizado: ' + new Date(statsLastUpdated).toLocaleString('es-ES', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) : ''}
-                    </span>
+            <!-- HEADER CON ESTADIO SVG DE FONDO -->
+            <div class="relative mb-8 overflow-hidden rounded-3xl" style="background: linear-gradient(135deg, #0d1b2a 0%, #1b3a5f 50%, #0d1b2a 100%);">
+                <!-- Elementos decorativos NBA -->
+                <div class="absolute inset-0 opacity-5">
+                    <svg viewBox="0 0 400 200" class="w-full h-full">
+                        <!-- Cancha de basketball simplificada -->
+                        <rect x="20" y="20" width="360" height="160" fill="none" stroke="#FFD700" stroke-width="2"/>
+                        <circle cx="200" cy="100" r="40" fill="none" stroke="#FFD700" stroke-width="2"/>
+                        <line x1="200" y1="20" x2="200" y2="180" stroke="#FFD700" stroke-width="2"/>
+                        <!-- Áreas de tiro -->
+                        <path d="M20 60 L60 60 L60 140 L20 140" fill="none" stroke="#FFD700" stroke-width="2"/>
+                        <path d="M380 60 L340 60 L340 140 L380 140" fill="none" stroke="#FFD700" stroke-width="2"/>
+                        <circle cx="60" cy="100" r="30" fill="none" stroke="#FFD700" stroke-width="2"/>
+                        <circle cx="340" cy="100" r="30" fill="none" stroke="#FFD700" stroke-width="2"/>
+                    </svg>
                 </div>
-            </div>
-            
-            <!-- LOGO -->
-            <div class="text-center mb-8">
-                <div class="logo-container mb-4">
-                    ${LOGO_SVG}
-                    <div>
-                        <h1 class="text-4xl md:text-5xl font-black text-white font-orbitron tracking-wider">NIOSPORTS</h1>
-                        <h2 class="text-xl font-bold gradient-text-animated font-orbitron">PRO v2.5 FINAL</h2>
+                
+                <div class="relative z-10 p-8 text-center">
+                    <!-- Logo -->
+                    <div class="flex items-center justify-center gap-4 mb-4">
+                        ${LOGO_SVG}
+                        <div>
+                            <h1 class="text-4xl md:text-5xl font-black text-white font-display tracking-widest">NIOSPORTS</h1>
+                            <div class="flex items-center justify-center gap-2">
+                                <span class="bg-yellow-500 text-navy-dark px-3 py-1 rounded-full text-xs font-bold" style="color: #0d1b2a;">PRO v2.5</span>
+                                <span class="text-yellow-400 text-sm font-semibold">🏀 NBA Analytics</span>
+                            </div>
+                        </div>
                     </div>
+                    <p class="text-gray-400 text-sm">Sistema Profesional de Predicciones NBA con Inteligencia Artificial</p>
                 </div>
-                <p class="text-gray-400 text-sm">Tu herramienta profesional de análisis NBA con IA</p>
+                
+                <!-- Barra de estado -->
+                <div class="bg-black/30 backdrop-blur px-4 py-2 flex items-center justify-center gap-3">
+                    ${apiConnected ? '<div class="live-dot"></div>' : '<span class="text-yellow-500">⚠️</span>'}
+                    <span class="font-medium text-sm ${apiConnected ? 'text-green-400' : 'text-yellow-400'}">
+                        ${apiConnected ? 'LIVE' : 'OFFLINE'} • ${statsSource}
+                    </span>
+                    ${statsLastUpdated ? `<span class="text-xs text-gray-500">• ${new Date(statsLastUpdated).toLocaleString('es-ES', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</span>` : ''}
+                </div>
             </div>
             
-            <!-- BOTONES PRINCIPALES PREMIUM -->
-            <button onclick="navigateTo('tendencia')" class="btn-3d w-full bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-2xl mb-4">
-                <div class="flex flex-col items-center">
-                    <div class="text-5xl mb-3">📈</div>
-                    <h3 class="text-xl font-bold text-white mb-1">Tendencia + H2H</h3>
-                    <p class="text-emerald-100 text-xs mt-2">1Q • 1H • Full Game • IA Predictor</p>
+            <!-- BOTÓN PRINCIPAL - TENDENCIA -->
+            <button onclick="navigateTo('tendencia')" class="btn-3d w-full p-6 rounded-2xl shadow-2xl mb-4 relative overflow-hidden group" style="background: linear-gradient(135deg, #FFD700 0%, #F59E0B 100%);">
+                <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
+                <div class="relative flex items-center justify-center gap-4">
+                    <div class="text-5xl">🏀</div>
+                    <div class="text-left">
+                        <h3 class="text-2xl font-bold" style="color: #0d1b2a;">Analizar Partido</h3>
+                        <p class="text-sm opacity-80" style="color: #0d1b2a;">Tendencia + H2H + Factores Contextuales</p>
+                    </div>
                 </div>
             </button>
             
+            <!-- BOTONES SECUNDARIOS -->
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <button onclick="navigateTo('bestPicks')" class="btn-3d glass-card bg-gradient-to-br from-yellow-500/90 to-orange-600/90 p-5 rounded-2xl shadow-2xl">
+                <button onclick="navigateTo('bestPicks')" class="btn-3d p-5 rounded-2xl shadow-xl border border-yellow-500/30 hover:border-yellow-400 transition-all" style="background: linear-gradient(135deg, #1b263b 0%, #22354a 100%);">
                     <div class="text-3xl mb-2">🔥</div>
-                    <h3 class="text-lg font-bold text-white">Mejores Picks</h3>
-                    <p class="text-yellow-100 text-xs">Algoritmo sugiere</p>
+                    <h3 class="text-lg font-bold text-yellow-400">Best Picks</h3>
+                    <p class="text-gray-400 text-xs">Sugerencias del Modelo</p>
                 </button>
                 
-                <button onclick="navigateTo('picks')" class="btn-3d glass-card bg-gradient-to-br from-pink-500/90 to-rose-600/90 p-5 rounded-2xl shadow-2xl">
+                <button onclick="navigateTo('picks')" class="btn-3d p-5 rounded-2xl shadow-xl border border-white/10 hover:border-yellow-500/30 transition-all" style="background: linear-gradient(135deg, #1b263b 0%, #22354a 100%);">
                     <div class="text-3xl mb-2">📊</div>
                     <h3 class="text-lg font-bold text-white">Mis Picks</h3>
-                    <p class="text-pink-100 text-xs">Historial completo</p>
+                    <p class="text-gray-400 text-xs">Historial Completo</p>
                 </button>
             </div>
             
-            <!-- Dashboard de Rendimiento -->
-            <button onclick="navigateTo('dashboard')" class="btn-3d w-full glass-card bg-gradient-to-br from-cyan-500/90 to-blue-600/90 p-5 rounded-2xl shadow-2xl mb-4 border border-cyan-400/30">
-                <div class="flex items-center justify-center gap-4">
-                    <div class="text-4xl">📉</div>
-                    <div class="text-left">
-                        <h3 class="text-xl font-bold text-white">Dashboard Pro</h3>
-                        <p class="text-cyan-100 text-sm">Gráficos • CLV • Backtesting</p>
+            <!-- DASHBOARD Y DATA -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button onclick="navigateTo('dashboard')" class="btn-3d p-4 rounded-2xl shadow-xl border border-blue-500/30 hover:border-blue-400 transition-all" style="background: linear-gradient(135deg, #0d1b2a 0%, #1b3a5f 100%);">
+                    <div class="flex items-center gap-3">
+                        <div class="text-2xl">📈</div>
+                        <div class="text-left">
+                            <h3 class="font-bold text-blue-400">Dashboard</h3>
+                            <p class="text-gray-500 text-xs">Gráficos & Stats</p>
+                        </div>
                     </div>
-                </div>
-            </button>
-            
-            <button onclick="navigateTo('ingesta')" class="btn-3d w-full glass-card bg-gradient-to-br from-purple-600/90 to-indigo-700/90 p-5 rounded-2xl shadow-2xl mb-6 border border-purple-400/30">
-                <div class="flex items-center justify-center gap-4">
-                    <div class="text-4xl">📝</div>
-                    <div class="text-left">
-                        <h3 class="text-xl font-bold text-white">Ingesta de Datos H2H</h3>
-                        <p class="text-purple-100 text-sm">Agregar partidos manualmente</p>
+                </button>
+                
+                <button onclick="navigateTo('ingesta')" class="btn-3d p-4 rounded-2xl shadow-xl border border-purple-500/30 hover:border-purple-400 transition-all" style="background: linear-gradient(135deg, #1b263b 0%, #2d1b4a 100%);">
+                    <div class="flex items-center gap-3">
+                        <div class="text-2xl">📝</div>
+                        <div class="text-left">
+                            <h3 class="font-bold text-purple-400">Ingesta H2H</h3>
+                            <p class="text-gray-500 text-xs">Agregar Datos</p>
+                        </div>
                     </div>
-                </div>
-            </button>
+                </button>
+            </div>
             
-            <!-- MI RÉCORD PERSONAL - Movido abajo -->
-            <div class="bg-gradient-to-br from-purple-600/30 to-pink-600/30 rounded-2xl p-5 mb-6 border border-purple-500/50">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-lg font-bold text-white">🏆 Mi Récord Personal</h3>
-                    <button onclick="navigateTo('picks')" class="text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg">Ver todo</button>
+            <!-- MI RÉCORD PERSONAL -->
+            <div class="rounded-2xl p-5 mb-6 border border-yellow-500/30" style="background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">🏆</span>
+                        <h3 class="text-lg font-bold text-white">Mi Récord Personal</h3>
+                    </div>
+                    <button onclick="navigateTo('picks')" class="text-xs bg-yellow-500 hover:bg-yellow-400 text-gray-900 px-3 py-1 rounded-lg font-semibold transition-all">Ver todo</button>
                 </div>
                 
-                <!-- Fila principal: Win Rate, Ganados, Perdidos, Pendientes -->
-                <div class="grid grid-cols-4 gap-3 text-center">
-                    <div class="bg-white/10 rounded-xl p-3">
-                        <p class="text-3xl font-black ${parseFloat(picksStats.winRate) >= 55 ? 'text-green-400' : parseFloat(picksStats.winRate) >= 45 ? 'text-yellow-400' : 'text-red-400'}">${picksStats.winRate}%</p>
-                        <p class="text-gray-400 text-xs">Efectividad</p>
+                <!-- Stats principales -->
+                <div class="grid grid-cols-4 gap-3 text-center mb-4">
+                    <div class="rounded-xl p-3" style="background: rgba(255,255,255,0.05);">
+                        <p class="text-2xl font-black ${parseFloat(picksStats.winRate) >= 55 ? 'text-green-400' : parseFloat(picksStats.winRate) >= 45 ? 'text-yellow-400' : 'text-red-400'}">${picksStats.winRate}%</p>
+                        <p class="text-gray-500 text-xs">Win Rate</p>
                     </div>
-                    <div class="bg-white/10 rounded-xl p-3">
-                        <p class="text-3xl font-black text-green-400">${picksStats.wins}</p>
-                        <p class="text-gray-400 text-xs">Ganados</p>
+                    <div class="rounded-xl p-3" style="background: rgba(34,197,94,0.1);">
+                        <p class="text-2xl font-black text-green-400">${picksStats.wins}</p>
+                        <p class="text-gray-500 text-xs">Wins</p>
                     </div>
-                    <div class="bg-white/10 rounded-xl p-3">
-                        <p class="text-3xl font-black text-red-400">${picksStats.losses}</p>
-                        <p class="text-gray-400 text-xs">Perdidos</p>
+                    <div class="rounded-xl p-3" style="background: rgba(239,68,68,0.1);">
+                        <p class="text-2xl font-black text-red-400">${picksStats.losses}</p>
+                        <p class="text-gray-500 text-xs">Losses</p>
                     </div>
-                    <div class="bg-white/10 rounded-xl p-3">
-                        <p class="text-3xl font-black text-yellow-400">${picksStats.pending}</p>
-                        <p class="text-gray-400 text-xs">Pendientes</p>
+                    <div class="rounded-xl p-3" style="background: rgba(255,215,0,0.1);">
+                        <p class="text-2xl font-black text-yellow-400">${picksStats.pending}</p>
+                        <p class="text-gray-500 text-xs">Pending</p>
                     </div>
                 </div>
                 
-                <!-- Fila secundaria: Profit, ROI, Racha -->
-                <div class="grid grid-cols-3 gap-3 text-center mt-3">
-                    <div class="bg-black/20 rounded-xl p-3">
-                        <p class="text-2xl font-black ${parseFloat(picksStats.profit) >= 0 ? 'text-green-400' : 'text-red-400'}">${parseFloat(picksStats.profit) > 0 ? '+' : ''}${picksStats.profit}</p>
-                        <p class="text-gray-400 text-xs">${parseFloat(picksStats.profit) >= 0 ? '📈' : '📉'} Profit (u)</p>
+                <!-- Profit y ROI -->
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div class="rounded-xl p-3 border border-white/5" style="background: rgba(0,0,0,0.3);">
+                        <p class="text-xl font-black ${parseFloat(picksStats.profit) >= 0 ? 'text-green-400' : 'text-red-400'}">${parseFloat(picksStats.profit) > 0 ? '+' : ''}${picksStats.profit}u</p>
+                        <p class="text-gray-500 text-xs">Profit</p>
                     </div>
-                    <div class="bg-black/20 rounded-xl p-3">
-                        <p class="text-2xl font-black ${parseFloat(picksStats.roi) >= 0 ? 'text-cyan-400' : 'text-red-400'}">${parseFloat(picksStats.roi) > 0 ? '+' : ''}${picksStats.roi}%</p>
-                        <p class="text-gray-400 text-xs">💰 ROI</p>
+                    <div class="rounded-xl p-3 border border-white/5" style="background: rgba(0,0,0,0.3);">
+                        <p class="text-xl font-black ${parseFloat(picksStats.roi) >= 0 ? 'text-blue-400' : 'text-red-400'}">${parseFloat(picksStats.roi) > 0 ? '+' : ''}${picksStats.roi}%</p>
+                        <p class="text-gray-500 text-xs">ROI</p>
                     </div>
-                    <div class="bg-black/20 rounded-xl p-3">
+                    <div class="rounded-xl p-3 border border-white/5" style="background: rgba(0,0,0,0.3);">
                         ${picksStats.streak.count > 0 ? `
-                            <p class="text-2xl font-black ${picksStats.streak.type === 'win' ? 'text-green-400' : 'text-red-400'}">${picksStats.streak.count}${picksStats.streak.type === 'win' ? 'W' : 'L'}</p>
-                            <p class="text-gray-400 text-xs">${picksStats.streak.type === 'win' ? '🔥' : '❄️'} Racha</p>
+                            <p class="text-xl font-black ${picksStats.streak.type === 'win' ? 'text-green-400' : 'text-red-400'}">${picksStats.streak.count}${picksStats.streak.type === 'win' ? 'W' : 'L'}</p>
+                            <p class="text-gray-500 text-xs">${picksStats.streak.type === 'win' ? '🔥' : '❄️'} Streak</p>
                         ` : `
-                            <p class="text-2xl font-black text-gray-500">-</p>
-                            <p class="text-gray-400 text-xs">🎯 Racha</p>
+                            <p class="text-xl font-black text-gray-500">-</p>
+                            <p class="text-gray-500 text-xs">Streak</p>
                         `}
                     </div>
                 </div>
                 
-                <!-- Desglose por período -->
+                <!-- Por período -->
                 ${picksStats.total > 0 ? `
-                <div class="mt-4 pt-3 border-t border-white/10">
-                    <p class="text-xs text-gray-500 mb-2 text-center">📊 Por Período</p>
+                <div class="mt-4 pt-4 border-t border-white/10">
+                    <p class="text-xs text-gray-500 mb-3 text-center">📊 Rendimiento por Período</p>
                     <div class="grid grid-cols-3 gap-2">
-                        <div class="bg-yellow-500/10 rounded-lg p-2 text-center">
+                        <div class="rounded-lg p-2 text-center" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.2);">
                             <p class="text-yellow-400 font-bold text-sm">1Q</p>
                             <p class="text-white text-xs">${picksStats.byPeriod['1Q'].wins}W-${picksStats.byPeriod['1Q'].losses}L</p>
                             <p class="text-xs ${picksStats.byPeriod['1Q'].profit >= 0 ? 'text-green-400' : 'text-red-400'}">${picksStats.byPeriod['1Q'].profit >= 0 ? '+' : ''}${picksStats.byPeriod['1Q'].profit.toFixed(2)}u</p>
                         </div>
-                        <div class="bg-pink-500/10 rounded-lg p-2 text-center">
-                            <p class="text-pink-400 font-bold text-sm">1H</p>
+                        <div class="rounded-lg p-2 text-center" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);">
+                            <p class="text-blue-400 font-bold text-sm">1H</p>
                             <p class="text-white text-xs">${picksStats.byPeriod['1H'].wins}W-${picksStats.byPeriod['1H'].losses}L</p>
                             <p class="text-xs ${picksStats.byPeriod['1H'].profit >= 0 ? 'text-green-400' : 'text-red-400'}">${picksStats.byPeriod['1H'].profit >= 0 ? '+' : ''}${picksStats.byPeriod['1H'].profit.toFixed(2)}u</p>
                         </div>
-                        <div class="bg-green-500/10 rounded-lg p-2 text-center">
+                        <div class="rounded-lg p-2 text-center" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
                             <p class="text-green-400 font-bold text-sm">FULL</p>
                             <p class="text-white text-xs">${picksStats.byPeriod['FULL'].wins}W-${picksStats.byPeriod['FULL'].losses}L</p>
                             <p class="text-xs ${picksStats.byPeriod['FULL'].profit >= 0 ? 'text-green-400' : 'text-red-400'}">${picksStats.byPeriod['FULL'].profit >= 0 ? '+' : ''}${picksStats.byPeriod['FULL'].profit.toFixed(2)}u</p>
@@ -2981,29 +3204,32 @@ function renderTendencia() {
     
     let html = `
         <div class="p-3 md:p-4 max-w-4xl mx-auto">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4 text-sm md:text-base">← Volver</button>
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 px-4 py-2 rounded-lg mb-4 text-sm md:text-base font-semibold transition-all" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);">← Volver al Inicio</button>
             <div class="text-center mb-6">
-                <div class="logo-container justify-center mb-2">
+                <div class="flex items-center justify-center gap-3 mb-2">
                     ${LOGO_SVG}
-                    <h1 class="text-2xl md:text-3xl font-bold text-white font-orbitron">TENDENCIA + H2H</h1>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-white font-display tracking-wide">ANÁLISIS DE PARTIDO</h1>
+                        <p class="text-yellow-400 text-sm font-semibold">🏀 Tendencia + H2H + Factores Contextuales</p>
+                    </div>
                 </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-6">
-                <div class="bg-gradient-to-br from-cyan-600 to-blue-700 p-3 md:p-4 rounded-xl">
-                    <h2 class="text-base md:text-lg font-bold text-white mb-2 text-center">🏠 LOCAL</h2>
+                <div class="p-3 md:p-4 rounded-xl border border-blue-500/30" style="background: linear-gradient(135deg, #1b3a5f 0%, #0d1b2a 100%);">
+                    <h2 class="text-base md:text-lg font-bold text-blue-400 mb-2 text-center">🏠 EQUIPO LOCAL</h2>
                     <select id="localSelect" class="select-premium w-full">
                         ${opts.replace(`value="${localTeam}"`, `value="${localTeam}" selected`)}
                     </select>
                     ${lD && lR ? `
-                        <div class="mt-3 bg-black/30 rounded-lg p-2 md:p-3">
-                            <div class="text-cyan-200 text-xs md:text-sm text-center mb-2 font-semibold">📊 Temporada 2025-26</div>
+                        <div class="mt-3 rounded-lg p-2 md:p-3" style="background: rgba(0,0,0,0.3);">
+                            <div class="text-blue-300 text-xs md:text-sm text-center mb-2 font-semibold">📊 Temporada 2025-26</div>
                             <div class="grid grid-cols-3 gap-1 text-center text-xs md:text-sm mb-2">
                                 <div class="text-white">1Q: ${lD.q1} ${formatRanking(lR.q1)}</div>
                                 <div class="text-white">1H: ${lD.half} ${formatRanking(lR.half)}</div>
                                 <div class="text-white">Full: ${lD.full} ${formatRanking(lR.full)}</div>
                             </div>
-                            <div class="text-yellow-300 text-xs md:text-sm text-center font-bold border-t border-white/20 pt-2">
+                            <div class="text-yellow-400 text-xs md:text-sm text-center font-bold border-t border-white/20 pt-2">
                                 <span class="block mb-1">🏠 HOME</span>
                                 <div class="grid grid-cols-3 gap-1">
                                     <div>1Q: ${lD.q1Home} ${formatRanking(lR.q1Home)}</div>
@@ -3014,20 +3240,20 @@ function renderTendencia() {
                         </div>
                     ` : ''}
                 </div>
-                <div class="bg-gradient-to-br from-orange-600 to-red-700 p-3 md:p-4 rounded-xl">
-                    <h2 class="text-base md:text-lg font-bold text-white mb-2 text-center">✈️ VISITANTE</h2>
+                <div class="p-3 md:p-4 rounded-xl border border-orange-500/30" style="background: linear-gradient(135deg, #4a2c2a 0%, #0d1b2a 100%);">
+                    <h2 class="text-base md:text-lg font-bold text-orange-400 mb-2 text-center">✈️ EQUIPO VISITANTE</h2>
                     <select id="visitingSelect" class="select-premium w-full">
                         ${opts.replace(`value="${visitingTeam}"`, `value="${visitingTeam}" selected`)}
                     </select>
                     ${vD && vR ? `
-                        <div class="mt-3 bg-black/30 rounded-lg p-2 md:p-3">
-                            <div class="text-orange-200 text-xs md:text-sm text-center mb-2 font-semibold">📊 Temporada 2025-26</div>
+                        <div class="mt-3 rounded-lg p-2 md:p-3" style="background: rgba(0,0,0,0.3);">
+                            <div class="text-orange-300 text-xs md:text-sm text-center mb-2 font-semibold">📊 Temporada 2025-26</div>
                             <div class="grid grid-cols-3 gap-1 text-center text-xs md:text-sm mb-2">
                                 <div class="text-white">1Q: ${vD.q1} ${formatRanking(vR.q1)}</div>
                                 <div class="text-white">1H: ${vD.half} ${formatRanking(vR.half)}</div>
                                 <div class="text-white">Full: ${vD.full} ${formatRanking(vR.full)}</div>
                             </div>
-                            <div class="text-yellow-300 text-xs md:text-sm text-center font-bold border-t border-white/20 pt-2">
+                            <div class="text-yellow-400 text-xs md:text-sm text-center font-bold border-t border-white/20 pt-2">
                                 <span class="block mb-1">✈️ AWAY</span>
                                 <div class="grid grid-cols-3 gap-1">
                                     <div>1Q: ${vD.q1Away} ${formatRanking(vR.q1Away)}</div>
@@ -3048,9 +3274,9 @@ function renderTendencia() {
         const suggestedFull = (Math.round(parseFloat(trends.full) * 2) / 2).toFixed(1);
         
         html += `
-            <div class="glass rounded-2xl p-3 md:p-5 shadow-xl mb-6 border border-white/10">
-                <h2 class="text-lg md:text-xl font-bold text-white mb-1 text-center">📈 TENDENCIA v2.5 - MODELO FINAL</h2>
-                <p class="text-center text-gray-400 text-xs md:text-sm mb-2">${localTeam} (HOME) + ${visitingTeam} (AWAY)</p>
+            <div class="rounded-2xl p-3 md:p-5 shadow-xl mb-6 border border-yellow-500/30" style="background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);">
+                <h2 class="text-lg md:text-xl font-bold text-yellow-400 mb-1 text-center font-display tracking-wide">📈 PREDICCIÓN DEL MODELO v2.5</h2>
+                <p class="text-center text-gray-400 text-xs md:text-sm mb-2">${localTeam} (HOME) vs ${visitingTeam} (AWAY)</p>
                 
                 ${advancedData ? `
                     <!-- Badges de factores activos -->
