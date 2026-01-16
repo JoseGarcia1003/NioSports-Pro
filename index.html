@@ -570,10 +570,101 @@
         ::-webkit-scrollbar-thumb:hover { background: var(--gold-dark); }
         
         /* ═══════════════════════════════════════════════════════════════ */
-        /* TEMA CLARO (Opcional - mantenemos dark por defecto)            */
+        /* TEMA CLARO - FONDO BLANCO LIMPIO                               */
         /* ═══════════════════════════════════════════════════════════════ */
         [data-theme="light"] body {
-            background: linear-gradient(180deg, #1e3a5f 0%, #0d1b2a 100%);
+            background: #ffffff !important;
+            color: #1a1a2a;
+        }
+        
+        [data-theme="light"] .animated-bg {
+            background: #ffffff !important;
+        }
+        
+        [data-theme="light"] .animated-bg::before,
+        [data-theme="light"] .animated-bg::after {
+            border-color: rgba(13, 27, 42, 0.1);
+        }
+        
+        [data-theme="light"] .particles {
+            opacity: 0.3;
+        }
+        
+        [data-theme="light"] .particle {
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%);
+        }
+        
+        /* Cards y contenedores en tema claro */
+        [data-theme="light"] .glass,
+        [data-theme="light"] .glass-card {
+            background: rgba(13, 27, 42, 0.03) !important;
+            border-color: rgba(13, 27, 42, 0.1) !important;
+        }
+        
+        /* Textos en tema claro */
+        [data-theme="light"] .text-white {
+            color: #0d1b2a !important;
+        }
+        
+        [data-theme="light"] .text-gray-400,
+        [data-theme="light"] .text-gray-500 {
+            color: #64748b !important;
+        }
+        
+        [data-theme="light"] h1, 
+        [data-theme="light"] h2, 
+        [data-theme="light"] h3 {
+            color: #0d1b2a !important;
+        }
+        
+        /* Mantener colores de acento */
+        [data-theme="light"] .text-yellow-400 {
+            color: #d97706 !important;
+        }
+        
+        [data-theme="light"] .text-green-400 {
+            color: #16a34a !important;
+        }
+        
+        [data-theme="light"] .text-red-400 {
+            color: #dc2626 !important;
+        }
+        
+        [data-theme="light"] .text-blue-400 {
+            color: #2563eb !important;
+        }
+        
+        /* Botones y cards con fondo en tema claro */
+        [data-theme="light"] .btn-3d,
+        [data-theme="light"] button[style*="background: linear-gradient"] {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Secciones con fondo oscuro mantienen texto blanco */
+        [data-theme="light"] [style*="background: linear-gradient(135deg, #1b263b"],
+        [data-theme="light"] [style*="background: linear-gradient(135deg, #0d1b2a"] {
+            color: white !important;
+        }
+        
+        [data-theme="light"] [style*="background: linear-gradient(135deg, #1b263b"] .text-white,
+        [data-theme="light"] [style*="background: linear-gradient(135deg, #0d1b2a"] .text-white,
+        [data-theme="light"] [style*="background: linear-gradient(135deg, #1b263b"] h1,
+        [data-theme="light"] [style*="background: linear-gradient(135deg, #1b263b"] h2,
+        [data-theme="light"] [style*="background: linear-gradient(135deg, #1b263b"] h3 {
+            color: white !important;
+        }
+        
+        /* Inputs en tema claro */
+        [data-theme="light"] select,
+        [data-theme="light"] input {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #0d1b2a !important;
+        }
+        
+        [data-theme="light"] select option {
+            background-color: #ffffff !important;
+            color: #0d1b2a !important;
         }
         
         /* ═══════════════════════════════════════════════════════════════ */
