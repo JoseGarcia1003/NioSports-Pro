@@ -3108,6 +3108,10 @@ function render() {
     else if (currentView === 'picks') app.innerHTML = renderPicks();
     else if (currentView === 'bestPicks') app.innerHTML = renderBestPicks();
     else if (currentView === 'dashboard') app.innerHTML = renderDashboard();
+    else if (currentView === 'bankroll') {
+        app.innerHTML = renderBankrollView();
+        setTimeout(() => createBankrollChart(), 100);
+    }
     attachEvents();
     
     // Inicializar gráficos si estamos en dashboard
@@ -3231,7 +3235,17 @@ function renderHome() {
                             <p class="text-gray-500 text-xs">Agregar Datos</p>
                         </div>
                     </div>
+                </button>                
+                <button onclick="navigateTo('bankroll')" class="btn-3d p-4 rounded-2xl shadow-xl border border-green-500/30 hover:border-green-400 transition-all" style="background: linear-gradient(135deg, #0d1b2a 0%, #1b4a2d 100%);">
+                    <div class="flex items-center gap-3">
+                        <div class="text-2xl">💰</div>
+                        <div class="text-left">
+                            <h3 class="font-bold text-green-400">Bankroll</h3>
+                            <p class="text-gray-500 text-xs">Gestión & Stats</p>
+                        </div>
+                    </div>
                 </button>
+
             </div>
             
             <!-- MI RÉCORD PERSONAL -->
