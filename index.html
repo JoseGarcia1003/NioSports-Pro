@@ -5432,6 +5432,16 @@ function loadBankrollFromFirebase() {
         if (snapshot.exists()) {
             BANKROLL_DATA = snapshot.val();
         }
+        // Asegurar que picks siempre sea un array
+        if (!BANKROLL_DATA.picks || !Array.isArray(BANKROLL_DATA.picks)) {
+            BANKROLL_DATA.picks = [];
+        }
+        if (!BANKROLL_DATA.dailyBanks) {
+            BANKROLL_DATA.dailyBanks = {};
+        }
+        if (!BANKROLL_DATA.settings) {
+            BANKROLL_DATA.settings = { alertThreshold: 20, initialBank: 0 };
+        }
         if (currentView === 'bankroll') render();
     });
 }
@@ -5519,6 +5529,9 @@ function deletePickFromBankroll(pickId) {
 }
 
 function getFilteredPicks() {
+    if (!BANKROLL_DATA || !BANKROLL_DATA.picks || !Array.isArray(BANKROLL_DATA.picks)) {
+        return [];
+    }
     let picks = BANKROLL_DATA.picks.filter(p => p.status !== 'pending');
     
     if (filterPeriod !== 'all') {
@@ -5898,7 +5911,7 @@ function renderBankrollView() {
                 </h3>
             </div>
             <div class="space-y-3">
-                ${BANKROLL_DATA.picks.length === 0 ? `
+                ${(!BANKROLL_DATA.picks || BANKROLL_DATA.picks.length === 0) ? `
                     <div class="text-center py-12">
                         <div class="text-6xl mb-4">📊</div>
                         <p class="text-gray-400 text-xl mb-2">No hay picks registrados</p>
