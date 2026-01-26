@@ -793,6 +793,51 @@
         .notification.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .notification.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
         .notification.value { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        /* ═══════════════════════════════════════════════════════════════ */
+        /* SISTEMA DE NOTIFICACIONES MEJORADO */
+        /* ═══════════════════════════════════════════════════════════════ */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+        
+        .toast {
+            background: rgba(13, 27, 42, 0.95);
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            animation: slideInRight 0.3s ease, fadeOut 0.3s ease 4.7s forwards;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .toast.success { border-color: #22c55e; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(13, 27, 42, 0.95)); }
+        .toast.warning { border-color: #f59e0b; background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(13, 27, 42, 0.95)); }
+        .toast.error { border-color: #ef4444; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(13, 27, 42, 0.95)); }
+        .toast.info { border-color: #3b82f6; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(13, 27, 42, 0.95)); }
+        .toast.value { border-color: #FFD700; background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(13, 27, 42, 0.95)); }
+        
+        .toast-icon { font-size: 24px; }
+        .toast-content { flex: 1; }
+        .toast-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; font-family: 'Outfit', sans-serif; }
+        .toast-message { font-size: 13px; color: rgba(255,255,255,0.8); }
+        .toast-close {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+            font-size: 20px;
+        }
+        .toast-close:hover { opacity: 1; }
+
         @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -880,9 +925,43 @@
         .win-badge { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; }
         .loss-badge { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; }
         .pending-badge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; }
+
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: rgba(13, 27, 42, 0.95);
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="min-h-screen">
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+
     <!-- FONDO ANIMADO PREMIUM -->
     <div class="animated-bg"></div>
     
@@ -934,6 +1013,62 @@ function toggleTheme() {
         if (btn) btn.textContent = saved === 'dark' ? '🌙' : '☀️';
     }, 100);
 })();
+
+// ═══════════════════════════════════════════════════════════════
+// SISTEMA DE NOTIFICACIONES MEJORADO
+// ═══════════════════════════════════════════════════════════════
+let toastCounter = 0;
+
+function showToast(title, message, type = 'info', duration = 5000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const toastId = `toast-${toastCounter++}`;
+    const icons = {
+        success: '✅',
+        warning: '⚠️',
+        error: '❌',
+        info: 'ℹ️',
+        value: '💎'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.id = toastId;
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || 'ℹ️'}</div>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <div class="toast-close" onclick="closeToast('${toastId}')">×</div>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => closeToast(toastId), duration);
+}
+
+function closeToast(toastId) {
+    const toast = document.getElementById(toastId);
+    if (toast) {
+        toast.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }
+}
+
+// Mejorar showNotification existente para usar el nuevo sistema
+function showNotification(message, type = 'info') {
+    const titles = {
+        success: '¡Éxito!',
+        warning: 'Atención',
+        error: 'Error',
+        info: 'Información',
+        value: '¡Valor Detectado!'
+    };
+    showToast(titles[type] || 'Notificación', message, type);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // FIREBASE CONFIGURATION
 // ═══════════════════════════════════════════════════════════════
@@ -5538,6 +5673,448 @@ function deletePickFromBankroll(pickId) {
     render();
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+// QUICK ADD: PREDICTOR → BANKROLL
+// ═══════════════════════════════════════════════════════════════
+function quickAddToBankroll(pickData) {
+    if (!firebaseConnected) {
+        showToast('Sin conexión', 'Conecta a Firebase primero', 'warning');
+        return;
+    }
+    
+    // Verificar que hay bank registrado
+    if (getCurrentBank() === 0 && Object.keys(BANKROLL_DATA.dailyBanks).length === 0) {
+        showToast('Registra tu Bank', 'Primero debes registrar tu bank inicial', 'warning');
+        navigateTo('bankroll');
+        return;
+    }
+    
+    // Crear modal de confirmación con datos pre-llenados
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="glass-card rounded-xl p-6 max-w-md w-full mx-4">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-3xl">⚡</span>
+                <h3 class="text-xl font-display text-white">Quick Add a Bankroll</h3>
+            </div>
+            
+            <div class="space-y-3 mb-4">
+                <div class="p-3 rounded-lg" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);">
+                    <p class="text-sm text-gray-400">Partido</p>
+                    <p class="text-white font-bold">${pickData.teams}</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 rounded-lg" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);">
+                        <p class="text-sm text-gray-400">Línea</p>
+                        <p class="text-white font-bold">${pickData.type} ${pickData.line}</p>
+                    </div>
+                    <div class="p-3 rounded-lg" style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3);">
+                        <p class="text-sm text-gray-400">Cuota</p>
+                        <p class="text-white font-bold">${pickData.odds}</p>
+                    </div>
+                </div>
+                
+                ${pickData.confidence ? `
+                <div class="p-3 rounded-lg" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3);">
+                    <p class="text-sm text-gray-400">Confianza del Modelo</p>
+                    <p class="text-green-400 font-bold text-lg">${pickData.confidence}%</p>
+                </div>
+                ` : ''}
+                
+                <div>
+                    <label class="text-gray-400 text-sm block mb-2">Stake ($)</label>
+                    <input type="number" id="quickStake" step="0.01" placeholder="Ej: 50.00" 
+                           class="w-full px-4 py-3 rounded-lg text-white font-bold text-center"
+                           style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,215,0,0.3);">
+                </div>
+                
+                <div>
+                    <label class="text-gray-400 text-sm block mb-2">Notas (opcional)</label>
+                    <textarea id="quickNotes" rows="2" placeholder="Razón del pick..." 
+                              class="w-full px-3 py-2 rounded-lg text-white text-sm"
+                              style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,215,0,0.3);">${pickData.reason || ''}</textarea>
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="this.closest('.fixed').remove()" 
+                        class="flex-1 py-3 rounded-lg font-bold" style="background: rgba(107,114,128,0.6); color: white;">
+                    Cancelar
+                </button>
+                <button onclick="confirmQuickAdd(${JSON.stringify(pickData).replace(/"/g, '&quot;')});this.closest('.fixed').remove()" 
+                        class="flex-1 py-3 rounded-lg font-bold" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
+                    💰 Agregar
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    setTimeout(() => document.getElementById('quickStake').focus(), 100);
+}
+
+function confirmQuickAdd(pickData) {
+    const stake = document.getElementById('quickStake').value;
+    const notes = document.getElementById('quickNotes').value;
+    
+    if (!stake || parseFloat(stake) <= 0) {
+        showToast('Stake inválido', 'Ingresa un monto válido', 'error');
+        return;
+    }
+    
+    // Agregar al bankroll
+    addPickToBankroll({
+        type: 'single',
+        odds: pickData.odds,
+        stake: stake,
+        category: 'NBA',
+        notes: notes || `${pickData.teams} - ${pickData.type} ${pickData.line}${pickData.confidence ? ` (Confianza: ${pickData.confidence}%)` : ''}`
+    });
+    
+    showToast('¡Pick agregado!', 'Se guardó en tu Bankroll', 'success');
+    
+    // Navegar a bankroll después de 1 segundo
+    setTimeout(() => navigateTo('bankroll'), 1000);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// SISTEMA DE BACKUP AUTOMÁTICO
+// ═══════════════════════════════════════════════════════════════
+function autoBackup() {
+    try {
+        const backupData = {
+            bankroll: BANKROLL_DATA,
+            h2h: H2H_DATABASE,
+            picks: PICKS_DATABASE,
+            timestamp: new Date().toISOString(),
+            version: '2.0'
+        };
+        
+        localStorage.setItem('niosports_backup', JSON.stringify(backupData));
+        localStorage.setItem('niosports_backup_date', new Date().toISOString());
+        
+        console.log('✅ Backup automático realizado');
+    } catch (error) {
+        console.error('Error en backup:', error);
+    }
+}
+
+function restoreFromBackup() {
+    try {
+        const backup = localStorage.getItem('niosports_backup');
+        if (!backup) {
+            showToast('Sin backup', 'No hay backup disponible', 'warning');
+            return false;
+        }
+        
+        const data = JSON.parse(backup);
+        const backupDate = localStorage.getItem('niosports_backup_date');
+        
+        if (confirm(`¿Restaurar backup del ${new Date(backupDate).toLocaleString()}?`)) {
+            BANKROLL_DATA = data.bankroll || BANKROLL_DATA;
+            H2H_DATABASE = data.h2h || H2H_DATABASE;
+            PICKS_DATABASE = data.picks || PICKS_DATABASE;
+            
+            // Guardar en Firebase
+            saveBankrollToFirebase();
+            database.ref('h2h_games').set(H2H_DATABASE);
+            database.ref('picks').set(PICKS_DATABASE);
+            
+            showToast('¡Restaurado!', 'Backup restaurado exitosamente', 'success');
+            render();
+            return true;
+        }
+    } catch (error) {
+        console.error('Error restaurando backup:', error);
+        showToast('Error', 'No se pudo restaurar el backup', 'error');
+        return false;
+    }
+}
+
+function exportAllData() {
+    try {
+        const exportData = {
+            bankroll: BANKROLL_DATA,
+            h2h: H2H_DATABASE,
+            picks: PICKS_DATABASE,
+            stats: TEAM_STATS,
+            timestamp: new Date().toISOString(),
+            version: '2.0'
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = window.URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `niosports_export_${getTodayDate()}.json`;
+        link.click();
+        
+        showToast('¡Exportado!', 'Datos descargados exitosamente', 'success');
+    } catch (error) {
+        console.error('Error exportando:', error);
+        showToast('Error', 'No se pudo exportar', 'error');
+    }
+}
+
+function importData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
+                
+                if (confirm('¿Importar datos? Esto sobrescribirá los datos actuales.')) {
+                    BANKROLL_DATA = data.bankroll || BANKROLL_DATA;
+                    H2H_DATABASE = data.h2h || H2H_DATABASE;
+                    PICKS_DATABASE = data.picks || PICKS_DATABASE;
+                    
+                    // Guardar en Firebase
+                    saveBankrollToFirebase();
+                    database.ref('h2h_games').set(H2H_DATABASE);
+                    database.ref('picks').set(PICKS_DATABASE);
+                    
+                    showToast('¡Importado!', 'Datos importados exitosamente', 'success');
+                    render();
+                }
+            } catch (error) {
+                console.error('Error importando:', error);
+                showToast('Error', 'Archivo inválido', 'error');
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+// Backup automático cada 30 minutos
+setInterval(autoBackup, 30 * 60 * 1000);
+
+// Backup al cerrar página
+window.addEventListener('beforeunload', autoBackup);
+
+
+// ═══════════════════════════════════════════════════════════════
+// SISTEMA DE ALERTAS INTELIGENTES
+// ═══════════════════════════════════════════════════════════════
+function checkBankrollAlerts() {
+    const stats = calculateStats();
+    const currentBank = stats.currentBank;
+    const initialBank = stats.initialBank;
+    
+    if (initialBank === 0) return;
+    
+    const lossPercentage = ((initialBank - currentBank) / initialBank) * 100;
+    const threshold = BANKROLL_DATA.settings.alertThreshold || 20;
+    
+    // Alerta de pérdida
+    if (lossPercentage >= threshold) {
+        showToast(
+            '⚠️ Bank Bajo',
+            `Has perdido ${lossPercentage.toFixed(1)}% de tu bank inicial. Considera reducir stakes.`,
+            'warning',
+            7000
+        );
+    }
+    
+    // Alerta de racha perdedora
+    if (stats.streakType === 'lost' && stats.currentStreak >= 3) {
+        showToast(
+            '🔴 Racha Perdedora',
+            `Llevas ${stats.currentStreak} picks perdidos. ¡No persigas pérdidas!`,
+            'error',
+            7000
+        );
+    }
+    
+    // Alerta de racha ganadora
+    if (stats.streakType === 'won' && stats.currentStreak >= 5) {
+        showToast(
+            '🔥 ¡Racha ganadora!',
+            `${stats.currentStreak} picks ganados consecutivos. ¡Sigue así!`,
+            'success',
+            5000
+        );
+    }
+    
+    // Alerta ROI positivo alto
+    if (stats.roi >= 20 && stats.totalPicks >= 10) {
+        showToast(
+            '💎 ROI Excelente',
+            `Tu ROI de ${stats.roi.toFixed(1)}% es profesional. ¡Increíble!`,
+            'value',
+            6000
+        );
+    }
+}
+
+function checkValuePicks() {
+    // Esta función se llamará desde el análisis de partidos
+    // Para detectar picks de alto valor
+    if (currentView !== 'tendencia') return;
+    
+    const trendQ1 = localTeam && visitingTeam ? calculateTrend(localTeam, visitingTeam, 'Q1', 'neutral') : null;
+    const trendHalf = localTeam && visitingTeam ? calculateTrend(localTeam, visitingTeam, 'Half', 'neutral') : null;
+    const trendFull = localTeam && visitingTeam ? calculateTrend(localTeam, visitingTeam, 'Full', 'neutral') : null;
+    
+    const checks = [
+        { trend: trendQ1, line: lineQ1, type: typeQ1, period: '1Q' },
+        { trend: trendHalf, line: lineHalf, type: typeHalf, period: '1H' }
+
+
+// ═══════════════════════════════════════════════════════════════
+// CALCULADORA KELLY CRITERION
+// ═══════════════════════════════════════════════════════════════
+function calculateKellyStake(bankroll, odds, winProbability, kellyFraction = 0.25) {
+    const b = odds - 1;
+    const p = winProbability / 100;
+    const q = 1 - p;
+    
+    const kellyPercent = ((b * p) - q) / b;
+    const adjustedKelly = kellyPercent * kellyFraction;
+    
+    if (adjustedKelly <= 0) return 0;
+    
+    const maxPercent = 0.05;
+    const finalPercent = Math.min(adjustedKelly, maxPercent);
+    
+    return bankroll * finalPercent;
+}
+
+function showKellyCalculator() {
+    const currentBank = getCurrentBank();
+    
+    if (currentBank === 0) {
+        showToast('Registra tu Bank', 'Primero debes tener un bank registrado', 'warning');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 overflow-y-auto';
+    modal.innerHTML = `
+        <div class="glass-card rounded-xl p-6 max-w-md w-full mx-4 my-8">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-3xl">🧮</span>
+                <h3 class="text-xl font-display text-white">Calculadora Kelly</h3>
+            </div>
+            
+            <div class="space-y-4 mb-4">
+                <div class="p-3 rounded-lg" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3);">
+                    <p class="text-sm text-gray-400">Tu Bank Actual</p>
+                    <p class="text-white font-bold text-xl">$${currentBank.toFixed(2)}</p>
+                </div>
+                
+                <div>
+                    <label class="text-gray-400 text-sm block mb-2">Cuota Decimal</label>
+                    <input type="number" id="kellyOdds" step="0.01" value="1.90" placeholder="1.90"
+                           oninput="calculateKellyLive()"
+                           class="w-full px-4 py-3 rounded-lg text-white font-bold"
+                           style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,215,0,0.3);">
+                </div>
+                
+                <div>
+                    <label class="text-gray-400 text-sm block mb-2">Probabilidad de Ganar (%)</label>
+                    <input type="number" id="kellyProb" step="1" min="0" max="100" value="55" placeholder="55"
+                           oninput="calculateKellyLive()"
+                           class="w-full px-4 py-3 rounded-lg text-white font-bold"
+                           style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,215,0,0.3);">
+                    <p class="text-xs text-gray-500 mt-1">Usa confianza del modelo o tu estimación</p>
+                </div>
+                
+                <div>
+                    <label class="text-gray-400 text-sm block mb-2">Fracción Kelly</label>
+                    <select id="kellyFraction" onchange="calculateKellyLive()" class="w-full px-4 py-3 rounded-lg text-white font-bold"
+                            style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,215,0,0.3);">
+                        <option value="0.10">10% Kelly (Muy Conservador)</option>
+                        <option value="0.25" selected>25% Kelly (Recomendado)</option>
+                        <option value="0.50">50% Kelly (Moderado)</option>
+                        <option value="1.00">100% Kelly (Agresivo)</option>
+                    </select>
+                </div>
+                
+                <div id="kellyResult" class="p-4 rounded-lg" style="background: rgba(59,130,246,0.1); border: 2px solid rgba(59,130,246,0.3);">
+                    <p class="text-sm text-gray-400 mb-1">Stake Recomendado</p>
+                    <p class="text-blue-400 font-bold text-3xl">$0.00</p>
+                    <p class="text-xs text-gray-500 mt-2">Calculando...</p>
+                </div>
+            </div>
+            
+            <button onclick="this.closest('.fixed').remove()" 
+                    class="w-full py-3 rounded-lg font-bold" style="background: linear-gradient(135deg, #FFD700, #F59E0B); color: #0d1b2a;">
+                Cerrar
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    setTimeout(() => calculateKellyLive(), 100);
+}
+
+function calculateKellyLive() {
+    const odds = parseFloat(document.getElementById('kellyOdds')?.value || 1.90);
+    const prob = parseFloat(document.getElementById('kellyProb')?.value || 55);
+    const fraction = parseFloat(document.getElementById('kellyFraction')?.value || 0.25);
+    const currentBank = getCurrentBank();
+    
+    const stake = calculateKellyStake(currentBank, odds, prob, fraction);
+    const resultDiv = document.getElementById('kellyResult');
+    
+    if (!resultDiv) return;
+    
+    if (stake <= 0) {
+        resultDiv.innerHTML = `
+            <p class="text-sm text-gray-400 mb-1">Stake Recomendado</p>
+            <p class="text-red-400 font-bold text-2xl">NO APOSTAR</p>
+            <p class="text-xs text-gray-500 mt-2">No hay valor matemático</p>
+        `;
+        resultDiv.style.background = 'rgba(239,68,68,0.1)';
+        resultDiv.style.borderColor = 'rgba(239,68,68,0.3)';
+    } else {
+        const percent = (stake / currentBank) * 100;
+        const expectedROI = ((odds - 1) * prob - (100 - prob)) / 100 * 100;
+        resultDiv.innerHTML = `
+            <p class="text-sm text-gray-400 mb-1">Stake Recomendado</p>
+            <p class="text-green-400 font-bold text-3xl">$${stake.toFixed(2)}</p>
+            <p class="text-xs text-gray-500 mt-2">${percent.toFixed(2)}% del bank | ROI esperado: ${expectedROI.toFixed(1)}%</p>
+        `;
+        resultDiv.style.background = 'rgba(34,197,94,0.1)';
+        resultDiv.style.borderColor = 'rgba(34,197,94,0.3)';
+    }
+}
+
+,
+        { trend: trendFull, line: lineFull, type: typeFull, period: 'Full' }
+    ];
+    
+    checks.forEach(check => {
+        if (!check.trend || !check.line || check.trend.games === 0) return;
+        
+        const diff = Math.abs(parseFloat(check.trend.avg) - parseFloat(check.line));
+        const isOver = parseFloat(check.trend.avg) > parseFloat(check.line);
+        const recommended = isOver ? 'OVER' : 'UNDER';
+        
+        // Pick de alto valor: diferencia >= 8 puntos
+        if (diff >= 8 && recommended === check.type) {
+            showToast(
+                '💎 ¡VALOR DETECTADO!',
+                `${check.period}: Diferencia de ${diff.toFixed(1)} puntos. H2H: ${check.trend.avg} vs Línea: ${check.line}`,
+                'value',
+                8000
+            );
+        }
+    });
+}
+
+
+
 function getFilteredPicks() {
     if (!BANKROLL_DATA || !BANKROLL_DATA.picks || !Array.isArray(BANKROLL_DATA.picks)) {
         return [];
@@ -5976,6 +6553,20 @@ function renderBankrollView() {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Sistema de backup automático
+    const lastBackup = localStorage.getItem('niosports_backup_date');
+    if (lastBackup) {
+        const hours = (Date.now() - new Date(lastBackup)) / (1000 * 60 * 60);
+        console.log(`✅ Último backup: ${new Date(lastBackup).toLocaleString()} (hace ${hours.toFixed(1)}h)`);
+        if (hours > 24) {
+            console.log('⚠️ Backup antiguo, realizando nuevo backup...');
+            setTimeout(() => autoBackup(), 3000);
+        }
+    } else {
+        console.log('📦 Primer backup en 5 segundos...');
+        setTimeout(() => autoBackup(), 5000);
+    }
+    
     // Cargar VALUE_PICKS desde localStorage
     loadValuePicksFromStorage();
     // Primero cargar estadísticas desde API
