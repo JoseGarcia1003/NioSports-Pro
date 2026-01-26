@@ -6186,29 +6186,6 @@ function calculateKellyLive() {
     }
 }
 
-,
-        { trend: trendFull, line: lineFull, type: typeFull, period: 'Full' }
-    ];
-    
-    checks.forEach(check => {
-        if (!check.trend || !check.line || check.trend.games === 0) return;
-        
-        const diff = Math.abs(parseFloat(check.trend.avg) - parseFloat(check.line));
-        const isOver = parseFloat(check.trend.avg) > parseFloat(check.line);
-        const recommended = isOver ? 'OVER' : 'UNDER';
-        
-        // Pick de alto valor: diferencia >= 8 puntos
-        if (diff >= 8 && recommended === check.type) {
-            showToast(
-                '💎 ¡VALOR DETECTADO!',
-                `${check.period}: Diferencia de ${diff.toFixed(1)} puntos. H2H: ${check.trend.avg} vs Línea: ${check.line}`,
-                'value',
-                8000
-            );
-        }
-    });
-}
-
 
 
 function getFilteredPicks() {
