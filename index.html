@@ -6011,40 +6011,6 @@ function checkBankrollAlerts() {
     }
 }
 
-function checkValuePicks() {
-    // Esta función se llamará desde el análisis de partidos
-    // Para detectar picks de alto valor
-    if (currentView !== 'tendencia') return;
-    
-    const trendQ1 = localTeam && visitingTeam ? calculateTrend(localTeam, visitingTeam, 'Q1', 'neutral') : null;
-    const trendHalf = localTeam && visitingTeam ? calculateTrend(localTeam, visitingTeam, 'Half', 'neutral') : null;
-    const trendFull = localTeam && visitingTeam ? calculateTrend(localTeam, visitingTeam, 'Full', 'neutral') : null;
-    
-    const checks = [
-        { trend: trendQ1, line: lineQ1, type: typeQ1, period: '1Q' },
-        { trend: trendHalf, line: lineHalf, type: typeHalf, period: '1H' },
-        { trend: trendFull, line: lineFull, type: typeFull, period: 'Full' }
-    ];
-    
-    checks.forEach(check => {
-        if (!check.trend || !check.line || check.trend.games === 0) return;
-        
-        const diff = Math.abs(parseFloat(check.trend.avg) - parseFloat(check.line));
-        const isOver = parseFloat(check.trend.avg) > parseFloat(check.line);
-        const recommended = isOver ? 'OVER' : 'UNDER';
-        
-        // Pick de alto valor: diferencia >= 8 puntos
-        if (diff >= 8 && recommended === check.type) {
-            showToast(
-                '💎 ¡VALOR DETECTADO!',
-                `${check.period}: Diferencia de ${diff.toFixed(1)} puntos. H2H: ${check.trend.avg} vs Línea: ${check.line}`,
-                'value',
-                8000
-            );
-        }
-    });
-}
-
 // ═══════════════════════════════════════════════════════════════
 // CALCULADORA KELLY CRITERION
 // ═══════════════════════════════════════════════════════════════
