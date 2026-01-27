@@ -15,7 +15,7 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22NioSports%20Pro%22%2C%22short_name%22%3A%22NioSports%22%2C%22description%22%3A%22Sistema%20predictivo%20NBA%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231a1a2e%22%2C%22theme_color%22%3A%22%231a1a2e%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%2520viewBox%3D%270%25200%252064%252064%27%253E%253Ccircle%2520cx%3D%2732%27%2520cy%3D%2732%27%2520r%3D%2730%27%2520fill%3D%27%25231a1a2e%27%2F%253E%253Ctext%2520x%3D%2732%27%2520y%3D%2742%27%2520text-anchor%3D%27middle%27%2520font-size%3D%2730%27%2520fill%3D%27white%27%253EN%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
     
-    <!-- FAVICON - Logo NioSports NUEVO -->
+    <!-- FAVICON - Logo NioSports  -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FFD700'/%3E%3Cstop offset='100%25' style='stop-color:%23F59E0B'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%230d1b2a'/%3E%3Ccircle cx='32' cy='32' r='28' fill='none' stroke='url(%23g1)' stroke-width='3'/%3E%3Ccircle cx='32' cy='26' r='10' fill='%23f97316'/%3E%3Ctext x='32' y='50' text-anchor='middle' font-family='Arial Black' font-size='12' font-weight='bold' fill='%23FFD700'%3EN%3C/text%3E%3C/svg%3E">
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230d1b2a'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='30' fill='%23FFD700'%3EN%3C/text%3E%3C/svg%3E">
     
@@ -956,28 +956,7 @@
             opacity: 1;
         }
     
-    <style>
-        .feature-badge {
-            position: relative;
-        }
-        .feature-badge::after {
-            content: 'NUEVO';
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-            font-size: 9px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: 800;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-    </style>
+
 </style>
 </head>
 <body class="min-h-screen">
@@ -1116,7 +1095,7 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
 // ═══════════════════════════════════════════════════════════════
-// LOGO SVG - NUEVO DISEÑO AZUL MARINO + DORADO + BASKETBALL
+// LOGO SVG -  DISEÑO AZUL MARINO + DORADO + BASKETBALL
 // ═══════════════════════════════════════════════════════════════
 const LOGO_SVG = `
 <svg class="logo-icon logo-glow" width="70" height="70" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -1196,7 +1175,7 @@ async function loadTeamStatsFromAPI() {
             statsSource = data.source || 'TeamRankings.com';
             apiConnected = true;
             
-            // NUEVO: Cargar promedios de liga si vienen en la API
+            // : Cargar promedios de liga si vienen en la API
             if (data.leagueAverages) {
                 LEAGUE_AVG = {
                     ...LEAGUE_AVG,
@@ -1302,9 +1281,9 @@ let currentView = 'home';
 let localTeam = '', visitingTeam = '';
 let lineQ1 = '', lineHalf = '', lineFull = '';
 let typeQ1 = 'OVER', typeHalf = 'OVER', typeFull = 'OVER';
-// NUEVO: Variables para cuotas (odds decimales)
+// : Variables para cuotas (odds decimales)
 let oddsQ1 = '', oddsHalf = '', oddsFull = '';
-// NUEVO: Variables para línea Vegas (comparación)
+// : Variables para línea Vegas (comparación)
 let vegasLineQ1 = '', vegasLineHalf = '', vegasLineFull = '';
 // ═══════════════════════════════════════════════════════════════
 // VARIABLES DE AJUSTE CONTEXTUAL v2.5
@@ -1318,7 +1297,7 @@ let localScheduleDensity = 'normal', awayScheduleDensity = 'normal';
 let isDivisionRivalry = false;
 let gameDay = 'weekday';
 
-// NUEVO: Cache para datos de API y auto-detección
+// : Cache para datos de API y auto-detección
 let TEAM_SCHEDULE_CACHE = {};
 let TEAM_GAMES_CACHE = {};
 let autoDetectEnabled = true;
@@ -1423,7 +1402,7 @@ function updateFirebaseStatus(status) {
         el.className = 'firebase-status firebase-connected';
         firebaseConnected = true;
     } else if (status === 'disconnected') {
-        el.textContent = '🔴 Sin Conexión';
+        el.textContent = ' Sin Conexión';
         el.className = 'firebase-status firebase-disconnected';
         firebaseConnected = false;
     } else {
@@ -3642,8 +3621,8 @@ function renderTendencia() {
                     <div class="flex flex-wrap justify-center gap-2 mb-2">
                         ${advancedData.combinedPace ? `<span class="badge-neon badge-neon-blue" title="Ritmo combinado">⚡ ${advancedData.combinedPace.toFixed(1)}</span>` : ''}
                         ${advancedData.components?.full?.altitude ? `<span class="badge-neon badge-neon-yellow">🏔️ +${advancedData.components.full.altitude}</span>` : ''}
-                        ${localB2B ? `<span class="badge-neon badge-neon-pink">🔴 ${localTeam} B2B</span>` : ''}
-                        ${awayB2B ? `<span class="badge-neon badge-neon-pink">🔴 ${visitingTeam} B2B</span>` : ''}
+                        ${localB2B ? `<span class="badge-neon badge-neon-pink"> ${localTeam} B2B</span>` : ''}
+                        ${awayB2B ? `<span class="badge-neon badge-neon-pink"> ${visitingTeam} B2B</span>` : ''}
                         ${localInjury ? `<span class="badge-neon badge-neon-pink">🏥 ${localTeam}</span>` : ''}
                         ${awayInjury ? `<span class="badge-neon badge-neon-pink">🏥 ${visitingTeam}</span>` : ''}
                         ${localRestDays >= 3 ? `<span class="badge-neon badge-neon-green">💪 ${localTeam} +${localRestDays}d</span>` : ''}
@@ -3687,7 +3666,7 @@ function renderTendencia() {
                             <!-- Fila 1: B2B -->
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="bg-red-500/10 rounded-lg p-3 border border-red-500/20">
-                                    <p class="text-xs text-red-400 font-bold mb-2 text-center">🔴 Back-to-Back (B2B)</p>
+                                    <p class="text-xs text-red-400 font-bold mb-2 text-center"> Back-to-Back (B2B)</p>
                                     <div class="space-y-2">
                                         <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
                                             <input type="checkbox" ${localB2B ? 'checked' : ''} onchange="localB2B = this.checked; debouncedRender();" class="w-4 h-4 accent-red-500">
@@ -6004,7 +5983,7 @@ function checkBankrollAlerts() {
     // Alerta de racha perdedora
     if (stats.streakType === 'lost' && stats.currentStreak >= 3) {
         showToast(
-            '🔴 Racha Perdedora',
+            ' Racha Perdedora',
             `Llevas ${stats.currentStreak} picks perdidos. ¡No persigas pérdidas!`,
             'error',
             7000
@@ -6416,16 +6395,21 @@ function renderBankrollView() {
     const canSetBank = canSetDailyBank();
     
     return `
+        <!-- Botón Volver (Fuera del contenedor) -->
+        <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px;">
+            <button onclick="navigateTo('home')" class="mb-6 px-6 py-3 rounded-xl font-bold hover:scale-105 transition-all flex items-center gap-2" style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 215, 0, 0.3); color: white;">
+                ← Volver al Inicio
+            </button>
+        </div>
+        
         <!-- Contenedor Principal Centralizado -->
         <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px;">
-            
-            <!-- Botón Volver -->
             <button onclick="navigateTo('home')" class="mb-4 px-6 py-3 rounded-xl font-bold hover:scale-105 transition-all flex items-center gap-2" style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 215, 0, 0.3); color: white;">
                 ← Volver al Inicio
             </button>
             
             <!-- Hero Section Compacta -->
-            <div class="rounded-3xl p-6 mb-6 shadow-2xl border border-yellow-500/30" style="background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #0d1b2a 100%);">
+            <div class="rounded-3xl p-6 mb-6 shadow-2xl border border-yellow-500/30" style="overflow: hidden;" style="background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #0d1b2a 100%);">
                 <div class="flex items-center justify-between flex-wrap gap-4">
                     <div class="flex items-center gap-4">
                         <div class="text-6xl">💰</div>
@@ -6475,17 +6459,17 @@ function renderBankrollView() {
                     <option value="single">🎯 Sencillas</option>
                     <option value="combo">🎲 Combinadas</option>
                 </select>
-                <div class="flex gap-3 ml-auto flex-wrap">
+                <div class="flex gap-3 ml-auto flex-wrap" style="max-width: 100%;">
                     <button onclick="exportToCSV()" class="px-4 py-2 rounded-lg font-bold text-sm hover:scale-105 transition-all" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white;">
                         📥 CSV
                     </button>
-                    <button onclick="exportAllData()" class="feature-badge" class="px-4 py-2 rounded-lg font-bold text-sm hover:scale-105 transition-all" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white;">
+                    <button onclick="exportAllData()"  class="px-4 py-2 rounded-lg font-bold text-sm hover:scale-105 transition-all" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white;">
                         💾 Export
                     </button>
-                    <button onclick="importData()" class="feature-badge" class="px-4 py-2 rounded-lg font-bold text-sm hover:scale-105 transition-all" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+                    <button onclick="importData()"  class="px-4 py-2 rounded-lg font-bold text-sm hover:scale-105 transition-all" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
                         📂 Import
                     </button>
-                    <button onclick="showKellyCalculator()" class="feature-badge" class="px-4 py-2 rounded-lg font-bold text-sm hover:scale-105 transition-all" style="background: linear-gradient(135deg, #FFD700 0%, #F59E0B 100%); color: #0d1b2a;">
+                    <button onclick="showKellyCalculator()"  class="px-4 py-2 rounded-lg font-bold text-sm hover:scale-105 transition-all" style="background: linear-gradient(135deg, #FFD700 0%, #F59E0B 100%); color: #0d1b2a;">
                         🧮 Kelly
                     </button>
                 </div>
