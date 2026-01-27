@@ -499,7 +499,7 @@
       "halfHomeRank": 2,
       "halfAway": 61.9,
       "halfAwayRank": 2,
-      "pace": 104.9,
+      "pace": 104.8,
       "paceRank": 11,
       "oppPpg": 115.8,
       "oppPpgRank": 16,
@@ -965,7 +965,7 @@
     "pace": 103.7,
     "ppg": 115.8
   },
-  "lastUpdated": "2026-01-27T07:03:21.053Z",
+  "lastUpdated": "2026-01-27T13:59:36.646Z",
   "source": "TeamRankings.com",
   "version": "6.0",
   "scrapedDate": "2026-01-27",
