@@ -1136,44 +1136,52 @@ let filterPeriod = 'all';
 let filterType = 'all';
 let currentView = 'home';
 
-// ═══════════════════════════════════════════════════════════════
-// BASE DE DATOS DE JUGADORES NBA (JSON Local)
-// ═══════════════════════════════════════════════════════════════
-let NBA_PLAYERS_DATA = {};
+// BALLDONTLIE API
+const BAPI_KEY = '1a68766c-33e1-4f7c-8613-9a2dcfb55b33';
+const BAPI_URL = 'https://api.balldontlie.io/v1';
 
-// Cargar datos de jugadores desde el JSON
-async function cargarDatosJugadores() {
-    try {
-        const response = await fetch('nba_players_database.json');
-        if (!response.ok) {
-            console.warn('⚠️ No se pudo cargar nba_players_database.json');
-            return false;
-        }
-        NBA_PLAYERS_DATA = await response.json();
-        console.log('✅ Base de datos de jugadores cargada:', Object.keys(NBA_PLAYERS_DATA).length, 'jugadores');
-        return true;
-    } catch (error) {
-        console.warn('⚠️ Error cargando base de datos de jugadores:', error);
-        return false;
+async function buscarJugador(nombre) {
+    const url = BAPI_URL + '/players?search=' + nombre;
+    const resp = await fetch(url, {
+        headers: { 'Authorization': BAPI_KEY }
+    });
+    const data = await resp.json();
+    console.log('Resultado:', data);
+    if (data.data.length > 0) {
+        const j = data.data[0];
+        console.log('Jugador:', j.first_name, j.last_name);
+        console.log('Equipo:', j.team.full_name);
+        console.log('Posicion:', j.position);
+        return j;
+    } else {
+        console.log('No encontrado');
+        return null;
     }
 }
 
-// Función para buscar un jugador en la base de datos
-function buscarJugadorLocal(nombre) {
-    // Búsqueda exacta
-    if (NBA_PLAYERS_DATA[nombre]) {
-        return NBA_PLAYERS_DATA[nombre];
+async function verStats(jugadorId) {
+    const url = BAPI_URL + '/season_averages?season=2024&player_ids[]=' + jugadorId;
+    const resp = await fetch(url, {
+        headers: { 'Authorization': BAPI_KEY }
+    });
+    const data = await resp.json();
+    if (data.data.length > 0) {
+        const s = data.data[0];
+        console.log('Puntos:', s.pts);
+        console.log('Asistencias:', s.ast);
+        console.log('Rebotes:', s.reb);
+        return s;
     }
-    
-    // Búsqueda parcial (por si el usuario no escribe el nombre completo)
-    const nombreLower = nombre.toLowerCase();
-    for (const nombreCompleto in NBA_PLAYERS_DATA) {
-        if (nombreCompleto.toLowerCase().includes(nombreLower)) {
-            return NBA_PLAYERS_DATA[nombreCompleto];
-        }
-    }
-    
     return null;
+}
+
+async function pruebaAPI() {
+    console.log('Probando API...');
+    const jugador = await buscarJugador('Curry');
+    if (jugador) {
+        await verStats(jugador.id);
+        console.log('Exito!');
+    }
 }
 
 let localTeam = '', visitingTeam = '';
@@ -3159,7 +3167,6 @@ function render() {
     else if (currentView === 'picks') app.innerHTML = renderPicks();
     else if (currentView === 'bestPicks') app.innerHTML = renderBestPicks();
     else if (currentView === 'dashboard') app.innerHTML = renderDashboard();
-    else if (currentView === 'playerProps') app.innerHTML = renderPlayerProps();
     else if (currentView === 'bankroll') {
         app.innerHTML = renderBankrollView();
         setTimeout(() => createBankrollChart(), 100);
@@ -3266,21 +3273,6 @@ function renderHome() {
                     <p class="text-gray-400 text-xs">Historial Completo</p>
                 </button>
             </div>
-
-            <!-- PROPS DE JUGADORES - DESTACADO -->
-            <button onclick="navigateTo('playerProps')" class="btn-3d w-full p-5 rounded-2xl shadow-xl mb-4 border-2 border-cyan-500/50 hover:border-cyan-400 transition-all relative overflow-hidden group" style="background: linear-gradient(135deg, #0d1b2a 0%, #1e3a5f 100%);">
-                <div class="absolute inset-0 bg-cyan-500/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
-                <div class="relative flex items-center justify-center gap-4">
-                    <div class="text-5xl">👤</div>
-                    <div class="text-left">
-                        <h3 class="text-2xl font-bold text-cyan-400">Props de Jugadores</h3>
-                        <p class="text-sm text-cyan-300/70">Análisis Individual + Stats Actuales</p>
-                    </div>
-                    <div class="ml-auto bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        NUEVO
-                    </div>
-                </div>
-            </button>
 
             <!-- DASHBOARD Y DATA -->
             <div class="grid grid-cols-2 gap-4 mb-4">
@@ -5314,230 +5306,6 @@ function renderTotals() {
 // ═══════════════════════════════════════════════════════════════
 // NAVEGACIÓN Y EVENTOS
 // ═══════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════
-// VISTA: ANÁLISIS DE JUGADORES INDIVIDUALES (PROPS)
-// ═══════════════════════════════════════════════════════════════
-function renderPlayerProps() {
-    return `
-        <div class="p-4 max-w-6xl mx-auto">
-            <!-- Botón Volver -->
-            <button onclick="navigateTo('home')" 
-                    class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 px-4 py-2 rounded-lg mb-4 transition-all"
-                    style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);">
-                ← Volver al Inicio
-            </button>
-            
-            <!-- Header -->
-            <div class="text-center mb-6">
-                <div class="flex items-center justify-center gap-3 mb-2">
-                    ${LOGO_SVG}
-                    <div>
-                        <h1 class="text-3xl font-bold text-white font-display tracking-wide">ANÁLISIS DE JUGADORES</h1>
-                        <p class="text-yellow-400 text-sm font-semibold">🎯 Props Individuales + Stats en Tiempo Real</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Buscador de Jugadores -->
-            <div class="mb-6 rounded-xl p-6 border border-yellow-500/30" style="background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);">
-                <h2 class="text-xl font-bold text-yellow-400 mb-4">🔍 Buscar Jugador</h2>
-                
-                <input type="text" 
-                       id="playerSearchInput"
-                       placeholder="Escribe el nombre del jugador... (ej: LeBron, Curry, Durant)"
-                       class="w-full p-4 rounded-lg text-white text-lg"
-                       style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,215,0,0.3);"
-                       oninput="buscarJugadoresEnTiempoReal(this.value)">
-                
-                <div id="searchResults" class="mt-4"></div>
-            </div>
-            
-            <!-- Resultados del Jugador Seleccionado -->
-            <div id="playerDetailsContainer"></div>
-        </div>
-    `;
-}
-
-// Función para buscar jugadores mientras se escribe
-function buscarJugadoresEnTiempoReal(query) {
-    const resultsContainer = document.getElementById('searchResults');
-    
-    if (query.length < 2) {
-        resultsContainer.innerHTML = '';
-        return;
-    }
-    
-    const queryLower = query.toLowerCase();
-    const resultados = [];
-    
-    // Buscar en la base de datos
-    for (const nombre in NBA_PLAYERS_DATA) {
-        if (nombre.toLowerCase().includes(queryLower)) {
-            resultados.push({
-                nombre: nombre,
-                datos: NBA_PLAYERS_DATA[nombre]
-            });
-        }
-    }
-    
-    if (resultados.length === 0) {
-        resultsContainer.innerHTML = `
-            <div class="text-center p-4 text-gray-400">
-                No se encontraron jugadores con "${query}"
-            </div>
-        `;
-        return;
-    }
-    
-    // Mostrar resultados
-    resultsContainer.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            ${resultados.map(r => `
-                <div class="p-4 rounded-lg cursor-pointer hover:bg-white/20 transition-all"
-                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,215,0,0.2);"
-                     onclick="mostrarDetallesJugador('${r.nombre.replace(/'/g, "\'")}')">
-                    <div class="font-bold text-white text-lg">${r.nombre}</div>
-                    <div class="text-sm text-gray-300 mt-1">
-                        ${r.datos.temporada_actual.pts} PPG | 
-                        ${r.datos.temporada_actual.ast} APG | 
-                        ${r.datos.temporada_actual.reb} RPG
-                    </div>
-                    <div class="text-xs text-yellow-400 mt-2">
-                        📊 ${r.datos.temporada_actual.partidos} partidos jugados
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-}
-
-// Función para mostrar detalles completos del jugador
-function mostrarDetallesJugador(nombreJugador) {
-    const jugador = NBA_PLAYERS_DATA[nombreJugador];
-    
-    if (!jugador) {
-        alert('Jugador no encontrado');
-        return;
-    }
-    
-    const stats = jugador.temporada_actual;
-    const ultimos = jugador.ultimos_5_juegos || [];
-    
-    // Calcular promedio de últimos 5
-    let avg5 = { pts: 0, ast: 0, reb: 0 };
-    if (ultimos.length > 0) {
-        avg5.pts = (ultimos.reduce((sum, j) => sum + j.pts, 0) / ultimos.length).toFixed(1);
-        avg5.ast = (ultimos.reduce((sum, j) => sum + j.ast, 0) / ultimos.length).toFixed(1);
-        avg5.reb = (ultimos.reduce((sum, j) => sum + j.reb, 0) / ultimos.length).toFixed(1);
-    }
-    
-    const html = `
-        <div class="rounded-xl p-6 border border-yellow-500/50 mb-6" style="background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);">
-            <!-- Header del Jugador -->
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-3xl font-bold text-white">${nombreJugador}</h2>
-                    <p class="text-yellow-400 text-sm">Temporada ${jugador.temporada} • ${stats.partidos} partidos</p>
-                    <p class="text-gray-400 text-xs mt-1">Última actualización: ${jugador.fecha_ultima_actualizacion || 'N/A'}</p>
-                </div>
-            </div>
-            
-            <!-- Promedios de Temporada -->
-            <div class="mb-6">
-                <h3 class="text-lg font-bold text-cyan-400 mb-3">📊 PROMEDIOS DE TEMPORADA</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                    <div class="p-3 rounded-lg text-center" style="background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.3);">
-                        <div class="text-2xl font-bold text-green-400">${stats.pts}</div>
-                        <div class="text-xs text-gray-300">Puntos</div>
-                    </div>
-                    <div class="p-3 rounded-lg text-center" style="background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3);">
-                        <div class="text-2xl font-bold text-blue-400">${stats.ast}</div>
-                        <div class="text-xs text-gray-300">Asistencias</div>
-                    </div>
-                    <div class="p-3 rounded-lg text-center" style="background: rgba(168,85,247,0.2); border: 1px solid rgba(168,85,247,0.3);">
-                        <div class="text-2xl font-bold text-purple-400">${stats.reb}</div>
-                        <div class="text-xs text-gray-300">Rebotes</div>
-                    </div>
-                    <div class="p-3 rounded-lg text-center" style="background: rgba(251,191,36,0.2); border: 1px solid rgba(251,191,36,0.3);">
-                        <div class="text-2xl font-bold text-yellow-400">${stats.stl}</div>
-                        <div class="text-xs text-gray-300">Robos</div>
-                    </div>
-                    <div class="p-3 rounded-lg text-center" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.3);">
-                        <div class="text-2xl font-bold text-red-400">${stats.blk}</div>
-                        <div class="text-xs text-gray-300">Bloqueos</div>
-                    </div>
-                    <div class="p-3 rounded-lg text-center" style="background: rgba(20,184,166,0.2); border: 1px solid rgba(20,184,166,0.3);">
-                        <div class="text-2xl font-bold text-teal-400">${stats.fg3m || 0}</div>
-                        <div class="text-xs text-gray-300">Triples</div>
-                    </div>
-                    <div class="p-3 rounded-lg text-center" style="background: rgba(156,163,175,0.2); border: 1px solid rgba(156,163,175,0.3);">
-                        <div class="text-2xl font-bold text-gray-400">${stats.min || 0}</div>
-                        <div class="text-xs text-gray-300">Minutos</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Últimos 5 Juegos -->
-            ${ultimos.length > 0 ? `
-                <div class="mb-6">
-                    <h3 class="text-lg font-bold text-cyan-400 mb-3">📅 ÚLTIMOS 5 JUEGOS</h3>
-                    <div class="space-y-2">
-                        ${ultimos.map((juego, idx) => `
-                            <div class="flex items-center justify-between p-3 rounded-lg" 
-                                 style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
-                                <div class="flex-1">
-                                    <span class="text-gray-400 text-sm">${juego.fecha}</span>
-                                    <span class="text-white font-bold mx-2">vs ${juego.oponente}</span>
-                                </div>
-                                <div class="flex gap-4 text-sm">
-                                    <span class="text-green-400">${juego.pts} PTS</span>
-                                    <span class="text-blue-400">${juego.ast} AST</span>
-                                    <span class="text-purple-400">${juego.reb} REB</span>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    
-                    <!-- Promedio de Últimos 5 -->
-                    <div class="mt-4 p-4 rounded-lg" style="background: rgba(255,215,0,0.1); border: 2px solid rgba(255,215,0,0.3);">
-                        <div class="text-sm text-yellow-400 font-bold mb-2">📈 PROMEDIO ÚLTIMOS 5 JUEGOS:</div>
-                        <div class="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                                <div class="text-2xl font-bold text-white">${avg5.pts}</div>
-                                <div class="text-xs text-gray-300">Puntos</div>
-                            </div>
-                            <div>
-                                <div class="text-2xl font-bold text-white">${avg5.ast}</div>
-                                <div class="text-xs text-gray-300">Asistencias</div>
-                            </div>
-                            <div>
-                                <div class="text-2xl font-bold text-white">${avg5.reb}</div>
-                                <div class="text-xs text-gray-300">Rebotes</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ` : '<div class="text-center text-gray-400 py-8">No hay datos de juegos recientes disponibles</div>'}
-            
-            <!-- Información de Feature Próximo -->
-            <div class="mt-6 p-4 rounded-xl border border-purple-500/30" style="background: rgba(168,85,247,0.1);">
-                <div class="text-center">
-                    <div class="text-4xl mb-2">🚀</div>
-                    <h4 class="text-lg font-bold text-purple-400 mb-2">Predicciones ML Próximamente</h4>
-                    <p class="text-sm text-gray-400">Sistema de machine learning para predecir props en desarrollo</p>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('playerDetailsContainer').innerHTML = html;
-    
-    // Scroll hasta los detalles
-    document.getElementById('playerDetailsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-
 function navigateTo(v) {
     currentView = v;
     if (v === 'home') {
@@ -6261,8 +6029,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadValuePicksFromStorage();
     // Primero cargar estadísticas desde API
     await loadTeamStatsFromAPI();
-    // Cargar base de datos de jugadores NBA
-    await cargarDatosJugadores();
     // Luego cargar datos de Firebase
     loadH2HFromFirebase();
     loadBankrollFromFirebase();
