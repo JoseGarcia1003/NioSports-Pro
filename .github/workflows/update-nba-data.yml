@@ -48,26 +48,3 @@ jobs:
           echo "✅ Actualización completada exitosamente"
           echo "📅 Fecha: $(date)"
           ls -lh nba_players_database.json
-```
-
-### **2.3 - Guardar**
-
-1. Abajo, en "Commit new file"
-2. Escribe: `Crear workflow de actualización automática`
-3. Haz clic en **"Commit new file"**
-
-✅ **Carpeta `.github/workflows/` creada correctamente**
-
----
-
-## 📤 PASO 3: SUBIR CARPETA `scripts` CORRECTAMENTE (5 minutos)
-
-Ahora el script de Python.
-
-### **3.1 - Crear archivo en la ruta correcta**
-
-1. Vuelve a la página principal del repo
-2. Haz clic en **"Add file"** → **"Create new file"**
-3. En el nombre del archivo escribe:
-```
-scripts/update_players.py
