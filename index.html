@@ -3167,6 +3167,7 @@ function render() {
     else if (currentView === 'picks') app.innerHTML = renderPicks();
     else if (currentView === 'bestPicks') app.innerHTML = renderBestPicks();
     else if (currentView === 'dashboard') app.innerHTML = renderDashboard();
+        else if (currentView === 'playerProps') app.innerHTML = renderPlayerProps();
     else if (currentView === 'bankroll') {
         app.innerHTML = renderBankrollView();
         setTimeout(() => createBankrollChart(), 100);
@@ -3255,6 +3256,20 @@ function renderHome() {
                     <div class="text-left">
                         <h3 class="text-2xl font-bold" style="color: #0d1b2a;">Analizar Partido</h3>
                         <p class="text-sm opacity-80" style="color: #0d1b2a;">Tendencia + H2H + Factores Contextuales</p>
+                    </div>
+                </div>
+            </button>
+
+            <!-- BOTÓN PROPS DE JUGADORES -->
+            <button onclick="navigateTo('playerProps')" class="btn-3d w-full p-6 rounded-2xl shadow-2xl mb-4 transition-all border-2 border-cyan-500/50 hover:border-cyan-400 bg-gradient-to-br from-cyan-900/40 via-blue-900/40 to-cyan-800/40">
+                <div class="flex items-center justify-between">
+                    <div class="text-left">
+                        <div class="text-5xl mb-2">👤</div>
+                        <h3 class="text-2xl font-bold text-cyan-400 gradient-text">Props de Jugadores</h3>
+                        <p class="text-sm text-cyan-300/70 mt-1">Análisis Individual + Stats Actuales</p>
+                    </div>
+                    <div class="ml-auto bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full badge-new">
+                        NUEVO
                     </div>
                 </div>
             </button>
@@ -6033,6 +6048,267 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadH2HFromFirebase();
     loadBankrollFromFirebase();
 });
-    </script>
+    
+
+// ═══════════════════════════════════════════════════════════════
+// SISTEMA DE PROPS DE JUGADORES
+// ═══════════════════════════════════════════════════════════════
+
+let NBA_PLAYERS_DATA = {};
+let PLAYER_FAVORITES = JSON.parse(localStorage.getItem('playerFavorites') || '[]');
+let PLAYER_SEARCH_HISTORY = JSON.parse(localStorage.getItem('playerSearchHistory') || '[]');
+
+async function cargarDatosJugadores() {
+    if (Object.keys(NBA_PLAYERS_DATA).length > 0) return true;
+    try {
+        const response = await fetch('nba_players_database.json');
+        if (!response.ok) return false;
+        NBA_PLAYERS_DATA = await response.json();
+        console.log(`✅ ${Object.keys(NBA_PLAYERS_DATA).length} jugadores cargados`);
+        return true;
+    } catch (error) {
+        console.error('❌ Error:', error);
+        return false;
+    }
+}
+
+function buscarJugadorLocal(query) {
+    if (!query || query.length < 2) return [];
+    const queryLower = query.toLowerCase().trim();
+    const results = [];
+    for (const nombre in NBA_PLAYERS_DATA) {
+        const nombreLower = nombre.toLowerCase();
+        if (nombreLower.includes(queryLower)) {
+            results.push({
+                nombre: nombre,
+                datos: NBA_PLAYERS_DATA[nombre],
+                score: nombreLower.startsWith(queryLower) ? 100 : 50
+            });
+        }
+    }
+    results.sort((a, b) => b.score - a.score);
+    return results.slice(0, 20);
+}
+
+function toggleFavorito(nombreJugador) {
+    const idx = PLAYER_FAVORITES.indexOf(nombreJugador);
+    if (idx > -1) {
+        PLAYER_FAVORITES.splice(idx, 1);
+    } else {
+        PLAYER_FAVORITES.push(nombreJugador);
+    }
+    localStorage.setItem('playerFavorites', JSON.stringify(PLAYER_FAVORITES));
+}
+
+function esFavorito(nombreJugador) {
+    return PLAYER_FAVORITES.includes(nombreJugador);
+}
+
+function agregarAlHistorial(nombreJugador) {
+    PLAYER_SEARCH_HISTORY = PLAYER_SEARCH_HISTORY.filter(n => n !== nombreJugador);
+    PLAYER_SEARCH_HISTORY.unshift(nombreJugador);
+    PLAYER_SEARCH_HISTORY = PLAYER_SEARCH_HISTORY.slice(0, 10);
+    localStorage.setItem('playerSearchHistory', JSON.stringify(PLAYER_SEARCH_HISTORY));
+}
+
+function renderPlayerProps() {
+    const totalJugadores = Object.keys(NBA_PLAYERS_DATA).length;
+    return `
+        <div class="p-4 max-w-7xl mx-auto fade-in">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <button onclick="navigateTo('home')" class="text-yellow-400 hover:text-yellow-300 text-2xl">←</button>
+                    <h1 class="text-3xl font-display gradient-text">Props de Jugadores</h1>
+                </div>
+                <div class="text-sm text-gray-400">
+                    <span class="bg-cyan-900/30 px-3 py-1 rounded-full">${totalJugadores} jugadores</span>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6 mb-6">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="playerSearchInput" 
+                        placeholder="🔍 Buscar jugador..." 
+                        class="w-full bg-navy-light text-white px-6 py-4 rounded-xl border-2 border-gray-700 focus:border-cyan-500 text-lg"
+                        oninput="buscarJugadoresEnTiempoReal(this.value)"
+                    />
+                </div>
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <span class="text-sm text-gray-400">Favoritos:</span>
+                    ${PLAYER_FAVORITES.slice(0, 5).map(nombre => 
+                        `<button onclick="buscarYMostrar('${nombre}')" class="bg-yellow-900/30 hover:bg-yellow-800/50 px-3 py-1 rounded-full text-sm text-yellow-300">
+                            ⭐ ${nombre}
+                        </button>`
+                    ).join('')}
+                </div>
+            </div>
+
+            <div id="searchResults" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
+            <div id="playerDetails"></div>
+        </div>
+    `;
+}
+
+function buscarJugadoresEnTiempoReal(query) {
+    const container = document.getElementById('searchResults');
+    if (!query || query.length < 2) {
+        container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">Escribe al menos 2 caracteres...</div>';
+        return;
+    }
+    const resultados = buscarJugadorLocal(query);
+    if (resultados.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No se encontraron jugadores</div>';
+        return;
+    }
+    container.innerHTML = resultados.map(r => {
+        const stats = r.datos.temporada_actual;
+        const isFav = esFavorito(r.nombre);
+        return `
+            <div class="player-card glass rounded-xl p-4 cursor-pointer hover:border-cyan-500 border-2 border-transparent transition-all" 
+                 onclick="mostrarDetallesJugador('${r.nombre}')">
+                <div class="flex justify-between items-start mb-3">
+                    <h3 class="font-bold text-lg text-white">${r.nombre}</h3>
+                    <button onclick="event.stopPropagation(); toggleFavoritoYRefresh('${r.nombre}')" class="text-xl">
+                        ${isFav ? '⭐' : '☆'}
+                    </button>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-orange-900/30 rounded-lg p-2">
+                        <div class="text-2xl font-bold text-orange-400">${stats.pts}</div>
+                        <div class="text-xs text-gray-400">PPG</div>
+                    </div>
+                    <div class="bg-blue-900/30 rounded-lg p-2">
+                        <div class="text-2xl font-bold text-blue-400">${stats.ast}</div>
+                        <div class="text-xs text-gray-400">APG</div>
+                    </div>
+                    <div class="bg-green-900/30 rounded-lg p-2">
+                        <div class="text-2xl font-bold text-green-400">${stats.reb}</div>
+                        <div class="text-xs text-gray-400">RPG</div>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-500 text-center">${stats.partidos} GP</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function mostrarDetallesJugador(nombreJugador) {
+    const datos = NBA_PLAYERS_DATA[nombreJugador];
+    if (!datos) return;
+    agregarAlHistorial(nombreJugador);
+    const stats = datos.temporada_actual;
+    const ultimos5 = datos.ultimos_5_juegos || [];
+    let avg5 = { pts: 0, ast: 0, reb: 0 };
+    if (ultimos5.length > 0) {
+        avg5.pts = (ultimos5.reduce((s, j) => s + j.pts, 0) / ultimos5.length).toFixed(1);
+        avg5.ast = (ultimos5.reduce((s, j) => s + j.ast, 0) / ultimos5.length).toFixed(1);
+        avg5.reb = (ultimos5.reduce((s, j) => s + j.reb, 0) / ultimos5.length).toFixed(1);
+    }
+    const container = document.getElementById('playerDetails');
+    container.innerHTML = `
+        <div class="glass rounded-2xl p-6 fade-in">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold gradient-text mb-2">${nombreJugador}</h2>
+                    <div class="text-gray-400">${datos.temporada} • ${stats.partidos} GP</div>
+                </div>
+                <button onclick="toggleFavoritoYRefresh('${nombreJugador}')" class="text-4xl">
+                    ${esFavorito(nombreJugador) ? '⭐' : '☆'}
+                </button>
+            </div>
+            <h3 class="text-xl font-bold text-cyan-400 mb-4">📊 Promedios Temporada</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+                <div class="bg-gradient-to-br from-orange-900/40 to-orange-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-orange-400">${stats.pts}</div>
+                    <div class="text-xs text-gray-400 mt-1">PPG</div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-900/40 to-blue-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-blue-400">${stats.ast}</div>
+                    <div class="text-xs text-gray-400 mt-1">APG</div>
+                </div>
+                <div class="bg-gradient-to-br from-green-900/40 to-green-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-green-400">${stats.reb}</div>
+                    <div class="text-xs text-gray-400 mt-1">RPG</div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-900/40 to-purple-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-purple-400">${stats.stl}</div>
+                    <div class="text-xs text-gray-400 mt-1">STL</div>
+                </div>
+                <div class="bg-gradient-to-br from-red-900/40 to-red-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-red-400">${stats.blk}</div>
+                    <div class="text-xs text-gray-400 mt-1">BLK</div>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-900/40 to-yellow-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-yellow-400">${stats.fg3m}</div>
+                    <div class="text-xs text-gray-400 mt-1">3PM</div>
+                </div>
+                <div class="bg-gradient-to-br from-cyan-900/40 to-cyan-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-cyan-400">${stats.min}</div>
+                    <div class="text-xs text-gray-400 mt-1">MIN</div>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold text-cyan-400 mb-4">🏀 Últimos 5 Juegos</h3>
+            <div class="overflow-x-auto mb-4">
+                <table class="w-full text-sm">
+                    <thead class="bg-navy-lighter">
+                        <tr>
+                            <th class="p-3 text-left">Fecha</th>
+                            <th class="p-3 text-left">vs</th>
+                            <th class="p-3 text-center">PTS</th>
+                            <th class="p-3 text-center">AST</th>
+                            <th class="p-3 text-center">REB</th>
+                            <th class="p-3 text-center">MIN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${ultimos5.map((juego, i) => `
+                            <tr class="${i % 2 === 0 ? 'bg-navy-light/30' : ''}">
+                                <td class="p-3">${juego.fecha}</td>
+                                <td class="p-3 font-semibold">${juego.oponente}</td>
+                                <td class="p-3 text-center font-bold text-orange-400">${juego.pts}</td>
+                                <td class="p-3 text-center font-bold text-blue-400">${juego.ast}</td>
+                                <td class="p-3 text-center font-bold text-green-400">${juego.reb}</td>
+                                <td class="p-3 text-center text-gray-400">${juego.min}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="bg-yellow-900/20 border border-yellow-700/30 rounded-xl p-4">
+                <div class="font-bold text-yellow-400 mb-2">📈 Promedio Últimos 5</div>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-orange-400">${avg5.pts}</div>
+                        <div class="text-xs text-gray-400">PPG</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-blue-400">${avg5.ast}</div>
+                        <div class="text-xs text-gray-400">APG</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-green-400">${avg5.reb}</div>
+                        <div class="text-xs text-gray-400">RPG</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function buscarYMostrar(nombre) {
+    document.getElementById('playerSearchInput').value = nombre;
+    buscarJugadoresEnTiempoReal(nombre);
+    setTimeout(() => mostrarDetallesJugador(nombre), 300);
+}
+
+function toggleFavoritoYRefresh(nombre) {
+    toggleFavorito(nombre);
+    render();
+}
+
+</script>
 </body>
 </html>
