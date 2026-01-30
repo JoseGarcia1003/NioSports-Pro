@@ -8,7 +8,7 @@ on:
 jobs:
   update-data:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     
     steps:
       - name: 📥 Checkout repositorio
@@ -27,7 +27,7 @@ jobs:
           pip install nba_api pandas numpy requests
       
       - name: 🏀 Ejecutar script de actualización
-        timeout-minutes: 25
+        timeout-minutes: 40
         run: |
           python scripts/update_players.py
         continue-on-error: false
