@@ -1,0 +1,73 @@
+name: Actualizar Datos NBA Diariamente
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout repositorio
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🐍 Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: 📦 Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install nba_api
+      
+      - name: 🏀 Ejecutar script de actualización
+        run: |
+          python scripts/update_players.py
+      
+      - name: 📊 Verificar cambios
+        id: verify
+        run: |
+          git diff --quiet nba_players_database.json || echo "changed=true" >> $GITHUB_OUTPUT
+      
+      - name: 💾 Commit y Push cambios
+        if: steps.verify.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions Bot"
+          git add nba_players_database.json
+          git commit -m "🤖 Actualización automática datos NBA - $(date +'%Y-%m-%d %H:%M')"
+          git push
+      
+      - name: ✅ Resumen
+        run: |
+          echo "✅ Actualización completada exitosamente"
+          echo "📅 Fecha: $(date)"
+          ls -lh nba_players_database.json
+```
+
+### **2.3 - Guardar**
+
+1. Abajo, en "Commit new file"
+2. Escribe: `Crear workflow de actualización automática`
+3. Haz clic en **"Commit new file"**
+
+✅ **Carpeta `.github/workflows/` creada correctamente**
+
+---
+
+## 📤 PASO 3: SUBIR CARPETA `scripts` CORRECTAMENTE (5 minutos)
+
+Ahora el script de Python.
+
+### **3.1 - Crear archivo en la ruta correcta**
+
+1. Vuelve a la página principal del repo
+2. Haz clic en **"Add file"** → **"Create new file"**
+3. En el nombre del archivo escribe:
+```
+scripts/update_players.py
