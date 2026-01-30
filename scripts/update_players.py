@@ -7,14 +7,12 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import signal
 
-# Timeout handler
 class TimeoutException(Exception):
     pass
 
 def timeout_handler(signum, frame):
     raise TimeoutException()
 
-# Set timeout para evitar que se quede trabado
 signal.signal(signal.SIGALRM, timeout_handler)
 
 def log(mensaje):
@@ -26,7 +24,6 @@ def extraer_datos_jugador(player_id, nombre, max_retries=2):
     """Extrae datos de un jugador con retry y timeout"""
     for intento in range(max_retries):
         try:
-            # Timeout de 30 segundos por jugador
             signal.alarm(30)
             
             carrera = playercareerstats.PlayerCareerStats(player_id=player_id, timeout=10)
@@ -50,7 +47,7 @@ def extraer_datos_jugador(player_id, nombre, max_retries=2):
                 signal.alarm(0)
                 return None
             
-            time.sleep(0.3)  # Reducido de 0.6 a 0.3
+            time.sleep(0.3)
             
             try:
                 gamelog = playergamelog.PlayerGameLog(
@@ -94,7 +91,7 @@ def extraer_datos_jugador(player_id, nombre, max_retries=2):
                 'fecha_ultima_actualizacion': ultimos_5[0]['fecha'] if len(ultimos_5) > 0 else 'N/A'
             }
             
-            signal.alarm(0)  # Cancelar timeout
+            signal.alarm(0)
             return datos
             
         except TimeoutException:
@@ -124,7 +121,7 @@ def procesar_batch_paralelo(batch, max_workers=5):
         for future in as_completed(futures):
             nombre = futures[future]
             try:
-                datos = future.result(timeout=45)  # 45 segundos max por jugador
+                datos = future.result(timeout=45)
                 if datos:
                     resultados[nombre] = datos
             except Exception:
@@ -133,20 +130,17 @@ def procesar_batch_paralelo(batch, max_workers=5):
     return resultados
 
 def main():
-    log("🏀 INICIANDO ACTUALIZACIÓN OPTIMIZADA DE DATOS NBA")
+    log("🏀 INICIANDO ACTUALIZACIÓN COMPLETA DE DATOS NBA")
     log("=" * 70)
     
     log("📋 Obteniendo lista de jugadores activos...")
     todos_jugadores = players.get_players()
     jugadores_activos = [j for j in todos_jugadores if j['is_active']]
     
-    # Limitar a 200 jugadores principales para evitar timeout
-    # (Puedes aumentar después si funciona bien)
-    jugadores_activos = jugadores_activos[:200]
+    # PROCESAR TODOS LOS JUGADORES (sin límite)
+    log(f"✅ Procesando TODOS los jugadores activos: {len(jugadores_activos)}")
     
-    log(f"✅ Procesando {len(jugadores_activos)} jugadores principales")
-    
-    BATCH_SIZE = 50  # Batches más pequeños
+    BATCH_SIZE = 50
     database = {}
     exitosos = 0
     
@@ -167,8 +161,7 @@ def main():
         progreso = (fin / len(jugadores_activos)) * 100
         log(f"   📊 Progreso: {fin}/{len(jugadores_activos)} ({progreso:.0f}%) - Exitosos: {exitosos}")
         
-        # Guardar progreso incremental
-        if batch_num % 2 == 0:  # Cada 2 batches
+        if batch_num % 2 == 0:
             with open('nba_players_database.json', 'w', encoding='utf-8') as f:
                 json.dump(database, f, indent=2, ensure_ascii=False)
             log(f"   💾 Progreso guardado")
