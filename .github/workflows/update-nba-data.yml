@@ -49,4 +49,5 @@ jobs:
         run: |
           echo "✅ Actualización completada exitosamente"
           echo "📅 Fecha: $(date)"
+          echo "📊 Jugadores actualizados: $(jq 'length' nba_players_database.json 2>/dev/null || echo '0')"
           ls -lh nba_players_database.json
