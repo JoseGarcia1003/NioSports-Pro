@@ -19,7 +19,7 @@ jobs:
           authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
       
       - name: 🌐 Usar Exit Node
-        run: sudo tailscale up --exit-node=${{ secrets.TAILSCALE_EXIT_NODE }} --accept-routes
+        run: sudo tailscale up --reset --exit-node=${{ secrets.TAILSCALE_EXIT_NODE }} --accept-routes
       
       - name: ✅ Verificar IP
         run: curl -s https://ifconfig.me
