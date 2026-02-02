@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NioSports Pro v2.5 FINAL - Modelo Predictivo Avanzado</title>
+    <title>NioSports Pro v3.0 ULTIMATE - Sistema NBA #1 - Modelo Predictivo Avanzado</title>
 
     <!-- PWA Meta Tags -->
     <meta name="description" content="Sistema predictivo avanzado para totales NBA con backtesting, B2B, PACE y calibración">
@@ -24,6 +24,8 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
     <!-- Chart.js para bankroll -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <!-- Chart.js para gráficos del Dashboard -->
@@ -6314,5 +6316,897 @@ function toggleFavoritoYRefresh(nombre) {
 }
 
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- NIOSPORTS PRO V3.0 ULTIMATE - CÓDIGO COMPLETO DE LAS 4 FASES              -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// VARIABLES GLOBALES V3.0
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Fase 1: Props
+let PLAYERS_DATABASE = {};
+let PLAYERS_LOADED = false;
+let CURRENT_VIEW_V3 = 'totals'; // 'totals', 'props', 'recommendations', 'tracking'
+let PROPS_SEARCH_QUERY = '';
+let PROPS_SEARCH_RESULTS = [];
+let PROPS_FILTERS = { team: '', minMin: 0, minPPG: 0, minConsistency: 0 };
+let PROPS_SORT_BY = 'pts';
+let PROPS_SORT_ORDER = 'desc';
+let FAVORITE_PLAYERS = JSON.parse(localStorage.getItem('niosports_v3_favorites') || '[]');
+let COMPARISON_LIST = [];
+let CURRENT_PLAYER_MODAL = null;
+
+// Fase 2: Recomendaciones
+let DAILY_PICKS = [];
+let DAILY_PICKS_LOADED = false;
+let DAILY_PICKS_DATE = null;
+
+// Fase 3: Tracking
+let USER_PICKS = [];
+let PICKS_LOADED = false;
+
+// Fase 4: Auth
+let currentUser = null;
+let userTier = 'free';
+let userUsageToday = {
+    player_searches: 0,
+    player_views: 0,
+    comparisons: 0,
+    predictions: 0,
+    date: new Date().toISOString().split('T')[0]
+};
+
+const FREE_TIER_LIMITS = {
+    player_searches: 10,
+    player_views: 5,
+    comparisons: 2,
+    daily_picks_view: 3,
+    predictions: 5
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FASE 1: FUNCIONES DE PROPS MEJORADOS
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function loadPlayersDatabase() {
+    if (PLAYERS_LOADED) return;
+    
+    try {
+        showLoading('Cargando jugadores...');
+        
+        const response = await fetch('https://josegarcia1003.github.io/NioSports-Pro/data/nba_players_database_v3.json');
+        
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        
+        const data = await response.json();
+        PLAYERS_DATABASE = data;
+        PLAYERS_LOADED = true;
+        
+        console.log('✅ Jugadores cargados:', Object.keys(data).length);
+        showNotification('✅ ' + Object.keys(data).length + ' jugadores disponibles', 'success');
+        
+    } catch (error) {
+        console.error('Error cargando jugadores:', error);
+        showNotification('⚠️ Error cargando jugadores. Asegúrate de subir el JSON.', 'warning');
+        PLAYERS_DATABASE = {};
+        PLAYERS_LOADED = false;
+    } finally {
+        hideLoading();
+    }
+}
+
+function searchPlayers(query) {
+    if (!PLAYERS_LOADED) {
+        showNotification('⏳ Jugadores aún cargando...', 'info');
+        return [];
+    }
+    
+    // Check free tier limits
+    if (userTier === 'free') {
+        const today = new Date().toISOString().split('T')[0];
+        if (userUsageToday.date !== today) {
+            userUsageToday = { player_searches: 0, player_views: 0, comparisons: 0, predictions: 0, date: today };
+        }
+        if (userUsageToday.player_searches >= FREE_TIER_LIMITS.player_searches) {
+            showUpgradeModal('Has alcanzado el límite de búsquedas diarias (10)');
+            return [];
+        }
+        userUsageToday.player_searches++;
+        saveUsageToStorage();
+    }
+    
+    const q = query.toLowerCase().trim();
+    if (!q) return [];
+    
+    const allPlayers = Object.values(PLAYERS_DATABASE);
+    const results = allPlayers.filter(p => 
+        p.nombre.toLowerCase().includes(q) || 
+        p.equipo.toLowerCase().includes(q)
+    );
+    
+    PROPS_SEARCH_RESULTS = results.slice(0, 20);
+    return PROPS_SEARCH_RESULTS;
+}
+
+function applyFilters() {
+    let players = Object.values(PLAYERS_DATABASE);
+    
+    if (PROPS_FILTERS.team) {
+        players = players.filter(p => p.equipo === PROPS_FILTERS.team);
+    }
+    if (PROPS_FILTERS.minMin > 0) {
+        players = players.filter(p => p.temporada_actual.min >= PROPS_FILTERS.minMin);
+    }
+    if (PROPS_FILTERS.minPPG > 0) {
+        players = players.filter(p => p.temporada_actual.pts >= PROPS_FILTERS.minPPG);
+    }
+    if (PROPS_FILTERS.minConsistency > 0) {
+        players = players.filter(p => 
+            p.consistency_scores && p.consistency_scores.pts >= PROPS_FILTERS.minConsistency
+        );
+    }
+    
+    return sortPlayers(players);
+}
+
+function sortPlayers(players) {
+    return players.sort((a, b) => {
+        let valA, valB;
+        switch(PROPS_SORT_BY) {
+            case 'pts': valA = a.temporada_actual.pts; valB = b.temporada_actual.pts; break;
+            case 'ast': valA = a.temporada_actual.ast; valB = b.temporada_actual.ast; break;
+            case 'reb': valA = a.temporada_actual.reb; valB = b.temporada_actual.reb; break;
+            case 'min': valA = a.temporada_actual.min; valB = b.temporada_actual.min; break;
+            case 'consistency':
+                valA = a.consistency_scores ? a.consistency_scores.pts : 0;
+                valB = b.consistency_scores ? b.consistency_scores.pts : 0;
+                break;
+            case 'name':
+                return PROPS_SORT_ORDER === 'asc' ? 
+                    a.nombre.localeCompare(b.nombre) : 
+                    b.nombre.localeCompare(a.nombre);
+            default: valA = a.temporada_actual.pts; valB = b.temporada_actual.pts;
+        }
+        return PROPS_SORT_ORDER === 'desc' ? valB - valA : valA - valB;
+    });
+}
+
+function toggleFavorite(playerName) {
+    const idx = FAVORITE_PLAYERS.indexOf(playerName);
+    if (idx === -1) {
+        FAVORITE_PLAYERS.push(playerName);
+        showNotification('⭐ ' + playerName + ' agregado a favoritos', 'success');
+    } else {
+        FAVORITE_PLAYERS.splice(idx, 1);
+        showNotification('Removido de favoritos', 'info');
+    }
+    localStorage.setItem('niosports_v3_favorites', JSON.stringify(FAVORITE_PLAYERS));
+    renderPropsView();
+}
+
+function addToComparison(playerName) {
+    if (COMPARISON_LIST.includes(playerName)) {
+        showNotification('Ya está en comparación', 'warning');
+        return;
+    }
+    if (COMPARISON_LIST.length >= 3) {
+        showNotification('Máximo 3 jugadores', 'warning');
+        return;
+    }
+    
+    if (userTier === 'free') {
+        const today = new Date().toISOString().split('T')[0];
+        if (userUsageToday.date !== today) {
+            userUsageToday = { player_searches: 0, player_views: 0, comparisons: 0, predictions: 0, date: today };
+        }
+        if (userUsageToday.comparisons >= FREE_TIER_LIMITS.comparisons) {
+            showUpgradeModal('Has alcanzado el límite de comparaciones (2/día)');
+            return;
+        }
+        userUsageToday.comparisons++;
+        saveUsageToStorage();
+    }
+    
+    COMPARISON_LIST.push(playerName);
+    showNotification(playerName + ' agregado al comparador', 'success');
+    renderPropsView();
+}
+
+function removeFromComparison(playerName) {
+    COMPARISON_LIST = COMPARISON_LIST.filter(p => p !== playerName);
+    renderPropsView();
+}
+
+function showPlayerModal(playerName) {
+    if (userTier === 'free') {
+        const today = new Date().toISOString().split('T')[0];
+        if (userUsageToday.date !== today) {
+            userUsageToday = { player_searches: 0, player_views: 0, comparisons: 0, predictions: 0, date: today };
+        }
+        if (userUsageToday.player_views >= FREE_TIER_LIMITS.player_views) {
+            showUpgradeModal('Has alcanzado el límite de vistas detalladas (5/día)');
+            return;
+        }
+        userUsageToday.player_views++;
+        saveUsageToStorage();
+    }
+    
+    const player = PLAYERS_DATABASE[playerName];
+    if (!player) return;
+    
+    CURRENT_PLAYER_MODAL = playerName;
+    
+    const modal = document.createElement('div');
+    modal.id = 'playerModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
+    
+    const isFavorite = FAVORITE_PLAYERS.includes(playerName);
+    
+    modal.innerHTML = '<div style="background:#1b263b;border-radius:20px;max-width:1000px;width:100%;max-height:90vh;overflow-y:auto;padding:40px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.5);"><button onclick="closePlayerModal()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:28px;cursor:pointer;line-height:1;width:40px;height:40px;border-radius:50%;transition:all 0.3s;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">&times;</button><div style="margin-bottom:30px;"><h2 style="color:#FFD700;font-size:32px;margin-bottom:8px;font-weight:800;">' + player.nombre + '</h2><p style="color:#94a3b8;font-size:18px;margin-bottom:20px;">' + player.equipo + ' • ' + player.temporada + ' • ' + player.temporada_actual.partidos + ' GP</p><div style="display:flex;gap:12px;flex-wrap:wrap;"><button onclick="toggleFavorite('' + playerName + '')" style="background:' + (isFavorite ? '#FFD700' : 'transparent') + ';color:' + (isFavorite ? '#0d1b2a' : '#FFD700') + ';border:2px solid #FFD700;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;transition:all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">' + (isFavorite ? '⭐ FAVORITO' : '☆ AGREGAR A FAVORITOS') + '</button><button onclick="addToComparison('' + playerName + '')" style="background:transparent;color:#22c55e;border:2px solid #22c55e;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;transition:all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"  >➕ COMPARAR</button></div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:20px;margin-bottom:30px;"><div style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,215,0,0.05));padding:20px;border-radius:15px;text-align:center;border:2px solid rgba(255,215,0,0.3);"><div style="color:#FFD700;font-size:32px;font-weight:900;font-family:Outfit;">' + player.temporada_actual.pts + '</div><div style="color:#94a3b8;font-size:13px;font-weight:600;margin-top:5px;">PPG</div></div><div style="background:linear-gradient(135deg,rgba(34,197,94,0.2),rgba(34,197,94,0.05));padding:20px;border-radius:15px;text-align:center;border:2px solid rgba(34,197,94,0.3);"><div style="color:#22c55e;font-size:32px;font-weight:900;font-family:Outfit;">' + player.temporada_actual.ast + '</div><div style="color:#94a3b8;font-size:13px;font-weight:600;margin-top:5px;">APG</div></div><div style="background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(59,130,246,0.05));padding:20px;border-radius:15px;text-align:center;border:2px solid rgba(59,130,246,0.3);"><div style="color:#3b82f6;font-size:32px;font-weight:900;font-family:Outfit;">' + player.temporada_actual.reb + '</div><div style="color:#94a3b8;font-size:13px;font-weight:600;margin-top:5px;">RPG</div></div><div style="background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(168,85,247,0.05));padding:20px;border-radius:15px;text-align:center;border:2px solid rgba(168,85,247,0.3);"><div style="color:#a855f7;font-size:32px;font-weight:900;font-family:Outfit;">' + player.temporada_actual.min + '</div><div style="color:#94a3b8;font-size:13px;font-weight:600;margin-top:5px;">MIN</div></div></div>' + (player.home && player.away ? '<div style="background:rgba(255,255,255,0.05);padding:25px;border-radius:15px;margin-bottom:30px;border:1px solid rgba(255,255,255,0.1);"><h3 style="color:white;margin-bottom:20px;font-size:20px;font-weight:700;">🏠 Home vs ✈️ Away Splits</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;"><div style="background:rgba(34,197,94,0.1);padding:20px;border-radius:12px;border:2px solid rgba(34,197,94,0.3);"><h4 style="color:#22c55e;margin-bottom:15px;font-size:16px;font-weight:700;">🏠 EN CASA (' + player.home.gp + ' juegos)</h4><div style="color:#94a3b8;line-height:2;font-size:15px;"><div><span style="color:#94a3b8;">PPG:</span> <span style="color:white;font-weight:700;">' + player.home.pts + '</span></div><div><span style="color:#94a3b8;">APG:</span> <span style="color:white;font-weight:700;">' + player.home.ast + '</span></div><div><span style="color:#94a3b8;">RPG:</span> <span style="color:white;font-weight:700;">' + player.home.reb + '</span></div><div><span style="color:#94a3b8;">MIN:</span> <span style="color:white;font-weight:700;">' + player.home.min + '</span></div></div></div><div style="background:rgba(245,158,11,0.1);padding:20px;border-radius:12px;border:2px solid rgba(245,158,11,0.3);"><h4 style="color:#f59e0b;margin-bottom:15px;font-size:16px;font-weight:700;">✈️ VISITANTE (' + player.away.gp + ' juegos)</h4><div style="color:#94a3b8;line-height:2;font-size:15px;"><div><span style="color:#94a3b8;">PPG:</span> <span style="color:white;font-weight:700;">' + player.away.pts + '</span></div><div><span style="color:#94a3b8;">APG:</span> <span style="color:white;font-weight:700;">' + player.away.ast + '</span></div><div><span style="color:#94a3b8;">RPG:</span> <span style="color:white;font-weight:700;">' + player.away.reb + '</span></div><div><span style="color:#94a3b8;">MIN:</span> <span style="color:white;font-weight:700;">' + player.away.min + '</span></div></div></div></div></div>' : '') + (player.consistency_scores ? '<div style="background:rgba(255,255,255,0.05);padding:25px;border-radius:15px;margin-bottom:30px;border:1px solid rgba(255,255,255,0.1);"><h3 style="color:white;margin-bottom:20px;font-size:20px;font-weight:700;">📊 Consistency Scores</h3><div style="display:flex;flex-direction:column;gap:15px;">' + ['pts', 'ast', 'reb'].map(stat => {
+        const score = player.consistency_scores[stat];
+        const color = score >= 75 ? '#22c55e' : score >= 60 ? '#f59e0b' : '#ef4444';
+        return '<div><div style="display:flex;justify-content:space-between;margin-bottom:8px;align-items:center;"><span style="color:#94a3b8;text-transform:uppercase;font-size:13px;font-weight:700;">' + stat.toUpperCase() + '</span><span style="color:white;font-weight:800;font-size:16px;">' + score + '/100</span></div><div style="background:rgba(255,255,255,0.1);height:12px;border-radius:6px;overflow:hidden;"><div style="background:' + color + ';height:100%;width:' + score + '%;transition:width 0.5s ease;border-radius:6px;"></div></div></div>';
+    }).join('') + '</div></div>' : '') + (player.ultimos_10_juegos && player.ultimos_10_juegos.length > 0 ? '<div style="background:rgba(255,255,255,0.05);padding:25px;border-radius:15px;border:1px solid rgba(255,255,255,0.1);"><h3 style="color:white;margin-bottom:20px;font-size:20px;font-weight:700;">🏀 Últimos 10 Juegos</h3><div style="overflow-x:auto;"><table style="width:100%;border-collapse:separate;border-spacing:0;"><thead><tr style="background:rgba(255,255,255,0.05);"><th style="padding:12px;text-align:left;color:#94a3b8;font-size:13px;font-weight:700;border-bottom:2px solid rgba(255,215,0,0.3);">FECHA</th><th style="padding:12px;text-align:left;color:#94a3b8;font-size:13px;font-weight:700;border-bottom:2px solid rgba(255,215,0,0.3);">VS</th><th style="padding:12px;text-align:center;color:#94a3b8;font-size:13px;font-weight:700;border-bottom:2px solid rgba(255,215,0,0.3);">PTS</th><th style="padding:12px;text-align:center;color:#94a3b8;font-size:13px;font-weight:700;border-bottom:2px solid rgba(255,215,0,0.3);">AST</th><th style="padding:12px;text-align:center;color:#94a3b8;font-size:13px;font-weight:700;border-bottom:2px solid rgba(255,215,0,0.3);">REB</th><th style="padding:12px;text-align:center;color:#94a3b8;font-size:13px;font-weight:700;border-bottom:2px solid rgba(255,215,0,0.3);">MIN</th></tr></thead><tbody>' + player.ultimos_10_juegos.slice(0, 10).map((game, idx) => '<tr style="' + (idx % 2 === 0 ? 'background:rgba(255,255,255,0.02);' : '') + 'transition:background 0.2s;" onmouseover="this.style.background='rgba(255,215,0,0.1)'" onmouseout="this.style.background='' + (idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent') + ''"><td style="padding:12px;border-bottom:1px solid rgba(255,255,255,0.05);color:#94a3b8;font-size:14px;">' + game.fecha.split('T')[0] + '</td><td style="padding:12px;border-bottom:1px solid rgba(255,255,255,0.05);color:white;font-weight:600;font-size:14px;">' + (game.local ? 'vs' : '@') + ' ' + game.oponente + '</td><td style="padding:12px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);color:#FFD700;font-weight:800;font-size:15px;">' + game.pts + '</td><td style="padding:12px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);color:white;font-weight:600;font-size:14px;">' + game.ast + '</td><td style="padding:12px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);color:white;font-weight:600;font-size:14px;">' + game.reb + '</td><td style="padding:12px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);color:white;font-weight:600;font-size:14px;">' + game.min + '</td></tr>').join('') + '</tbody></table></div></div>' : '') + '</div>';
+    
+    document.body.appendChild(modal);
+    modal.onclick = (e) => { if (e.target === modal) closePlayerModal(); };
+}
+
+function closePlayerModal() {
+    const modal = document.getElementById('playerModal');
+    if (modal) modal.remove();
+    CURRENT_PLAYER_MODAL = null;
+}
+
+function saveUsageToStorage() {
+    localStorage.setItem('niosports_v3_usage', JSON.stringify(userUsageToday));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FASE 2: RECOMENDACIONES IA
+// ═══════════════════════════════════════════════════════════════════════════
+
+function calculateValueScore(player, propType) {
+    let score = 50;
+    
+    if (player.consistency_scores && player.consistency_scores[propType]) {
+        score += (player.consistency_scores[propType] - 50) * 0.5;
+    }
+    
+    if (player.trends && player.trends[propType]) {
+        if (player.trends[propType] === 'hot') score += 20;
+        else if (player.trends[propType] === 'cold') score -= 15;
+    }
+    
+    if (player.temporada_actual.min >= 30) score += 10;
+    else if (player.temporada_actual.min < 20) score -= 10;
+    
+    if (player.home && player.away) {
+        const homeStat = player.home[propType] || 0;
+        const awayStat = player.away[propType] || 0;
+        const seasonAvg = player.temporada_actual[propType];
+        if (homeStat > seasonAvg * 1.1) score += 5;
+    }
+    
+    return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function generateDailyPicks() {
+    if (!PLAYERS_LOADED) {
+        showNotification('⏳ Jugadores aún cargando...', 'info');
+        return [];
+    }
+    
+    const today = new Date().toISOString().split('T')[0];
+    if (DAILY_PICKS_DATE === today && DAILY_PICKS.length > 0) {
+        return DAILY_PICKS;
+    }
+    
+    const picks = [];
+    const players = Object.values(PLAYERS_DATABASE);
+    
+    players.forEach(player => {
+        if (player.temporada_actual.min < 15) return;
+        
+        ['pts', 'ast', 'reb'].forEach(propType => {
+            const valueScore = calculateValueScore(player, propType);
+            if (valueScore >= 65) {
+                const confidence = valueScore >= 80 ? 'HIGH' : valueScore >= 70 ? 'MEDIUM' : 'LOW';
+                const reasons = [];
+                
+                if (player.consistency_scores && player.consistency_scores[propType] >= 75) {
+                    reasons.push('📊 Alta consistencia (' + player.consistency_scores[propType] + '/100)');
+                }
+                if (player.trends && player.trends[propType] === 'hot') {
+                    reasons.push('🔥 Racha caliente');
+                }
+                if (player.temporada_actual.min >= 30) {
+                    reasons.push('⏱️ Minutos altos (' + player.temporada_actual.min + ' MIN)');
+                }
+                
+                picks.push({
+                    player: player.nombre,
+                    team: player.equipo,
+                    prop_type: propType,
+                    line: player.temporada_actual[propType],
+                    value_score: valueScore,
+                    confidence: confidence,
+                    reasons: reasons
+                });
+            }
+        });
+    });
+    
+    picks.sort((a, b) => b.value_score - a.value_score);
+    DAILY_PICKS = picks.slice(0, 15);
+    DAILY_PICKS_DATE = today;
+    DAILY_PICKS_LOADED = true;
+    
+    return DAILY_PICKS;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FASE 3: TRACKING
+// ═══════════════════════════════════════════════════════════════════════════
+
+function savePick(pickData) {
+    if (!currentUser) {
+        showNotification('⚠️ Debes iniciar sesión para guardar picks', 'warning');
+        return;
+    }
+    
+    const pickId = 'pick_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const pick = {
+        ...pickData,
+        pick_id: pickId,
+        user_id: currentUser.uid,
+        timestamp: new Date().toISOString(),
+        result: 'pending',
+        profit: 0
+    };
+    
+    database.ref('picks/' + currentUser.uid + '/' + pickId).set(pick)
+        .then(() => {
+            showNotification('✅ Pick guardado exitosamente', 'success');
+            loadUserPicks();
+        })
+        .catch(err => {
+            console.error('Error guardando pick:', err);
+            showNotification('❌ Error guardando pick', 'error');
+        });
+}
+
+function loadUserPicks() {
+    if (!currentUser) {
+        USER_PICKS = [];
+        return;
+    }
+    
+    database.ref('picks/' + currentUser.uid).on('value', snapshot => {
+        if (snapshot.exists()) {
+            const picksObj = snapshot.val();
+            USER_PICKS = Object.values(picksObj);
+        } else {
+            USER_PICKS = [];
+        }
+        renderTrackingView();
+    });
+}
+
+function markPickResult(pickId, result) {
+    if (!currentUser) return;
+    
+    const pickRef = database.ref('picks/' + currentUser.uid + '/' + pickId);
+    
+    pickRef.once('value', snapshot => {
+        const pick = snapshot.val();
+        if (!pick) return;
+        
+        let profit = 0;
+        if (result === 'win') {
+            profit = (pick.stake || 0) * ((pick.odds || 1.91) - 1);
+        } else if (result === 'loss') {
+            profit = -(pick.stake || 0);
+        }
+        
+        pickRef.update({
+            result: result,
+            profit: profit,
+            settled_at: new Date().toISOString()
+        }).then(() => {
+            showNotification('✅ Resultado marcado: ' + result.toUpperCase(), 'success');
+            loadUserPicks();
+        });
+    });
+}
+
+function calculateROI(picks) {
+    const settled = picks.filter(p => p.result && p.result !== 'pending');
+    if (settled.length === 0) return '0.00';
+    
+    const totalStaked = settled.reduce((sum, p) => sum + (p.stake || 0), 0);
+    const totalProfit = settled.reduce((sum, p) => sum + (p.profit || 0), 0);
+    
+    return totalStaked > 0 ? ((totalProfit / totalStaked) * 100).toFixed(2) : '0.00';
+}
+
+function calculateWinRate(picks) {
+    const settled = picks.filter(p => p.result && p.result !== 'pending');
+    if (settled.length === 0) return '0.0';
+    
+    const wins = settled.filter(p => p.result === 'win').length;
+    return ((wins / settled.length) * 100).toFixed(1);
+}
+
+function deletePick(pickId) {
+    if (!currentUser) return;
+    if (!confirm('¿Eliminar este pick?')) return;
+    
+    database.ref('picks/' + currentUser.uid + '/' + pickId).remove()
+        .then(() => {
+            showNotification('✅ Pick eliminado', 'success');
+            loadUserPicks();
+        })
+        .catch(err => {
+            showNotification('❌ Error eliminando pick', 'error');
+        });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FASE 4: AUTH Y MONETIZACIÓN
+// ═══════════════════════════════════════════════════════════════════════════
+
+const auth = firebase.auth();
+
+auth.onAuthStateChanged(user => {
+    currentUser = user;
+    if (user) {
+        database.ref('users/' + user.uid + '/tier').once('value', snapshot => {
+            userTier = snapshot.val() || 'free';
+            updateTierBadge();
+        });
+        loadUserPicks();
+    } else {
+        userTier = 'free';
+        USER_PICKS = [];
+        updateTierBadge();
+    }
+    renderCurrentView();
+});
+
+function signUpEmail(email, password) {
+    auth.createUserWithEmailAndPassword(email, password)
+        .then(userCred => {
+            database.ref('users/' + userCred.user.uid).set({
+                email: email,
+                created_at: new Date().toISOString(),
+                tier: 'free',
+                subscription_status: 'inactive'
+            });
+            showNotification('✅ Cuenta creada exitosamente', 'success');
+            closeAuthModal();
+        })
+        .catch(err => {
+            showNotification('❌ ' + err.message, 'error');
+        });
+}
+
+function signInEmail(email, password) {
+    auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+            showNotification('✅ Sesión iniciada', 'success');
+            closeAuthModal();
+        })
+        .catch(err => {
+            showNotification('❌ ' + err.message, 'error');
+        });
+}
+
+function signOutUser() {
+    auth.signOut().then(() => {
+        showNotification('✅ Sesión cerrada', 'success');
+        currentUser = null;
+        userTier = 'free';
+        USER_PICKS = [];
+        renderCurrentView();
+    });
+}
+
+function showUpgradeModal(reason) {
+    const modal = document.createElement('div');
+    modal.id = 'upgradeModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    
+    modal.innerHTML = '<div style="background:linear-gradient(135deg,#1b263b,#0d1b2a);border-radius:20px;max-width:600px;width:100%;padding:40px;position:relative;border:2px solid #FFD700;box-shadow:0 20px 60px rgba(255,215,0,0.3);"><button onclick="closeUpgradeModal()" style="position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:28px;cursor:pointer;">&times;</button><div style="text-align:center;"><div style="font-size:48px;margin-bottom:15px;">🚀</div><h2 style="color:#FFD700;font-size:28px;margin-bottom:15px;font-weight:800;">UPGRADE A PREMIUM</h2><p style="color:#94a3b8;font-size:16px;margin-bottom:25px;">' + reason + '</p><div style="background:rgba(255,215,0,0.1);border:2px solid #FFD700;border-radius:15px;padding:25px;margin-bottom:25px;"><div style="color:#FFD700;font-size:42px;font-weight:900;margin-bottom:5px;">$9.99</div><div style="color:#94a3b8;font-size:14px;margin-bottom:20px;">/mes</div><ul style="text-align:left;color:white;line-height:2;list-style:none;padding:0;"><li style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);">✅ Búsquedas ilimitadas</li><li style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);">✅ Top 15 picks del día</li><li style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);">✅ Analytics completos</li><li style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);">✅ Comparador ilimitado</li><li style="padding:8px 0;">✅ Sin anuncios</li></ul></div><button onclick="alert('💳 Sistema de pagos próximamente')" style="background:#FFD700;color:#0d1b2a;border:none;padding:15px 40px;border-radius:12px;font-size:18px;font-weight:800;cursor:pointer;width:100%;transition:all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">UPGRADE AHORA</button><p style="color:#94a3b8;font-size:12px;margin-top:15px;">💰 Garantía de devolución 30 días</p></div></div>';
+    
+    document.body.appendChild(modal);
+    modal.onclick = (e) => { if (e.target === modal) closeUpgradeModal(); };
+}
+
+function closeUpgradeModal() {
+    const modal = document.getElementById('upgradeModal');
+    if (modal) modal.remove();
+}
+
+function updateTierBadge() {
+    const badge = document.getElementById('userTierBadge');
+    if (badge) {
+        if (userTier === 'premium') {
+            badge.textContent = 'PREMIUM';
+            badge.style.background = 'linear-gradient(135deg,#FFD700,#F59E0B)';
+            badge.style.color = '#0d1b2a';
+        } else {
+            badge.textContent = 'FREE';
+            badge.style.background = 'rgba(255,255,255,0.1)';
+            badge.style.color = 'white';
+        }
+    }
+}
+
+function showAuthModal(mode = 'signin') {
+    const modal = document.createElement('div');
+    modal.id = 'authModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    
+    const isSignUp = mode === 'signup';
+    
+    modal.innerHTML = '<div style="background:#1b263b;border-radius:20px;max-width:450px;width:100%;padding:40px;position:relative;"><button onclick="closeAuthModal()" style="position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:28px;cursor:pointer;">&times;</button><h2 style="color:#FFD700;font-size:28px;margin-bottom:25px;text-align:center;font-weight:800;">' + (isSignUp ? 'CREAR CUENTA' : 'INICIAR SESIÓN') + '</h2><form onsubmit="event.preventDefault();' + (isSignUp ? 'handleSignUp' : 'handleSignIn') + '();" style="display:flex;flex-direction:column;gap:15px;"><input type="email" id="authEmail" placeholder="Email" required style="padding:15px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;font-size:16px;"><input type="password" id="authPassword" placeholder="Contraseña" required style="padding:15px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;font-size:16px;"><button type="submit" style="background:#FFD700;color:#0d1b2a;border:none;padding:15px;border-radius:10px;font-size:18px;font-weight:800;cursor:pointer;transition:all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">' + (isSignUp ? 'REGISTRARSE' : 'ENTRAR') + '</button></form><p style="text-align:center;color:#94a3b8;margin-top:20px;font-size:14px;">' + (isSignUp ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?') + ' <a href="#" onclick="showAuthModal('' + (isSignUp ? 'signin' : 'signup') + '');return false;" style="color:#FFD700;font-weight:700;text-decoration:none;">' + (isSignUp ? 'Inicia sesión' : 'Regístrate') + '</a></p></div>';
+    
+    document.body.appendChild(modal);
+    modal.onclick = (e) => { if (e.target === modal) closeAuthModal(); };
+}
+
+function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (modal) modal.remove();
+}
+
+function handleSignIn() {
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPassword').value;
+    signInEmail(email, password);
+}
+
+function handleSignUp() {
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPassword').value;
+    if (password.length < 6) {
+        showNotification('❌ La contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+    }
+    signUpEmail(email, password);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NAVEGACIÓN Y RENDERIZADO
+// ═══════════════════════════════════════════════════════════════════════════
+
+function switchViewV3(view) {
+    CURRENT_VIEW_V3 = view;
+    
+    document.querySelectorAll('.nav-btn-v3').forEach(btn => {
+        btn.style.borderBottom = '3px solid transparent';
+        btn.style.color = 'white';
+    });
+    
+    const btnId = {
+        'totals': 'navTotals',
+        'props': 'navProps',
+        'recommendations': 'navRecs',
+        'tracking': 'navTracking'
+    }[view];
+    
+    const btn = document.getElementById(btnId);
+    if (btn) {
+        btn.style.borderBottom = '3px solid #FFD700';
+        btn.style.color = '#FFD700';
+    }
+    
+    renderCurrentView();
+}
+
+function renderCurrentView() {
+    const container = document.getElementById('v3Container');
+    if (!container) return;
+    
+    switch(CURRENT_VIEW_V3) {
+        case 'totals':
+            container.style.display = 'none';
+            break;
+        case 'props':
+            container.style.display = 'block';
+            renderPropsView();
+            break;
+        case 'recommendations':
+            container.style.display = 'block';
+            renderRecommendationsView();
+            break;
+        case 'tracking':
+            container.style.display = 'block';
+            renderTrackingView();
+            break;
+    }
+}
+
+function renderPropsView() {
+    const container = document.getElementById('v3Container');
+    if (!container) return;
+    
+    let html = '<div style="max-width:1400px;margin:0 auto;padding:30px;"><h1 style="color:#FFD700;font-size:36px;font-weight:900;margin-bottom:30px;text-align:center;">🏀 PROPS DE JUGADORES</h1>';
+    
+    if (!PLAYERS_LOADED) {
+        html += '<div style="text-align:center;padding:60px;"><div style="font-size:48px;margin-bottom:20px;">⏳</div><p style="color:#94a3b8;font-size:18px;">Cargando jugadores...</p><p style="color:#94a3b8;font-size:14px;margin-top:10px;">Si no carga, asegúrate de subir nba_players_database_v3.json</p></div>';
+    } else {
+        html += '<div style="background:rgba(255,255,255,0.05);border-radius:15px;padding:25px;margin-bottom:30px;"><div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:20px;"><input type="text" id="propsSearchInput" placeholder="🔍 Buscar jugador o equipo..." value="' + PROPS_SEARCH_QUERY + '" oninput="handlePropsSearch(this.value)" style="flex:1;min-width:300px;padding:15px;border-radius:10px;border:2px solid rgba(255,215,0,0.3);background:rgba(255,255,255,0.05);color:white;font-size:16px;"><select onchange="PROPS_SORT_BY=this.value;renderPropsView()" style="padding:15px;border-radius:10px;border:2px solid rgba(255,215,0,0.3);background:rgba(255,255,255,0.05);color:white;font-size:14px;min-width:150px;"><option value="pts" ' + (PROPS_SORT_BY === 'pts' ? 'selected' : '') + '>PPG ⬇️</option><option value="ast" ' + (PROPS_SORT_BY === 'ast' ? 'selected' : '') + '>APG ⬇️</option><option value="reb" ' + (PROPS_SORT_BY === 'reb' ? 'selected' : '') + '>RPG ⬇️</option><option value="min" ' + (PROPS_SORT_BY === 'min' ? 'selected' : '') + '>MIN ⬇️</option><option value="name" ' + (PROPS_SORT_BY === 'name' ? 'selected' : '') + '>Nombre A-Z</option></select></div>';
+        
+        if (COMPARISON_LIST.length > 0) {
+            html += '<div style="background:rgba(34,197,94,0.1);border:2px solid #22c55e;border-radius:12px;padding:20px;margin-bottom:20px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3 style="color:#22c55e;font-size:18px;font-weight:700;">🔄 COMPARANDO (' + COMPARISON_LIST.length + ')</h3><button onclick="COMPARISON_LIST=[];renderPropsView()" style="background:transparent;border:2px solid #22c55e;color:#22c55e;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:700;">LIMPIAR</button></div><div style="display:flex;gap:15px;flex-wrap:wrap;">' + COMPARISON_LIST.map(name => '<div style="background:rgba(255,255,255,0.05);padding:12px 18px;border-radius:10px;display:flex;align-items:center;gap:10px;"><span style="color:white;font-weight:600;">' + name + '</span><button onclick="removeFromComparison('' + name + '')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:20px;line-height:1;">&times;</button></div>').join('') + '</div></div>';
+        }
+        
+        const displayPlayers = PROPS_SEARCH_QUERY ? PROPS_SEARCH_RESULTS : applyFilters();
+        
+        if (displayPlayers.length === 0) {
+            html += '<div style="text-align:center;padding:40px;"><p style="color:#94a3b8;font-size:18px;">No se encontraron jugadores</p></div>';
+        } else {
+            html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;">' + displayPlayers.slice(0, 20).map(player => {
+                const isFav = FAVORITE_PLAYERS.includes(player.nombre);
+                return '<div style="background:linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));border-radius:15px;padding:20px;border:2px solid rgba(255,215,0,0.2);transition:all 0.3s;cursor:pointer;" onmouseover="this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='rgba(255,215,0,0.2)';this.style.transform='translateY(0)'" onclick="showPlayerModal('' + player.nombre + '')"><div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:15px;"><div><h3 style="color:white;font-size:18px;font-weight:700;margin-bottom:5px;">' + player.nombre + '</h3><p style="color:#94a3b8;font-size:13px;">' + player.equipo + '</p></div><button onclick="event.stopPropagation();toggleFavorite('' + player.nombre + '')" style="background:none;border:none;font-size:24px;cursor:pointer;line-height:1;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">' + (isFav ? '⭐' : '☆') + '</button></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:15px;"><div style="text-align:center;"><div style="color:#FFD700;font-size:22px;font-weight:900;">' + player.temporada_actual.pts + '</div><div style="color:#94a3b8;font-size:11px;">PPG</div></div><div style="text-align:center;"><div style="color:#22c55e;font-size:22px;font-weight:900;">' + player.temporada_actual.ast + '</div><div style="color:#94a3b8;font-size:11px;">APG</div></div><div style="text-align:center;"><div style="color:#3b82f6;font-size:22px;font-weight:900;">' + player.temporada_actual.reb + '</div><div style="color:#94a3b8;font-size:11px;">RPG</div></div></div><div style="display:flex;gap:8px;"><button onclick="event.stopPropagation();showPlayerModal('' + player.nombre + '')" style="flex:1;background:rgba(255,215,0,0.1);border:2px solid #FFD700;color:#FFD700;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">VER DETALLES</button><button onclick="event.stopPropagation();addToComparison('' + player.nombre + '')" style="background:rgba(34,197,94,0.1);border:2px solid #22c55e;color:#22c55e;padding:10px 15px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">➕</button></div></div>';
+            }).join('') + '</div>';
+        }
+        
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function handlePropsSearch(query) {
+    PROPS_SEARCH_QUERY = query;
+    if (query.length >= 2) {
+        searchPlayers(query);
+    } else {
+        PROPS_SEARCH_RESULTS = [];
+    }
+    renderPropsView();
+}
+
+function renderRecommendationsView() {
+    const container = document.getElementById('v3Container');
+    if (!container) return;
+    
+    let html = '<div style="max-width:1400px;margin:0 auto;padding:30px;"><h1 style="color:#FFD700;font-size:36px;font-weight:900;margin-bottom:30px;text-align:center;">🤖 PICKS DEL DÍA</h1>';
+    
+    if (!PLAYERS_LOADED) {
+        html += '<div style="text-align:center;padding:60px;"><div style="font-size:48px;margin-bottom:20px;">⏳</div><p style="color:#94a3b8;font-size:18px;">Cargando recomendaciones...</p></div>';
+    } else {
+        if (!DAILY_PICKS_LOADED) {
+            generateDailyPicks();
+        }
+        
+        const visiblePicks = userTier === 'free' ? DAILY_PICKS.slice(0, FREE_TIER_LIMITS.daily_picks_view) : DAILY_PICKS;
+        
+        if (userTier === 'free' && DAILY_PICKS.length > FREE_TIER_LIMITS.daily_picks_view) {
+            html += '<div style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,215,0,0.05));border:2px solid #FFD700;border-radius:15px;padding:25px;margin-bottom:30px;text-align:center;"><div style="font-size:42px;margin-bottom:15px;">🔒</div><h3 style="color:#FFD700;font-size:22px;font-weight:800;margin-bottom:10px;">VER TOP 15 PICKS</h3><p style="color:#94a3b8;margin-bottom:20px;">Upgrade a Premium para ver todos los picks del día</p><button onclick="showUpgradeModal('Accede a los 15 mejores picks del día')" style="background:#FFD700;color:#0d1b2a;border:none;padding:15px 40px;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;">UPGRADE A PREMIUM</button></div>';
+        }
+        
+        html += '<div style="display:flex;flex-direction:column;gap:20px;">';
+        
+        visiblePicks.forEach((pick, idx) => {
+            const confColor = pick.confidence === 'HIGH' ? '#22c55e' : pick.confidence === 'MEDIUM' ? '#f59e0b' : '#94a3b8';
+            const confIcon = pick.confidence === 'HIGH' ? '🔥' : pick.confidence === 'MEDIUM' ? '⚠️' : '📊';
+            
+            html += '<div style="background:linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));border-radius:15px;padding:25px;border-left:4px solid ' + confColor + ';"><div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:20px;"><div style="flex:1;min-width:250px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span style="background:' + confColor + ';color:#0d1b2a;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:800;">#' + (idx + 1) + '</span><span style="background:rgba(255,255,255,0.1);color:' + confColor + ';padding:6px 12px;border-radius:8px;font-size:12px;font-weight:800;">' + confIcon + ' ' + pick.confidence + '</span><span style="background:rgba(255,255,255,0.1);color:white;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:800;">Score: ' + pick.value_score + '/100</span></div><h3 style="color:white;font-size:22px;font-weight:800;margin-bottom:5px;">' + pick.player + '</h3><p style="color:#94a3b8;font-size:14px;margin-bottom:15px;">' + pick.team + '</p><div style="background:rgba(255,215,0,0.1);border:2px solid #FFD700;border-radius:12px;padding:15px;margin-bottom:15px;"><p style="color:#94a3b8;font-size:13px;margin-bottom:5px;">RECOMENDACIÓN</p><p style="color:#FFD700;font-size:24px;font-weight:900;">OVER ' + pick.line + ' ' + pick.prop_type.toUpperCase() + '</p></div>' + (pick.reasons && pick.reasons.length > 0 ? '<div style="display:flex;flex-direction:column;gap:8px;">' + pick.reasons.map(r => '<div style="color:#94a3b8;font-size:14px;display:flex;align-items:center;gap:8px;"><span style="color:#22c55e;">✓</span>' + r + '</div>').join('') + '</div>' : '') + '</div><div style="display:flex;flex-direction:column;gap:10px;min-width:180px;"><button onclick="savePick({type:'prop',player:'' + pick.player + '',category:'' + pick.prop_type + '',selection:'OVER',line:' + pick.line + ',odds:1.91,stake:0})" style="background:#22c55e;color:white;border:none;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">💾 GUARDAR PICK</button><button onclick="showPlayerModal('' + pick.player + '')" style="background:rgba(255,215,0,0.1);border:2px solid #FFD700;color:#FFD700;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;width:100%;">📊 VER STATS</button></div></div></div>';
+        });
+        
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function renderTrackingView() {
+    const container = document.getElementById('v3Container');
+    if (!container) return;
+    
+    let html = '<div style="max-width:1400px;margin:0 auto;padding:30px;"><h1 style="color:#FFD700;font-size:36px;font-weight:900;margin-bottom:30px;text-align:center;">📈 TRACKING DE PICKS</h1>';
+    
+    if (!currentUser) {
+        html += '<div style="text-align:center;padding:60px;background:rgba(255,255,255,0.05);border-radius:15px;"><div style="font-size:48px;margin-bottom:20px;">🔐</div><h3 style="color:white;font-size:24px;margin-bottom:15px;">Inicia sesión para usar Tracking</h3><p style="color:#94a3b8;margin-bottom:25px;">Guarda y trackea tus picks con analytics completos</p><button onclick="showAuthModal('signin')" style="background:#FFD700;color:#0d1b2a;border:none;padding:15px 40px;border-radius:12px;font-size:18px;font-weight:800;cursor:pointer;">INICIAR SESIÓN</button></div>';
+    } else {
+        const roi = calculateROI(USER_PICKS);
+        const winRate = calculateWinRate(USER_PICKS);
+        const settledPicks = USER_PICKS.filter(p => p.result && p.result !== 'pending');
+        const wins = settledPicks.filter(p => p.result === 'win').length;
+        const losses = settledPicks.filter(p => p.result === 'loss').length;
+        const totalProfit = settledPicks.reduce((sum, p) => sum + (p.profit || 0), 0);
+        
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:30px;">';
+        html += '<div style="background:linear-gradient(135deg,rgba(34,197,94,0.2),rgba(34,197,94,0.05));border-radius:15px;padding:20px;border:2px solid #22c55e;"><div style="color:#94a3b8;font-size:13px;margin-bottom:8px;font-weight:600;">WIN RATE</div><div style="color:#22c55e;font-size:36px;font-weight:900;">' + winRate + '%</div><div style="color:#94a3b8;font-size:12px;margin-top:5px;">' + wins + ' wins / ' + settledPicks.length + ' picks</div></div>';
+        html += '<div style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,215,0,0.05));border-radius:15px;padding:20px;border:2px solid #FFD700;"><div style="color:#94a3b8;font-size:13px;margin-bottom:8px;font-weight:600;">ROI</div><div style="color:#FFD700;font-size:36px;font-weight:900;">' + (parseFloat(roi) >= 0 ? '+' : '') + roi + '%</div><div style="color:#94a3b8;font-size:12px;margin-top:5px;">Return on Investment</div></div>';
+        html += '<div style="background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(59,130,246,0.05));border-radius:15px;padding:20px;border:2px solid #3b82f6;"><div style="color:#94a3b8;font-size:13px;margin-bottom:8px;font-weight:600;">PROFIT</div><div style="color:' + (totalProfit >= 0 ? '#22c55e' : '#ef4444') + ';font-size:36px;font-weight:900;">' + (totalProfit >= 0 ? '+' : '') + '$' + Math.abs(totalProfit).toFixed(2) + '</div><div style="color:#94a3b8;font-size:12px;margin-top:5px;">Total ganancia</div></div>';
+        html += '<div style="background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(168,85,247,0.05));border-radius:15px;padding:20px;border:2px solid #a855f7;"><div style="color:#94a3b8;font-size:13px;margin-bottom:8px;font-weight:600;">TOTAL PICKS</div><div style="color:#a855f7;font-size:36px;font-weight:900;">' + USER_PICKS.length + '</div><div style="color:#94a3b8;font-size:12px;margin-top:5px;">' + USER_PICKS.filter(p => p.result === 'pending').length + ' pendientes</div></div>';
+        html += '</div>';
+        
+        html += '<div style="background:rgba(255,255,255,0.05);border-radius:15px;padding:25px;margin-bottom:30px;"><h3 style="color:white;font-size:20px;font-weight:800;margin-bottom:20px;">➕ NUEVO PICK</h3><form onsubmit="event.preventDefault();handleSaveNewPick()" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;"><input type="text" id="newPickPlayer" placeholder="Nombre jugador" required style="padding:12px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;"><select id="newPickCategory" required style="padding:12px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;"><option value="">Categoría</option><option value="pts">Puntos (PTS)</option><option value="ast">Asistencias (AST)</option><option value="reb">Rebotes (REB)</option></select><select id="newPickSelection" required style="padding:12px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;"><option value="OVER">OVER</option><option value="UNDER">UNDER</option></select><input type="number" id="newPickLine" step="0.5" placeholder="Línea" required style="padding:12px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;"><input type="number" id="newPickOdds" step="0.01" placeholder="Cuota (ej:1.91)" value="1.91" required style="padding:12px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;"><input type="number" id="newPickStake" placeholder="Stake ($)" required style="padding:12px;border-radius:10px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;"><button type="submit" style="background:#22c55e;color:white;border:none;padding:12px 24px;border-radius:10px;font-weight:800;cursor:pointer;">💾 GUARDAR</button></form></div>';
+        
+        if (USER_PICKS.length === 0) {
+            html += '<div style="text-align:center;padding:40px;background:rgba(255,255,255,0.05);border-radius:15px;"><p style="color:#94a3b8;font-size:18px;">No tienes picks guardados aún</p><p style="color:#94a3b8;font-size:14px;margin-top:10px;">Guarda picks desde Recomendaciones o usa el formulario arriba</p></div>';
+        } else {
+            const pendingPicks = USER_PICKS.filter(p => p.result === 'pending');
+            const settledPicksList = USER_PICKS.filter(p => p.result && p.result !== 'pending');
+            
+            if (pendingPicks.length > 0) {
+                html += '<div style="margin-bottom:30px;"><h3 style="color:white;font-size:20px;font-weight:800;margin-bottom:20px;">⏳ PICKS PENDIENTES (' + pendingPicks.length + ')</h3><div style="display:flex;flex-direction:column;gap:15px;">';
+                pendingPicks.forEach(pick => {
+                    html += '<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;border-left:4px solid #f59e0b;"><div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:15px;"><div style="flex:1;"><h4 style="color:white;font-size:18px;font-weight:700;margin-bottom:5px;">' + (pick.player || 'N/A') + '</h4><p style="color:#94a3b8;font-size:14px;margin-bottom:10px;">' + (pick.selection || 'OVER') + ' ' + (pick.line || 0) + ' ' + (pick.category ? pick.category.toUpperCase() : '') + ' @ ' + (pick.odds || 1.91) + '</p><p style="color:#94a3b8;font-size:13px;">Stake: $' + (pick.stake || 0) + '</p></div><div style="display:flex;gap:10px;"><button onclick="markPickResult('' + pick.pick_id + '','win')" style="background:#22c55e;color:white;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">✅ WIN</button><button onclick="markPickResult('' + pick.pick_id + '','loss')" style="background:#ef4444;color:white;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">❌ LOSS</button><button onclick="markPickResult('' + pick.pick_id + '','push')" style="background:#94a3b8;color:white;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">↩️ PUSH</button><button onclick="deletePick('' + pick.pick_id + '')" style="background:transparent;border:2px solid #ef4444;color:#ef4444;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">🗑️</button></div></div></div>';
+                });
+                html += '</div></div>';
+            }
+            
+            if (settledPicksList.length > 0) {
+                html += '<div><h3 style="color:white;font-size:20px;font-weight:800;margin-bottom:20px;">📊 HISTORIAL (' + settledPicksList.length + ')</h3><div style="display:flex;flex-direction:column;gap:15px;">';
+                settledPicksList.forEach(pick => {
+                    const resultColor = pick.result === 'win' ? '#22c55e' : pick.result === 'loss' ? '#ef4444' : '#94a3b8';
+                    const resultIcon = pick.result === 'win' ? '✅' : pick.result === 'loss' ? '❌' : '↩️';
+                    html += '<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;border-left:4px solid ' + resultColor + ';"><div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:15px;"><div style="flex:1;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span style="background:' + resultColor + ';color:white;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:800;">' + resultIcon + ' ' + pick.result.toUpperCase() + '</span></div><h4 style="color:white;font-size:18px;font-weight:700;margin-bottom:5px;">' + (pick.player || 'N/A') + '</h4><p style="color:#94a3b8;font-size:14px;margin-bottom:10px;">' + (pick.selection || 'OVER') + ' ' + (pick.line || 0) + ' ' + (pick.category ? pick.category.toUpperCase() : '') + ' @ ' + (pick.odds || 1.91) + '</p><p style="color:#94a3b8;font-size:13px;">Stake: $' + (pick.stake || 0) + ' | Profit: <span style="color:' + (pick.profit >= 0 ? '#22c55e' : '#ef4444') + ';font-weight:700;">' + (pick.profit >= 0 ? '+' : '') + '$' + (pick.profit || 0).toFixed(2) + '</span></p></div><button onclick="deletePick('' + pick.pick_id + '')" style="background:transparent;border:2px solid #ef4444;color:#ef4444;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">🗑️</button></div></div>';
+                });
+                html += '</div></div>';
+            }
+        }
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function handleSaveNewPick() {
+    const player = document.getElementById('newPickPlayer').value;
+    const category = document.getElementById('newPickCategory').value;
+    const selection = document.getElementById('newPickSelection').value;
+    const line = parseFloat(document.getElementById('newPickLine').value);
+    const odds = parseFloat(document.getElementById('newPickOdds').value);
+    const stake = parseFloat(document.getElementById('newPickStake').value);
+    
+    savePick({
+        type: 'prop',
+        player: player,
+        category: category,
+        selection: selection,
+        line: line,
+        odds: odds,
+        stake: stake
+    });
+    
+    document.getElementById('newPickPlayer').value = '';
+    document.getElementById('newPickCategory').value = '';
+    document.getElementById('newPickLine').value = '';
+    document.getElementById('newPickOdds').value = '1.91';
+    document.getElementById('newPickStake').value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INICIALIZACIÓN
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Cargar players al iniciar
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadPlayersDatabase();
+    loadUserPicks();
+});
+
+console.log('✅ NioSports Pro v3.0 ULTIMATE cargado correctamente');
+</script>
+
+<!-- Contenedor para las nuevas vistas -->
+<div id="v3Container" style="display:none;"></div>
+
+<!-- Navegación v3.0 -->
+<style>
+.nav-v3-container {
+    background: linear-gradient(135deg, #1b263b, #0d1b2a);
+    border-bottom: 3px solid #FFD700;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.nav-v3-left {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.nav-v3-logo {
+    color: #FFD700;
+    font-size: 24px;
+    font-weight: 900;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 1px;
+}
+.nav-btn-v3 {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+}
+.nav-btn-v3:hover {
+    color: #FFD700;
+    transform: translateY(-2px);
+}
+.nav-v3-right {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+#userTierBadge {
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+.nav-user-btn {
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+.nav-user-btn:hover {
+    background: rgba(255,215,0,0.2);
+    border-color: #FFD700;
+    transform: scale(1.05);
+}
+</style>
+
+<div class="nav-v3-container">
+    <div class="nav-v3-left">
+        <div class="nav-v3-logo">🏀 NIOSPORTS PRO v3.0</div>
+        <button onclick="switchViewV3('totals')" class="nav-btn-v3" id="navTotals" style="border-bottom: 3px solid #FFD700; color: #FFD700;">
+            📊 TOTALES
+        </button>
+        <button onclick="switchViewV3('props')" class="nav-btn-v3" id="navProps">
+            🏀 PROPS
+        </button>
+        <button onclick="switchViewV3('recommendations')" class="nav-btn-v3" id="navRecs">
+            🤖 PICKS DEL DÍA
+        </button>
+        <button onclick="switchViewV3('tracking')" class="nav-btn-v3" id="navTracking">
+            📈 TRACKING
+        </button>
+    </div>
+    <div class="nav-v3-right">
+        <span id="userTierBadge">FREE</span>
+        <button onclick="currentUser ? signOutUser() : showAuthModal('signin')" class="nav-user-btn">
+            <span id="userNameDisplay">👤 CUENTA</span>
+        </button>
+    </div>
+</div>
+
 </body>
 </html>
