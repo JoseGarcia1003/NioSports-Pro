@@ -6047,6 +6047,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Luego cargar datos de Firebase
     loadH2HFromFirebase();
     loadBankrollFromFirebase();
+    // CARGAR DATOS DE JUGADORES AUTOMÁTICAMENTE
+    await cargarDatosJugadores();
 });
     
 
