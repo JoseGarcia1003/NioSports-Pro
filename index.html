@@ -1153,7 +1153,105 @@
 }
 
     
-        .player-card {
+        
+        .ranking-card {
+            background: rgba(27,38,59,0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s;
+        }
+        
+        .ranking-card:hover {
+            border-color: rgba(255,215,0,0.3);
+            box-shadow: 0 10px 40px rgba(255,215,0,0.1);
+        }
+        
+        .ranking-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #FFD700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .ranking-item:hover {
+            background: rgba(255,215,0,0.1);
+            transform: translateX(5px);
+        }
+        
+        .rank-number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: #FFD700;
+            min-width: 35px;
+            text-align: center;
+        }
+        
+        .rank-info {
+            flex: 1;
+        }
+        
+        .rank-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: white;
+            margin-bottom: 2px;
+        }
+        
+        .rank-team {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .rank-stat {
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: #FFD700;
+            min-width: 60px;
+            text-align: right;
+        }
+        
+        .search-result-item {
+            padding: 12px 20px;
+            background: rgba(27,38,59,0.6);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .search-result-item:hover {
+            background: rgba(255,215,0,0.1);
+            border-left: 3px solid #FFD700;
+        }
+        
+.player-card {
             background: rgba(27,38,59,0.4);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.1);
@@ -6689,30 +6787,21 @@ function toggleFavoritoYRefresh(nombre) {
     </div>
     
     <div id="view-props" class="view-revolution" style="padding: 120px 40px 80px; min-height: 100vh;">
-        <div style="max-width: 1400px; margin: 0 auto;">
-            <h1 style="font-family: Outfit; font-size: 48px; font-weight: 700; margin-bottom: 20px; text-align: center; color: #FFD700;">🏀 Props de Jugadores</h1>
+        <div style="max-width: 1600px; margin: 0 auto;">
+            <h1 style="font-family: Outfit; font-size: 48px; font-weight: 700; margin-bottom: 10px; text-align: center; color: #FFD700;">
+                🏀 Rankings NBA 2024-25
+            </h1>
+            <p style="text-align: center; color: rgba(255,255,255,0.6); font-size: 18px; margin-bottom: 50px;">
+                Líderes de la Temporada Regular
+            </p>
             
-            <!-- Barra de búsqueda -->
-            <div style="max-width: 600px; margin: 0 auto 40px;">
-                <input 
-                    type="text" 
-                    id="searchPlayer" 
-                    placeholder="🔍 Buscar jugador..."
-                    oninput="filterPlayers()"
-                    style="width: 100%; padding: 16px 24px; background: rgba(27,38,59,0.6); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 16px; outline: none; transition: all 0.3s;"
-                    onfocus="this.style.borderColor='#FFD700'"
-                    onblur="this.style.borderColor='rgba(255,255,255,0.1)'"
-                />
-            </div>
-            
-            <div id="props-content" style="text-align: center; padding: 80px 40px;">
+            <div id="rankings-content" style="text-align: center; padding: 80px 40px;">
                 <div style="font-size: 72px; margin-bottom: 24px;">⏳</div>
-                <h2 style="font-size: 32px; color: #FFD700;">Cargando Base de Datos</h2>
-                <p style="color: rgba(255,255,255,0.6); font-size: 18px;">530+ jugadores NBA</p>
+                <h2 style="font-size: 32px; color: #FFD700;">Cargando Rankings</h2>
             </div>
         </div>
         
-        <!-- Modal Detalle Jugador -->
+        <!-- Modal Detalle Jugador --><!-- Modal Detalle Jugador -->
         <div id="playerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; padding: 40px 20px;" onclick="if(event.target.id==='playerModal') closePlayerModal()">
             <div style="max-width: 900px; margin: 0 auto; background: linear-gradient(135deg, #1b263b, #0d1b2a); border-radius: 24px; padding: 40px; position: relative; border: 2px solid #FFD700;">
                 <button onclick="closePlayerModal()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 24px; line-height: 40px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,215,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">×</button>
@@ -6765,199 +6854,198 @@ function toggleFavoritoYRefresh(nombre) {
         let loaded = false;
         async function loadPlayers() {
             if (loaded) return;
-            const content = document.getElementById('props-content');
-            try {
-                const res = await fetch('https://josegarcia1003.github.io/NioSports-Pro/data/nba_players_database_v3.json');
-                if (!res.ok) throw new Error();
-                const data = await res.json();
-                loaded = true;
-                const players = Object.values(data).slice(0, 24);
-                content.innerHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; text-align: left;">' + 
-                    players.map(p => '<div style="background: rgba(27,38,59,0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px;"><h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">' + p.nombre + '</h3><p style="color: rgba(255,255,255,0.6); font-size: 14px; margin-bottom: 20px;">' + p.equipo + '</p><div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center;"><div><div style="font-size: 28px; font-weight: 700; color: #FFD700;">' + p.temporada_actual.pts + '</div><div style="font-size: 12px; color: rgba(255,255,255,0.6);">PPG</div></div><div><div style="font-size: 28px; font-weight: 700; color: #22c55e;">' + p.temporada_actual.ast + '</div><div style="font-size: 12px; color: rgba(255,255,255,0.6);">APG</div></div><div><div style="font-size: 28px; font-weight: 700; color: #3b82f6;">' + p.temporada_actual.reb + '</div><div style="font-size: 12px; color: rgba(255,255,255,0.6);">RPG</div></div></div></div>').join('') + 
-                    '</div>';
-            } catch {
-                content.innerHTML = '<div style="font-size: 72px; margin-bottom: 24px;">📦</div><h2 style="font-size: 32px; color: #FFD700;">JSON No Encontrado</h2><p style="color: rgba(255,255,255,0.6);">Ejecuta el script de Colab</p>';
-            }
-        }
-        console.log('✅ NioSports Pro v3.0');
-    
-        
-        // ═══════════════════════════════════════════════════════════════════
-        // PROPS MEJORADO - Búsqueda, Equipos, Modal
-        // ═══════════════════════════════════════════════════════════════════
-        
-        let allPlayersData = [];
-        
-        async function loadPlayers() {
-            if (loaded) return;
-            const content = document.getElementById('props-content');
+            const content = document.getElementById('rankings-content');
             try {
                 const res = await fetch('https://josegarcia1003.github.io/NioSports-Pro/data/nba_players_database_v3.json');
                 if (!res.ok) throw new Error();
                 const data = await res.json();
                 loaded = true;
                 allPlayersData = Object.values(data);
-                renderPlayers(allPlayersData);
+                renderRankings(allPlayersData);
             } catch {
-                content.innerHTML = '<div style="font-size: 72px; margin-bottom: 24px;">📦</div><h2 style="font-size: 32px; color: #FFD700;">JSON No Encontrado</h2><p style="color: rgba(255,255,255,0.6);">Ejecuta el script de Colab</p>';
+                content.innerHTML = '<div style="font-size: 72px; margin-bottom: 24px;">📦</div><h2 style="font-size: 32px; color: #FFD700;">JSON No Encontrado</h2><p style="color: rgba(255,255,255,0.6);">Sube la base de datos</p>';
             }
         }
         
-        function renderPlayers(players) {
-            const content = document.getElementById('props-content');
-            const displayPlayers = players.slice(0, 100); // Mostrar primeros 100
+        function renderRankings(players) {
+            const content = document.getElementById('rankings-content');
             
-            content.innerHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; text-align: left;">' + 
-                displayPlayers.map(p => {
-                    const equipo = p.equipo || 'NBA';
-                    const partidos = p.temporada_actual?.partidos || 0;
-                    return `<div class="player-card" onclick="openPlayerModal('${p.nombre.replace(/'/g, "\'")}')">
-                        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px; color: white;">${p.nombre}</h3>
-                        <p style="color: #FFD700; font-size: 14px; margin-bottom: 20px; font-weight: 600;">${equipo} • ${partidos} GP</p>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center;">
-                            <div>
-                                <div style="font-size: 28px; font-weight: 700; color: #FFD700;">${p.temporada_actual.pts}</div>
-                                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">PPG</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 28px; font-weight: 700; color: #22c55e;">${p.temporada_actual.ast}</div>
-                                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">APG</div>
-                            </div>
-                            <div>
-                                <div style="font-size: 28px; font-weight: 700; color: #3b82f6;">${p.temporada_actual.reb}</div>
-                                <div style="font-size: 12px; color: rgba(255,255,255,0.6);">RPG</div>
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('') + 
-                '</div>';
-        }
-        
-        function filterPlayers() {
-            if (!loaded || allPlayersData.length === 0) return;
-            
-            const search = document.getElementById('searchPlayer').value.toLowerCase();
-            const filtered = allPlayersData.filter(p => 
-                p.nombre.toLowerCase().includes(search) || 
-                (p.equipo && p.equipo.toLowerCase().includes(search))
-            );
-            
-            renderPlayers(filtered);
-        }
-        
-        function openPlayerModal(playerName) {
-            const player = allPlayersData.find(p => p.nombre === playerName);
-            if (!player) return;
-            
-            const modal = document.getElementById('playerModal');
-            const content = document.getElementById('playerModalContent');
-            
-            const home = player.home || {};
-            const away = player.away || {};
-            const last10 = player.ultimos_10_juegos || [];
-            const consistency = player.consistency_scores || {};
-            const trends = player.trends || {};
+            // Calcular rankings
+            const rankings = {
+                pts: players.filter(p => p.temporada_actual?.pts > 0).sort((a,b) => b.temporada_actual.pts - a.temporada_actual.pts).slice(0,5),
+                reb: players.filter(p => p.temporada_actual?.reb > 0).sort((a,b) => b.temporada_actual.reb - a.temporada_actual.reb).slice(0,5),
+                ast: players.filter(p => p.temporada_actual?.ast > 0).sort((a,b) => b.temporada_actual.ast - a.temporada_actual.ast).slice(0,5),
+                stl: players.filter(p => p.temporada_actual?.stl > 0).sort((a,b) => b.temporada_actual.stl - a.temporada_actual.stl).slice(0,5),
+                blk: players.filter(p => p.temporada_actual?.blk > 0).sort((a,b) => b.temporada_actual.blk - a.temporada_actual.blk).slice(0,5),
+                fg3m: players.filter(p => p.temporada_actual?.fg3m > 0).sort((a,b) => b.temporada_actual.fg3m - a.temporada_actual.fg3m).slice(0,5)
+            };
             
             content.innerHTML = `
-                <h2 style="font-size: 36px; font-weight: 900; color: #FFD700; margin-bottom: 10px;">${player.nombre}</h2>
-                <p style="font-size: 18px; color: rgba(255,255,255,0.8); margin-bottom: 30px;">${player.equipo} • Temporada ${player.temporada}</p>
-                
-                <!-- Stats Principales -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 20px; margin-bottom: 40px;">
-                    <div style="text-align: center; background: rgba(255,215,0,0.1); padding: 20px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: 900; color: #FFD700;">${player.temporada_actual.pts}</div>
-                        <div style="font-size: 14px; color: rgba(255,255,255,0.7);">PPG</div>
-                    </div>
-                    <div style="text-align: center; background: rgba(34,197,94,0.1); padding: 20px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: 900; color: #22c55e;">${player.temporada_actual.ast}</div>
-                        <div style="font-size: 14px; color: rgba(255,255,255,0.7);">APG</div>
-                    </div>
-                    <div style="text-align: center; background: rgba(59,130,246,0.1); padding: 20px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: 900; color: #3b82f6;">${player.temporada_actual.reb}</div>
-                        <div style="font-size: 14px; color: rgba(255,255,255,0.7);">RPG</div>
-                    </div>
-                    <div style="text-align: center; background: rgba(168,85,247,0.1); padding: 20px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: 900; color: #a855f7;">${player.temporada_actual.min}</div>
-                        <div style="font-size: 14px; color: rgba(255,255,255,0.7);">MIN</div>
-                    </div>
-                </div>
-                
-                <!-- Home/Away Splits -->
-                <h3 style="color: #FFD700; font-size: 24px; margin-bottom: 20px; font-weight: 700;">📊 Home/Away Splits</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px;">
-                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
-                        <h4 style="color: #22c55e; font-size: 18px; margin-bottom: 15px;">🏠 Home (${home.gp || 0} GP)</h4>
-                        <div style="display: flex; justify-content: space-around;">
-                            <div><span style="color: #FFD700; font-weight: 700; font-size: 20px;">${home.pts || 0}</span><br><span style="font-size: 12px; color: rgba(255,255,255,0.6);">PPG</span></div>
-                            <div><span style="color: #22c55e; font-weight: 700; font-size: 20px;">${home.ast || 0}</span><br><span style="font-size: 12px; color: rgba(255,255,255,0.6);">APG</span></div>
-                            <div><span style="color: #3b82f6; font-weight: 700; font-size: 20px;">${home.reb || 0}</span><br><span style="font-size: 12px; color: rgba(255,255,255,0.6);">RPG</span></div>
-                        </div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
-                        <h4 style="color: #ef4444; font-size: 18px; margin-bottom: 15px;">✈️ Away (${away.gp || 0} GP)</h4>
-                        <div style="display: flex; justify-content: space-around;">
-                            <div><span style="color: #FFD700; font-weight: 700; font-size: 20px;">${away.pts || 0}</span><br><span style="font-size: 12px; color: rgba(255,255,255,0.6);">PPG</span></div>
-                            <div><span style="color: #22c55e; font-weight: 700; font-size: 20px;">${away.ast || 0}</span><br><span style="font-size: 12px; color: rgba(255,255,255,0.6);">APG</span></div>
-                            <div><span style="color: #3b82f6; font-weight: 700; font-size: 20px;">${away.reb || 0}</span><br><span style="font-size: 12px; color: rgba(255,255,255,0.6);">RPG</span></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Consistency & Trends -->
-                <h3 style="color: #FFD700; font-size: 24px; margin-bottom: 20px; font-weight: 700;">📈 Consistency & Trends</h3>
-                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 40px;">
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 24px; font-weight: 700; color: #FFD700;">${consistency.pts || 0}%</div>
-                            <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 10px;">PTS Consistency</div>
-                            <div style="font-size: 16px;">${trends.pts === 'hot' ? '🔥 HOT' : trends.pts === 'cold' ? '❄️ COLD' : '➡️ STABLE'}</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 24px; font-weight: 700; color: #22c55e;">${consistency.ast || 0}%</div>
-                            <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 10px;">AST Consistency</div>
-                            <div style="font-size: 16px;">${trends.ast === 'hot' ? '🔥 HOT' : trends.ast === 'cold' ? '❄️ COLD' : '➡️ STABLE'}</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 24px; font-weight: 700; color: #3b82f6;">${consistency.reb || 0}%</div>
-                            <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 10px;">REB Consistency</div>
-                            <div style="font-size: 16px;">${trends.reb === 'hot' ? '🔥 HOT' : trends.reb === 'cold' ? '❄️ COLD' : '➡️ STABLE'}</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Últimos 10 juegos -->
-                ${last10.length > 0 ? `
-                <h3 style="color: #FFD700; font-size: 24px; margin-bottom: 20px; font-weight: 700;">🗓️ Últimos ${last10.length} Juegos</h3>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid rgba(255,215,0,0.3);">
-                                <th style="padding: 12px; text-align: left; color: rgba(255,255,255,0.7); font-size: 14px;">Fecha</th>
-                                <th style="padding: 12px; text-align: left; color: rgba(255,255,255,0.7); font-size: 14px;">vs</th>
-                                <th style="padding: 12px; text-align: center; color: #FFD700; font-size: 14px;">PTS</th>
-                                <th style="padding: 12px; text-align: center; color: #22c55e; font-size: 14px;">AST</th>
-                                <th style="padding: 12px; text-align: center; color: #3b82f6; font-size: 14px;">REB</th>
-                                <th style="padding: 12px; text-align: center; color: rgba(255,255,255,0.7); font-size: 14px;">MIN</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${last10.map(g => `
-                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                    <td style="padding: 12px; font-size: 13px;">${g.fecha.substring(0, 10)}</td>
-                                    <td style="padding: 12px; font-size: 13px; font-weight: 600;">${g.oponente}</td>
-                                    <td style="padding: 12px; text-align: center; font-weight: 700; color: #FFD700;">${g.pts}</td>
-                                    <td style="padding: 12px; text-align: center; font-weight: 700; color: #22c55e;">${g.ast}</td>
-                                    <td style="padding: 12px; text-align: center; font-weight: 700; color: #3b82f6;">${g.reb}</td>
-                                    <td style="padding: 12px; text-align: center;">${g.min}</td>
-                                </tr>
+                <!-- Rankings Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px; text-align: left;">
+                    
+                    <!-- PUNTOS -->
+                    <div class="ranking-card">
+                        <h3 class="ranking-title">
+                            <span style="font-size: 28px;">🏅</span>
+                            <span>PUNTOS POR PARTIDO</span>
+                        </h3>
+                        <div class="ranking-list">
+                            ${rankings.pts.map((p, i) => `
+                                <div class="ranking-item" onclick="openPlayerModal('${p.nombre.replace(/'/g, "\'")}')">
+                                    <div class="rank-number">${i+1}</div>
+                                    <div class="rank-info">
+                                        <div class="rank-name">${p.nombre}</div>
+                                        <div class="rank-team">${p.equipo}</div>
+                                    </div>
+                                    <div class="rank-stat">${p.temporada_actual.pts}</div>
+                                </div>
                             `).join('')}
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
+                    
+                    <!-- REBOTES -->
+                    <div class="ranking-card">
+                        <h3 class="ranking-title">
+                            <span style="font-size: 28px;">💪</span>
+                            <span>REBOTES POR PARTIDO</span>
+                        </h3>
+                        <div class="ranking-list">
+                            ${rankings.reb.map((p, i) => `
+                                <div class="ranking-item" onclick="openPlayerModal('${p.nombre.replace(/'/g, "\'")}')">
+                                    <div class="rank-number">${i+1}</div>
+                                    <div class="rank-info">
+                                        <div class="rank-name">${p.nombre}</div>
+                                        <div class="rank-team">${p.equipo}</div>
+                                    </div>
+                                    <div class="rank-stat">${p.temporada_actual.reb}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- ASISTENCIAS -->
+                    <div class="ranking-card">
+                        <h3 class="ranking-title">
+                            <span style="font-size: 28px;">🎯</span>
+                            <span>ASISTENCIAS POR PARTIDO</span>
+                        </h3>
+                        <div class="ranking-list">
+                            ${rankings.ast.map((p, i) => `
+                                <div class="ranking-item" onclick="openPlayerModal('${p.nombre.replace(/'/g, "\'")}')">
+                                    <div class="rank-number">${i+1}</div>
+                                    <div class="rank-info">
+                                        <div class="rank-name">${p.nombre}</div>
+                                        <div class="rank-team">${p.equipo}</div>
+                                    </div>
+                                    <div class="rank-stat">${p.temporada_actual.ast}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- ROBOS -->
+                    <div class="ranking-card">
+                        <h3 class="ranking-title">
+                            <span style="font-size: 28px;">🔥</span>
+                            <span>ROBOS POR PARTIDO</span>
+                        </h3>
+                        <div class="ranking-list">
+                            ${rankings.stl.map((p, i) => `
+                                <div class="ranking-item" onclick="openPlayerModal('${p.nombre.replace(/'/g, "\'")}')">
+                                    <div class="rank-number">${i+1}</div>
+                                    <div class="rank-info">
+                                        <div class="rank-name">${p.nombre}</div>
+                                        <div class="rank-team">${p.equipo}</div>
+                                    </div>
+                                    <div class="rank-stat">${p.temporada_actual.stl}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- BLOQUEOS -->
+                    <div class="ranking-card">
+                        <h3 class="ranking-title">
+                            <span style="font-size: 28px;">🛡️</span>
+                            <span>BLOQUEOS POR PARTIDO</span>
+                        </h3>
+                        <div class="ranking-list">
+                            ${rankings.blk.map((p, i) => `
+                                <div class="ranking-item" onclick="openPlayerModal('${p.nombre.replace(/'/g, "\'")}')">
+                                    <div class="rank-number">${i+1}</div>
+                                    <div class="rank-info">
+                                        <div class="rank-name">${p.nombre}</div>
+                                        <div class="rank-team">${p.equipo}</div>
+                                    </div>
+                                    <div class="rank-stat">${p.temporada_actual.blk}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- TRIPLES -->
+                    <div class="ranking-card">
+                        <h3 class="ranking-title">
+                            <span style="font-size: 28px;">🎯</span>
+                            <span>TRIPLES POR PARTIDO</span>
+                        </h3>
+                        <div class="ranking-list">
+                            ${rankings.fg3m.map((p, i) => `
+                                <div class="ranking-item" onclick="openPlayerModal('${p.nombre.replace(/'/g, "\'")}')">
+                                    <div class="rank-number">${i+1}</div>
+                                    <div class="rank-info">
+                                        <div class="rank-name">${p.nombre}</div>
+                                        <div class="rank-team">${p.equipo}</div>
+                                    </div>
+                                    <div class="rank-stat">${p.temporada_actual.fg3m}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
                 </div>
-                ` : '<p style="color: rgba(255,255,255,0.6); text-align: center;">No hay datos de juegos recientes</p>'}
+                
+                <!-- Barra de búsqueda al final -->
+                <div style="margin-top: 60px; text-align: center;">
+                    <h3 style="font-size: 24px; color: #FFD700; margin-bottom: 20px;">🔍 Buscar Jugador Específico</h3>
+                    <input 
+                        type="text" 
+                        id="searchPlayer" 
+                        placeholder="Buscar cualquier jugador..."
+                        oninput="quickSearch()"
+                        style="max-width: 500px; width: 100%; padding: 16px 24px; background: rgba(27,38,59,0.6); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 16px; outline: none;"
+                    />
+                    <div id="search-results" style="max-width: 500px; margin: 20px auto;"></div>
+                </div>
             `;
+        }
+        
+        function quickSearch() {
+            const query = document.getElementById('searchPlayer').value.toLowerCase();
+            const results = document.getElementById('search-results');
             
-            modal.style.display = 'block';
+            if (!query || query.length < 2) {
+                results.innerHTML = '';
+                return;
+            }
+            
+            const matches = allPlayersData.filter(p => 
+                p.nombre.toLowerCase().includes(query) || 
+                (p.equipo && p.equipo.toLowerCase().includes(query))
+            ).slice(0, 5);
+            
+            if (matches.length === 0) {
+                results.innerHTML = '<p style="color: rgba(255,255,255,0.5);">No se encontraron resultados</p>';
+                return;
+            }
+            
+            results.innerHTML = matches.map(p => 
+                `<div class="search-result-item" onclick="openPlayerModal('${p.nombre.replace(/'/g, "\'")}')">
+                    <span style="font-weight: 600;">${p.nombre}</span>
+                    <span style="color: #FFD700; margin-left: 10px;">${p.equipo}</span>
+                </div>`
+            ).join('');
         }
         
         function closePlayerModal() {
