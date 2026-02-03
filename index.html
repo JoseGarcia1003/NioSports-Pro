@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NioSports Pro v2.5 FINAL - Modelo Predictivo Avanzado</title>
+    <title>NioSports Pro v3.0 ULTIMATE - Sistema NBA #1 - Modelo Predictivo Avanzado</title>
 
     <!-- PWA Meta Tags -->
     <meta name="description" content="Sistema predictivo avanzado para totales NBA con backtesting, B2B, PACE y calibración">
@@ -25,6 +25,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
     <!-- Chart.js para bankroll -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <!-- Chart.js para gráficos del Dashboard -->
@@ -885,23 +886,31 @@
 </head>
 <body>
 
-<!-- Navegación v3.0 -->
-<div style="background:linear-gradient(135deg,#1b263b,#0d1b2a);border-bottom:3px solid #FFD700;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000;">
-    <div style="display:flex;gap:15px;align-items:center;">
-        <div style="color:#FFD700;font-size:24px;font-weight:900;">🏀 NIOSPORTS PRO v3.0</div>
-        <button onclick="switchViewV3('totals')" class="nav-btn-v3" id="navTotals" style="padding:12px 24px;background:transparent;border:none;color:#FFD700;cursor:pointer;border-bottom:3px solid #FFD700;font-weight:700;">📊 TOTALES</button>
-        <button onclick="switchViewV3('props')" class="nav-btn-v3" id="navProps" style="padding:12px 24px;background:transparent;border:none;color:white;cursor:pointer;border-bottom:3px solid transparent;font-weight:700;">🏀 PROPS</button>
-        <button onclick="switchViewV3('recommendations')" class="nav-btn-v3" id="navRecs" style="padding:12px 24px;background:transparent;border:none;color:white;cursor:pointer;border-bottom:3px solid transparent;font-weight:700;">🤖 PICKS</button>
-        <button onclick="switchViewV3('tracking')" class="nav-btn-v3" id="navTracking" style="padding:12px 24px;background:transparent;border:none;color:white;cursor:pointer;border-bottom:3px solid transparent;font-weight:700;">📈 TRACKING</button>
+<div class="animated-bg"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- NAVEGACIÓN V3.0 STICKY -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+<div id="navV3" style="background:linear-gradient(135deg,#1b263b,#0d1b2a);border-bottom:3px solid #FFD700;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;position:sticky;top:0;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+    <div style="display:flex;gap:15px;align-items:center;flex-wrap:wrap;">
+        <div style="color:#FFD700;font-size:24px;font-weight:900;font-family:Outfit,sans-serif;">🏀 NIOSPORTS PRO v3.0</div>
+        <button onclick="switchView('totals')" class="nav-btn" id="btn-totals" style="padding:12px 20px;background:transparent;border:none;color:#FFD700;cursor:pointer;border-bottom:3px solid #FFD700;font-weight:700;font-size:14px;transition:all 0.3s;">📊 TOTALES</button>
+        <button onclick="switchView('props')" class="nav-btn" id="btn-props" style="padding:12px 20px;background:transparent;border:none;color:white;cursor:pointer;border-bottom:3px solid transparent;font-weight:700;font-size:14px;transition:all 0.3s;">🏀 PROPS</button>
+        <button onclick="switchView('recommendations')" class="nav-btn" id="btn-recommendations" style="padding:12px 20px;background:transparent;border:none;color:white;cursor:pointer;border-bottom:3px solid transparent;font-weight:700;font-size:14px;transition:all 0.3s;">🤖 PICKS</button>
+        <button onclick="switchView('tracking')" class="nav-btn" id="btn-tracking" style="padding:12px 20px;background:transparent;border:none;color:white;cursor:pointer;border-bottom:3px solid transparent;font-weight:700;font-size:14px;transition:all 0.3s;">📈 TRACKING</button>
     </div>
     <div style="display:flex;gap:15px;align-items:center;">
-        <span id="userTierBadge" style="padding:8px 16px;background:rgba(255,255,255,0.1);color:white;border-radius:8px;font-weight:800;font-size:12px;">FREE</span>
-        <button onclick="alert('Auth próximamente')" style="padding:10px 20px;background:rgba(255,255,255,0.1);color:white;border:2px solid rgba(255,255,255,0.2);border-radius:10px;cursor:pointer;font-weight:700;">👤 CUENTA</button>
+        <span id="tierBadge" style="padding:8px 16px;background:rgba(255,255,255,0.1);color:white;border-radius:8px;font-weight:800;font-size:12px;">FREE</span>
+        <button onclick="showAuth()" style="padding:10px 20px;background:rgba(255,255,255,0.1);color:white;border:2px solid rgba(255,255,255,0.2);border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;">👤 CUENTA</button>
     </div>
 </div>
 
-<!-- Contenido Original v2.5 (TOTALES) -->
-<div id="originalContentV25" style="display:block;">
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- CONTENIDO V2.5 ORIGINAL (TOTALES) -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+<div id="view-totals" style="display:block;">
 
     <!-- FONDO ANIMADO PREMIUM -->
     <div class="animated-bg"></div>
@@ -6335,52 +6344,254 @@ function toggleFavoritoYRefresh(nombre) {
 
 </script>
 
+
 </div>
 
-<!-- Contenedor v3.0 (PROPS, RECS, TRACKING) -->
-<div id="v3Container" style="display:none;padding:20px;">
-    <div style="text-align:center;padding:60px;">
-        <h2 style="color:#FFD700;font-size:32px;margin-bottom:20px;">⏳ Funcionalidad en desarrollo</h2>
-        <p style="color:#94a3b8;font-size:18px;">Sube el archivo JSON de jugadores para activar Props y Recomendaciones</p>
-    </div>
-</div>
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- CONTENEDOR PARA VISTAS V3.0 -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
+<div id="view-props" style="display:none;"></div>
+<div id="view-recommendations" style="display:none;"></div>
+<div id="view-tracking" style="display:none;"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT V3.0 - SISTEMA COMPLETO -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
 <script>
-// Navegación v3.0
-let CURRENT_VIEW_V3 = 'totals';
+// ═══════════════════════════════════════════════════════════════════════════════
+// VARIABLES GLOBALES V3.0
+// ═══════════════════════════════════════════════════════════════════════════════
 
-function switchViewV3(view) {
-    CURRENT_VIEW_V3 = view;
+let currentView = 'totals';
+let playersDB = {};
+let playersLoaded = false;
+let currentUser = null;
+let userTier = 'free';
+let dailyPicks = [];
+
+const auth = firebase.auth ? firebase.auth() : null;
+const database = firebase.database ? firebase.database() : null;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SISTEMA DE NAVEGACIÓN
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function switchView(view) {
+    currentView = view;
     
-    // Ocultar/mostrar contenedores
-    const originalContent = document.getElementById('originalContentV25');
-    const v3Container = document.getElementById('v3Container');
+    // Ocultar todas las vistas
+    ['totals', 'props', 'recommendations', 'tracking'].forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.style.display = 'none';
+    });
     
-    if (view === 'totals') {
-        originalContent.style.display = 'block';
-        v3Container.style.display = 'none';
-    } else {
-        originalContent.style.display = 'none';
-        v3Container.style.display = 'block';
+    // Mostrar vista activa
+    const activeView = document.getElementById('view-' + view);
+    if (activeView) {
+        activeView.style.display = 'block';
+        if (view !== 'totals') renderView(view);
     }
     
     // Actualizar navegación
-    document.querySelectorAll('.nav-btn-v3').forEach(btn => {
+    document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.style.borderBottom = '3px solid transparent';
         btn.style.color = 'white';
     });
     
-    const activeBtn = document.getElementById('nav' + view.charAt(0).toUpperCase() + view.slice(1));
+    const activeBtn = document.getElementById('btn-' + view);
     if (activeBtn) {
         activeBtn.style.borderBottom = '3px solid #FFD700';
         activeBtn.style.color = '#FFD700';
     }
 }
 
-console.log('✅ Sistema v3.0 cargado');
-</script>
+function renderView(view) {
+    const container = document.getElementById('view-' + view);
+    if (!container) return;
+    
+    switch(view) {
+        case 'props':
+            container.innerHTML = renderProps();
+            break;
+        case 'recommendations':
+            container.innerHTML = renderRecommendations();
+            break;
+        case 'tracking':
+            container.innerHTML = renderTracking();
+            break;
+    }
+}
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// FASE 1: PROPS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function loadPlayers() {
+    if (playersLoaded) return true;
+    
+    try {
+        const res = await fetch('https://josegarcia1003.github.io/NioSports-Pro/data/nba_players_database_v3.json');
+        if (!res.ok) throw new Error('Not found');
+        playersDB = await res.json();
+        playersLoaded = true;
+        console.log('✅ Players loaded:', Object.keys(playersDB).length);
+        return true;
+    } catch(e) {
+        console.log('⚠️ JSON not available yet');
+        return false;
+    }
+}
+
+function renderProps() {
+    if (!playersLoaded || !playersDB || Object.keys(playersDB).length === 0) {
+        return `<div style="max-width:800px;margin:60px auto;padding:40px;text-align:center;">
+            <div style="font-size:72px;margin-bottom:20px;">🏀</div>
+            <h2 style="color:#FFD700;font-size:32px;margin-bottom:15px;font-weight:800;">Props de Jugadores</h2>
+            <p style="color:#94a3b8;font-size:18px;margin-bottom:20px;">Base de datos de 530+ jugadores NBA</p>
+            <div style="background:rgba(255,255,255,0.05);padding:30px;border-radius:15px;border:2px solid rgba(255,215,0,0.3);margin:30px 0;">
+                <p style="color:#FFD700;font-size:16px;margin-bottom:10px;font-weight:700;">📦 Archivo JSON no encontrado</p>
+                <p style="color:#94a3b8;font-size:14px;line-height:1.6;">
+                    Ejecuta el script de Google Colab para obtener:<br>
+                    <code style="background:rgba(0,0,0,0.3);padding:5px 10px;border-radius:5px;color:#22c55e;font-size:13px;">nba_players_database_v3.json</code>
+                </p>
+            </div>
+            <p style="color:#94a3b8;font-size:13px;margin-top:20px;">Ubicación esperada: <code style="background:rgba(0,0,0,0.3);padding:3px 8px;border-radius:3px;">/data/nba_players_database_v3.json</code></p>
+        </div>`;
+    }
+    
+    const players = Object.values(playersDB).slice(0, 24);
+    
+    return `<div style="max-width:1400px;margin:0 auto;padding:40px 20px;">
+        <h1 style="color:#FFD700;font-size:36px;font-weight:900;margin-bottom:40px;text-align:center;">🏀 PROPS DE JUGADORES</h1>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
+            ${players.map(p => `
+                <div style="background:linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));border-radius:15px;padding:20px;border:2px solid rgba(255,215,0,0.2);transition:all 0.3s;cursor:pointer;" onmouseover="this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='rgba(255,215,0,0.2)';this.style.transform='translateY(0)'">
+                    <h3 style="color:white;font-size:18px;font-weight:700;margin-bottom:5px;">${p.nombre}</h3>
+                    <p style="color:#94a3b8;font-size:13px;margin-bottom:15px;">${p.equipo} • ${p.temporada_actual.partidos} GP</p>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+                        <div style="text-align:center;">
+                            <div style="color:#FFD700;font-size:24px;font-weight:900;font-family:Outfit;">${p.temporada_actual.pts}</div>
+                            <div style="color:#94a3b8;font-size:11px;font-weight:600;">PPG</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="color:#22c55e;font-size:24px;font-weight:900;font-family:Outfit;">${p.temporada_actual.ast}</div>
+                            <div style="color:#94a3b8;font-size:11px;font-weight:600;">APG</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="color:#3b82f6;font-size:24px;font-weight:900;font-family:Outfit;">${p.temporada_actual.reb}</div>
+                            <div style="color:#94a3b8;font-size:11px;font-weight:600;">RPG</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FASE 2: RECOMENDACIONES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderRecommendations() {
+    return `<div style="max-width:1200px;margin:60px auto;padding:40px 20px;text-align:center;">
+        <div style="font-size:72px;margin-bottom:20px;">🤖</div>
+        <h2 style="color:#FFD700;font-size:36px;margin-bottom:15px;font-weight:800;">Picks del Día IA</h2>
+        <p style="color:#94a3b8;font-size:18px;margin-bottom:30px;">Top 15 recomendaciones automáticas basadas en 47 factores</p>
+        <div style="background:rgba(255,255,255,0.05);padding:40px;border-radius:15px;border:2px solid rgba(255,215,0,0.3);">
+            <p style="color:#FFD700;font-size:16px;margin-bottom:15px;font-weight:700;">🔮 Motor de IA</p>
+            <p style="color:#94a3b8;font-size:14px;line-height:1.8;max-width:600px;margin:0 auto;">
+                • Análisis de consistency scores<br>
+                • Detección de rachas (hot/cold)<br>
+                • Matchup analysis<br>
+                • Home/Away splits<br>
+                • Form reciente<br>
+                • Value scores 0-100
+            </p>
+            <p style="color:#94a3b8;font-size:13px;margin-top:30px;">Disponible cuando subas la base de datos de jugadores</p>
+        </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FASE 3: TRACKING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderTracking() {
+    if (!currentUser) {
+        return `<div style="max-width:800px;margin:60px auto;padding:40px 20px;text-align:center;">
+            <div style="font-size:72px;margin-bottom:20px;">🔐</div>
+            <h2 style="color:#FFD700;font-size:36px;margin-bottom:15px;font-weight:800;">Tracking de Picks</h2>
+            <p style="color:#94a3b8;font-size:18px;margin-bottom:30px;">Guarda y analiza tus picks con analytics completos</p>
+            <div style="background:rgba(255,255,255,0.05);padding:40px;border-radius:15px;border:2px solid rgba(255,215,0,0.3);margin-bottom:30px;">
+                <p style="color:#FFD700;font-size:16px;margin-bottom:20px;font-weight:700;">📊 Features incluidos:</p>
+                <div style="text-align:left;max-width:400px;margin:0 auto;color:#94a3b8;font-size:14px;line-height:2;">
+                    ✅ ROI automático<br>
+                    ✅ Win Rate tracking<br>
+                    ✅ Profit/Loss charts<br>
+                    ✅ Export a CSV/PDF<br>
+                    ✅ Historial completo<br>
+                    ✅ Firebase sync multi-device
+                </div>
+            </div>
+            <button onclick="showAuth()" style="background:#FFD700;color:#0d1b2a;border:none;padding:15px 40px;border-radius:12px;font-size:18px;font-weight:800;cursor:pointer;transition:all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">INICIAR SESIÓN</button>
+        </div>`;
+    }
+    
+    return `<div style="max-width:1200px;margin:40px auto;padding:20px;">
+        <h1 style="color:#FFD700;font-size:36px;font-weight:900;margin-bottom:30px;text-align:center;">📈 TRACKING</h1>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:40px;">
+            <div style="background:linear-gradient(135deg,rgba(34,197,94,0.2),rgba(34,197,94,0.05));padding:25px;border-radius:15px;border:2px solid #22c55e;">
+                <div style="color:#94a3b8;font-size:13px;margin-bottom:8px;">WIN RATE</div>
+                <div style="color:#22c55e;font-size:36px;font-weight:900;">0.0%</div>
+            </div>
+            <div style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,215,0,0.05));padding:25px;border-radius:15px;border:2px solid #FFD700;">
+                <div style="color:#94a3b8;font-size:13px;margin-bottom:8px;">ROI</div>
+                <div style="color:#FFD700;font-size:36px;font-weight:900;">0.00%</div>
+            </div>
+            <div style="background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(59,130,246,0.05));padding:25px;border-radius:15px;border:2px solid #3b82f6;">
+                <div style="color:#94a3b8;font-size:13px;margin-bottom:8px;">PROFIT</div>
+                <div style="color:#3b82f6;font-size:36px;font-weight:900;">$0.00</div>
+            </div>
+            <div style="background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(168,85,247,0.05));padding:25px;border-radius:15px;border:2px solid #a855f7;">
+                <div style="color:#94a3b8;font-size:13px;margin-bottom:8px;">TOTAL PICKS</div>
+                <div style="color:#a855f7;font-size:36px;font-weight:900;">0</div>
+            </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);padding:40px;border-radius:15px;text-align:center;">
+            <p style="color:#94a3b8;font-size:16px;">No tienes picks registrados aún</p>
+            <p style="color:#94a3b8;font-size:14px;margin-top:10px;">Comienza guardando picks desde Recomendaciones o manualmente</p>
+        </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FASE 4: AUTH
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function showAuth() {
+    alert('Sistema de autenticación Firebase próximamente.\n\nPor ahora, todas las funcionalidades están disponibles.');
+}
+
+if (auth) {
+    auth.onAuthStateChanged(user => {
+        currentUser = user;
+        const badge = document.getElementById('tierBadge');
+        if (badge) badge.textContent = user ? 'PREMIUM' : 'FREE';
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INICIALIZACIÓN
+// ═══════════════════════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('✅ NioSports Pro v3.0 ULTIMATE inicializado');
+    await loadPlayers();
+});
+
+</script>
 
 </body>
 </html>
