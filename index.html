@@ -882,18 +882,48 @@
         .win-badge { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; }
         .loss-badge { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; }
         .pending-badge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; }
-    .nav-revolution{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(10,22,40,.7);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,215,0,.1)}.nav-revolution .nav-content{max-width:1400px;margin:0 auto;padding:20px 40px;display:flex;justify-content:space-between;align-items:center}.logo-revolution{font-family:Outfit,sans-serif;font-size:24px;font-weight:700;background:linear-gradient(135deg,#FFD700,#FFE55C);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:flex;align-items:center;gap:10px}.nav-links-revolution{display:flex;gap:30px;align-items:center}.nav-link-revolution{color:rgba(255,255,255,.8);font-weight:500;cursor:pointer;transition:all .3s;position:relative}.nav-link-revolution.active,.nav-link-revolution:hover{color:#FFD700}.nav-link-revolution.active::after{content:'';position:absolute;bottom:-8px;left:0;right:0;height:2px;background:#FFD700}.btn-nav{background:linear-gradient(135deg,#FFD700,#F59E0B);color:#0a1628;padding:12px 28px;border-radius:12px;border:none;font-weight:700;cursor:pointer}.hero-revolution{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:120px 40px 80px}.hero-content{max-width:1200px;text-align:center}.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.3);padding:8px 20px;border-radius:50px;font-size:14px;font-weight:600;color:#FFD700;margin-bottom:30px}.hero-title{font-family:Outfit,sans-serif;font-size:clamp(48px,8vw,72px);font-weight:700;line-height:1.1;margin-bottom:24px}.gradient-text{background:linear-gradient(135deg,#FFD700,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.hero-subtitle{font-size:clamp(18px,3vw,24px);color:rgba(255,255,255,.7);max-width:700px;margin:0 auto 40px}.hero-cta{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}.btn-hero{padding:18px 40px;border-radius:14px;font-weight:700;cursor:pointer;transition:all .3s;border:none}.btn-hero-primary{background:linear-gradient(135deg,#FFD700,#F59E0B);color:#0a1628;box-shadow:0 8px 25px rgba(255,215,0,.3)}.btn-hero-primary:hover{transform:translateY(-3px)}.btn-hero-secondary{background:rgba(255,255,255,.05);color:#fff;border:2px solid rgba(255,255,255,.1)}.stats-revolution{max-width:1200px;margin:-60px auto 0;padding:0 40px 80px;z-index:10}.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px}.stat-card-revolution{background:rgba(27,38,59,.6);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:32px;text-align:center;transition:all .3s}.stat-card-revolution:hover{transform:translateY(-5px);border-color:rgba(255,215,0,.3)}.stat-number{font-family:Outfit,sans-serif;font-size:48px;font-weight:700;color:#FFD700;margin-bottom:8px}.stat-label{color:rgba(255,255,255,.7);font-size:14px;font-weight:500;text-transform:uppercase}.features-revolution{padding:100px 40px}.features-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:30px}.feature-card{background:rgba(27,38,59,.4);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:40px;transition:all .4s;cursor:pointer}.feature-card:hover{transform:translateY(-8px);border-color:rgba(255,215,0,.4);box-shadow:0 15px 50px rgba(255,215,0,.2)}.feature-icon{width:60px;height:60px;background:linear-gradient(135deg,#FFD700,#ff6b35);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:24px}.feature-title{font-size:22px;font-weight:700;margin-bottom:12px}.feature-desc{color:rgba(255,255,255,.7);line-height:1.7}.view-revolution{display:none}.view-revolution.active{display:block}.ranking-card{background:rgba(27,38,59,.4);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:30px;transition:all .3s}.ranking-title{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:700;color:#FFD700;margin-bottom:20px;text-transform:uppercase}.ranking-list{display:flex;flex-direction:column;gap:12px}.ranking-item{display:flex;align-items:center;gap:15px;padding:15px;background:rgba(255,255,255,.03);border-radius:12px;transition:all .3s;cursor:pointer}.ranking-item:hover{background:rgba(255,215,0,.1);transform:translateX(5px)}.rank-number{font-family:Outfit,sans-serif;font-size:24px;font-weight:900;color:#FFD700;min-width:35px;text-align:center}.rank-info{flex:1}.rank-name{font-weight:700;font-size:16px;color:#fff;margin-bottom:2px}.rank-team{font-size:13px;color:rgba(255,255,255,.5)}.rank-stat{font-family:Outfit,sans-serif;font-size:28px;font-weight:900;color:#FFD700;min-width:60px;text-align:right}
-</style>
+    
+        /* Rankings */
+        .ranking-card{background:rgba(27,38,59,0.4);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:30px;transition:all 0.3s}
+        .ranking-title{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:700;color:#FFD700;margin-bottom:20px;text-transform:uppercase}
+        .ranking-list{display:flex;flex-direction:column;gap:12px}
+        .ranking-item{display:flex;align-items:center;gap:15px;padding:15px;background:rgba(255,255,255,0.03);border-radius:12px;transition:all 0.3s;cursor:pointer}
+        .ranking-item:hover{background:rgba(255,215,0,0.1);transform:translateX(5px)}
+        .rank-number{font-family:Outfit,sans-serif;font-size:24px;font-weight:900;color:#FFD700;min-width:35px;text-align:center}
+        .rank-info{flex:1}
+        .rank-name{font-weight:700;font-size:16px;color:white}
+        .rank-team{font-size:13px;color:rgba(255,255,255,0.5)}
+        .rank-stat{font-family:Outfit,sans-serif;font-size:28px;font-weight:900;color:#FFD700;min-width:60px;text-align:right}
 
+    </style>
 </head>
 <body>
+
 <div class="animated-bg"></div>
 
-<nav class="nav-revolution"><div class="nav-content"><div class="logo-revolution"><span>🏀</span> <span>NIOSPORTS PRO</span></div><div class="nav-links-revolution"><a class="nav-link-revolution active" onclick="switchView('home')">Inicio</a><a class="nav-link-revolution" onclick="switchView('totals')">Totales</a><a class="nav-link-revolution" onclick="switchView('props')">Props</a><a class="nav-link-revolution" onclick="switchView('picks')">Picks IA</a><a class="nav-link-revolution" onclick="switchView('tracking')">Tracking</a><button class="btn-nav" onclick="showAuth()">👤 Cuenta</button></div></div></nav>
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- NAVEGACIÓN V3.0 STICKY -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
-<div id="view-home" class="view-revolution active"><section class="hero-revolution"><div class="hero-content"><div class="hero-badge">✨ Sistema NBA #1 del Mercado</div><h1 class="hero-title">El Poder de la <span class="gradient-text">Inteligencia Artificial</span><br>en tus Apuestas NBA</h1><p class="hero-subtitle">530+ jugadores analizados en tiempo real. Motor predictivo con 47 factores contextuales.</p><div class="hero-cta"><button class="btn-hero btn-hero-primary" onclick="switchView('totals')">Explorar Sistema →</button><button class="btn-hero btn-hero-secondary" onclick="switchView('props')">Ver Base de Datos</button></div></div></section><div class="stats-revolution"><div class="stats-grid"><div class="stat-card-revolution"><div class="stat-number">530+</div><div class="stat-label">Jugadores</div></div><div class="stat-card-revolution"><div class="stat-number">47</div><div class="stat-label">Factores</div></div><div class="stat-card-revolution"><div class="stat-number">95.2%</div><div class="stat-label">Precisión</div></div><div class="stat-card-revolution"><div class="stat-number">24/7</div><div class="stat-label">En Vivo</div></div></div></div><section class="features-revolution"><div class="features-grid"><div class="feature-card" onclick="switchView('totals')"><div class="feature-icon">📊</div><h3 class="feature-title">Predicción de Totales</h3><p class="feature-desc">Sistema con calibración automática, B2B, PACE y 47 factores.</p></div><div class="feature-card" onclick="switchView('props')"><div class="feature-icon">🏀</div><h3 class="feature-title">Props de Jugadores</h3><p class="feature-desc">530+ jugadores, splits Home/Away, consistency scores.</p></div><div class="feature-card" onclick="switchView('picks')"><div class="feature-icon">🤖</div><h3 class="feature-title">Recomendaciones IA</h3><p class="feature-desc">Top 15 picks con value scores.</p></div><div class="feature-card" onclick="switchView('tracking')"><div class="feature-icon">📈</div><h3 class="feature-title">Tracking</h3><p class="feature-desc">ROI, Win Rate, gráficos.</p></div><div class="feature-card"><div class="feature-icon">🔥</div><h3 class="feature-title">Analytics Pro</h3><p class="feature-desc">Trends, matchup analysis.</p></div><div class="feature-card"><div class="feature-icon">⚡</div><h3 class="feature-title">Tiempo Real</h3><p class="feature-desc">Actualizaciones automáticas.</p></div></div></section></div>
+<div id="navV3" style="background:linear-gradient(135deg,#1b263b,#0d1b2a);border-bottom:3px solid #FFD700;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;position:sticky;top:0;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+    <div style="display:flex;gap:15px;align-items:center;flex-wrap:wrap;">
+        <div style="color:#FFD700;font-size:24px;font-weight:900;font-family:Outfit,sans-serif;">🏀 NIOSPORTS PRO v3.0</div>
+        <button onclick="switchView('totals')" class="nav-btn" id="btn-totals" style="padding:12px 20px;background:transparent;border:none;color:#FFD700;cursor:pointer;border-bottom:3px solid #FFD700;font-weight:700;font-size:14px;transition:all 0.3s;">📊 TOTALES</button>
+        <button onclick="switchView('props')" class="nav-btn" id="btn-props" style="padding:12px 20px;background:transparent;border:none;color:white;cursor:pointer;border-bottom:3px solid transparent;font-weight:700;font-size:14px;transition:all 0.3s;">🏀 PROPS</button>
+        <button onclick="switchView('recommendations')" class="nav-btn" id="btn-recommendations" style="padding:12px 20px;background:transparent;border:none;color:white;cursor:pointer;border-bottom:3px solid transparent;font-weight:700;font-size:14px;transition:all 0.3s;">🤖 PICKS</button>
+        <button onclick="switchView('tracking')" class="nav-btn" id="btn-tracking" style="padding:12px 20px;background:transparent;border:none;color:white;cursor:pointer;border-bottom:3px solid transparent;font-weight:700;font-size:14px;transition:all 0.3s;">📈 TRACKING</button>
+    </div>
+    <div style="display:flex;gap:15px;align-items:center;">
+        <span id="tierBadge" style="padding:8px 16px;background:rgba(255,255,255,0.1);color:white;border-radius:8px;font-weight:800;font-size:12px;">FREE</span>
+        <button onclick="showAuth()" style="padding:10px 20px;background:rgba(255,255,255,0.1);color:white;border:2px solid rgba(255,255,255,0.2);border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;">👤 CUENTA</button>
+    </div>
+</div>
 
-<div id="view-totals" class="view-revolution" style="display:block;">
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- CONTENIDO V2.5 ORIGINAL (TOTALES) -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+<div id="view-totals" style="display:block;">
 
     <!-- FONDO ANIMADO PREMIUM -->
     <div class="animated-bg"></div>
@@ -6334,13 +6364,37 @@ function toggleFavoritoYRefresh(nombre) {
 <!-- CONTENEDOR PARA VISTAS V3.0 -->
 <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
+<div id="view-props" style="display:none;">
+        <div style="max-width: 1600px; margin: 120px auto 80px; padding: 0 40px;">
+            <h1 style="font-family: Outfit; font-size: 48px; font-weight: 700; margin-bottom: 10px; text-align: center; color: #FFD700;">
+                🏀 Rankings NBA 2024-25
+            </h1>
+            <p style="text-align: center; color: rgba(255,255,255,0.6); font-size: 18px; margin-bottom: 30px;">
+                Líderes de la Temporada Regular
+            </p>
+            
+            <div style="max-width: 600px; margin: 0 auto 50px;">
+                <input 
+                    type="text" 
+                    id="searchPlayer" 
+                    placeholder="🔍 Buscar jugador o equipo..."
+                    style="width: 100%; padding: 16px 24px; background: rgba(27,38,59,0.6); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 16px;"
+                />
+            </div>
+            
+            <div id="rankings-content" style="text-align: center; padding: 40px 20px;">
+                <div style="font-size: 36px; margin-bottom: 12px; opacity: 0.4;">⏳</div>
+                <p style="color: rgba(255,255,255,0.4); font-size: 14px;">Cargando...</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="view-recommendations" style="display:none;"></div>
+<div id="view-tracking" style="display:none;"></div>
 
-
-<div id="view-props" class="view-revolution" style="padding:120px 40px 80px;min-height:100vh"><div style="max-width:1600px;margin:0 auto"><h1 style="font-family:Outfit;font-size:48px;font-weight:700;margin-bottom:10px;text-align:center;color:#FFD700">🏀 Rankings NBA 2024-25</h1><p style="text-align:center;color:rgba(255,255,255,.6);font-size:18px;margin-bottom:50px">Líderes de la Temporada Regular</p><div id="rankings-content" style="text-align:center;padding:60px 20px"><div style="font-size:48px;margin-bottom:16px;opacity:.5">⏳</div><p style="color:rgba(255,255,255,.5);font-size:16px">Cargando rankings...</p></div></div></div>
-
-<div id="view-picks" class="view-revolution" style="padding:120px 40px 80px;min-height:100vh"><div style="max-width:1200px;margin:0 auto;text-align:center"><h1 style="font-family:Outfit;font-size:48px;font-weight:700;margin-bottom:24px;color:#FFD700">🤖 Picks del Día IA</h1><div style="background:rgba(27,38,59,.4);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:60px;max-width:800px;margin:0 auto"><div style="font-size:72px;margin-bottom:24px">🔮</div><h3 style="color:#FFD700;font-size:24px">Motor IA</h3></div></div></div>
-
-<div id="view-tracking" class="view-revolution" style="padding:120px 40px 80px;min-height:100vh"><div style="max-width:1200px;margin:0 auto;text-align:center"><h1 style="font-family:Outfit;font-size:48px;font-weight:700;margin-bottom:24px;color:#FFD700">📈 Tracking</h1><div style="background:rgba(27,38,59,.4);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:60px;max-width:800px;margin:0 auto"><div style="font-size:72px;margin-bottom:24px">🔐</div><h3 style="color:#FFD700;font-size:24px">Inicia Sesión</h3><button class="btn-hero btn-hero-primary" onclick="showAuth()">Iniciar Sesión →</button></div></div></div>
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT V3.0 - SISTEMA COMPLETO -->
+<!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
 <script>
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -6361,6 +6415,7 @@ const database = firebase.database ? firebase.database() : null;
 // SISTEMA DE NAVEGACIÓN
 // ═══════════════════════════════════════════════════════════════════════════════
 
+        let allPlayersData = [];
 function switchView(view) {
     currentView = view;
     
@@ -6574,7 +6629,30 @@ document.addEventListener('DOMContentLoaded', async function() {
     await loadPlayers();
 });
 
-</script>
+
+
+// Rankings functionality
+function renderRankings(players) {
+    const content = document.getElementById('rankings-content');
+    const rankings = {
+        pts: players.filter(p => p.temporada_actual?.pts > 0).sort((a,b) => b.temporada_actual.pts - a.temporada_actual.pts).slice(0,5),
+        reb: players.filter(p => p.temporada_actual?.reb > 0).sort((a,b) => b.temporada_actual.reb - a.temporada_actual.reb).slice(0,5),
+        ast: players.filter(p => p.temporada_actual?.ast > 0).sort((a,b) => b.temporada_actual.ast - a.temporada_actual.ast).slice(0,5),
+        stl: players.filter(p => p.temporada_actual?.stl > 0).sort((a,b) => b.temporada_actual.stl - a.temporada_actual.stl).slice(0,5),
+        blk: players.filter(p => p.temporada_actual?.blk > 0).sort((a,b) => b.temporada_actual.blk - a.temporada_actual.blk).slice(0,5),
+        fg3m: players.filter(p => p.temporada_actual?.fg3m > 0).sort((a,b) => b.temporada_actual.fg3m - a.temporada_actual.fg3m).slice(0,5)
+    };
+    const titles = {pts:'🏅 PUNTOS',reb:'💪 REBOTES',ast:'🎯 ASISTENCIAS',stl:'🔥 ROBOS',blk:'🛡️ BLOQUEOS',fg3m:'🎯 TRIPLES'};
+    content.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(450px,1fr));gap:30px;text-align:left">' +
+        ['pts','reb','ast','stl','blk','fg3m'].map(stat => 
+            '<div class="ranking-card"><h3 class="ranking-title">' + titles[stat] + '</h3><div class="ranking-list">' +
+            rankings[stat].map((p,i) => 
+                '<div class="ranking-item"><div class="rank-number">' + (i+1) + '</div><div class="rank-info"><div class="rank-name">' + p.nombre + '</div><div class="rank-team">' + p.equipo + '</div></div><div class="rank-stat">' + p.temporada_actual[stat] + '</div></div>'
+            ).join('') + '</div></div>'
+        ).join('') + '</div>';
+}
+
+    </script>
 
 </body>
 </html>
