@@ -19,17 +19,17 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FFD700'/%3E%3Cstop offset='100%25' style='stop-color:%23F59E0B'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%230d1b2a'/%3E%3Ccircle cx='32' cy='32' r='28' fill='none' stroke='url(%23g1)' stroke-width='3'/%3E%3Ccircle cx='32' cy='26' r='10' fill='%23f97316'/%3E%3Ctext x='32' y='50' text-anchor='middle' font-family='Arial Black' font-size='12' font-weight='bold' fill='%23FFD700'%3EN%3C/text%3E%3C/svg%3E">
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230d1b2a'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='30' fill='%23FFD700'%3EN%3C/text%3E%3C/svg%3E">
 
-    <script src="https://cdn.tailwindcss.com">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <!-- Chart.js para bankroll -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <!-- Chart.js para gráficos del Dashboard -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { font-family: 'Inter', sans-serif; }
         .font-display { font-family: 'Outfit', sans-serif; letter-spacing: 1px; font-weight: 700; }
@@ -882,19 +882,6 @@
         .win-badge { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; }
         .loss-badge { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; }
         .pending-badge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; }
-    
-        /* Rankings */
-        .ranking-card{background:rgba(27,38,59,0.4);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:30px;transition:all 0.3s}
-        .ranking-title{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:700;color:#FFD700;margin-bottom:20px;text-transform:uppercase}
-        .ranking-list{display:flex;flex-direction:column;gap:12px}
-        .ranking-item{display:flex;align-items:center;gap:15px;padding:15px;background:rgba(255,255,255,0.03);border-radius:12px;transition:all 0.3s;cursor:pointer}
-        .ranking-item:hover{background:rgba(255,215,0,0.1);transform:translateX(5px)}
-        .rank-number{font-family:Outfit,sans-serif;font-size:24px;font-weight:900;color:#FFD700;min-width:35px;text-align:center}
-        .rank-info{flex:1}
-        .rank-name{font-weight:700;font-size:16px;color:white}
-        .rank-team{font-size:13px;color:rgba(255,255,255,0.5)}
-        .rank-stat{font-family:Outfit,sans-serif;font-size:28px;font-weight:900;color:#FFD700;min-width:60px;text-align:right}
-
     </style>
 </head>
 <body>
@@ -6364,32 +6351,8 @@ function toggleFavoritoYRefresh(nombre) {
 <!-- CONTENEDOR PARA VISTAS V3.0 -->
 <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
 
-<div id="view-props" style="display:none;">
-        <div style="max-width: 1600px; margin: 120px auto 80px; padding: 0 40px;">
-            <h1 style="font-family: Outfit; font-size: 48px; font-weight: 700; margin-bottom: 10px; text-align: center; color: #FFD700;">
-                🏀 Rankings NBA 2024-25
-            </h1>
-            <p style="text-align: center; color: rgba(255,255,255,0.6); font-size: 18px; margin-bottom: 30px;">
-                Líderes de la Temporada Regular
-            </p>
-            
-            <div style="max-width: 600px; margin: 0 auto 50px;">
-                <input 
-                    type="text" 
-                    id="searchPlayer" 
-                    placeholder="🔍 Buscar jugador o equipo..."
-                    style="width: 100%; padding: 16px 24px; background: rgba(27,38,59,0.6); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 16px;"
-                />
-            </div>
-            
-            <div id="rankings-content" style="text-align: center; padding: 40px 20px;">
-                <div style="font-size: 36px; margin-bottom: 12px; opacity: 0.4;">⏳</div>
-                <p style="color: rgba(255,255,255,0.4); font-size: 14px;">Cargando...</p>
-            </div>
-        </div>
-    </div>
-    
-    <div id="view-recommendations" style="display:none;"></div>
+<div id="view-props" style="display:none;"></div>
+<div id="view-recommendations" style="display:none;"></div>
 <div id="view-tracking" style="display:none;"></div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
@@ -6415,7 +6378,6 @@ const database = firebase.database ? firebase.database() : null;
 // SISTEMA DE NAVEGACIÓN
 // ═══════════════════════════════════════════════════════════════════════════════
 
-        let allPlayersData = [];
 function switchView(view) {
     currentView = view;
     
@@ -6629,30 +6591,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     await loadPlayers();
 });
 
-
-
-// Rankings functionality
-function renderRankings(players) {
-    const content = document.getElementById('rankings-content');
-    const rankings = {
-        pts: players.filter(p => p.temporada_actual?.pts > 0).sort((a,b) => b.temporada_actual.pts - a.temporada_actual.pts).slice(0,5),
-        reb: players.filter(p => p.temporada_actual?.reb > 0).sort((a,b) => b.temporada_actual.reb - a.temporada_actual.reb).slice(0,5),
-        ast: players.filter(p => p.temporada_actual?.ast > 0).sort((a,b) => b.temporada_actual.ast - a.temporada_actual.ast).slice(0,5),
-        stl: players.filter(p => p.temporada_actual?.stl > 0).sort((a,b) => b.temporada_actual.stl - a.temporada_actual.stl).slice(0,5),
-        blk: players.filter(p => p.temporada_actual?.blk > 0).sort((a,b) => b.temporada_actual.blk - a.temporada_actual.blk).slice(0,5),
-        fg3m: players.filter(p => p.temporada_actual?.fg3m > 0).sort((a,b) => b.temporada_actual.fg3m - a.temporada_actual.fg3m).slice(0,5)
-    };
-    const titles = {pts:'🏅 PUNTOS',reb:'💪 REBOTES',ast:'🎯 ASISTENCIAS',stl:'🔥 ROBOS',blk:'🛡️ BLOQUEOS',fg3m:'🎯 TRIPLES'};
-    content.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(450px,1fr));gap:30px;text-align:left">' +
-        ['pts','reb','ast','stl','blk','fg3m'].map(stat => 
-            '<div class="ranking-card"><h3 class="ranking-title">' + titles[stat] + '</h3><div class="ranking-list">' +
-            rankings[stat].map((p,i) => 
-                '<div class="ranking-item"><div class="rank-number">' + (i+1) + '</div><div class="rank-info"><div class="rank-name">' + p.nombre + '</div><div class="rank-team">' + p.equipo + '</div></div><div class="rank-stat">' + p.temporada_actual[stat] + '</div></div>'
-            ).join('') + '</div></div>'
-        ).join('') + '</div>';
-}
-
-    </script>
+</script>
 
 </body>
 </html>
