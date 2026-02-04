@@ -6791,17 +6791,39 @@ function toggleFavoritoYRefresh(nombre) {
             <h1 style="font-family: Outfit; font-size: 48px; font-weight: 700; margin-bottom: 10px; text-align: center; color: #FFD700;">
                 🏀 Rankings NBA 2024-25
             </h1>
-            <p style="text-align: center; color: rgba(255,255,255,0.6); font-size: 18px; margin-bottom: 50px;">
+            <p style="text-align: center; color: rgba(255,255,255,0.6); font-size: 18px; margin-bottom: 30px;">
                 Líderes de la Temporada Regular
             </p>
             
-            <div id="rankings-content" style="text-align: center; padding: 80px 40px;">
-                <div style="font-size: 72px; margin-bottom: 24px;">⏳</div>
-                <h2 style="font-size: 32px; color: #FFD700;">Cargando Rankings</h2>
+            <!-- Barra de búsqueda arriba -->
+            <div style="max-width: 600px; margin: 0 auto 50px;">
+                <input 
+                    type="text" 
+                    id="searchPlayer" 
+                    placeholder="🔍 Buscar jugador o equipo..."
+                    oninput="quickSearch()"
+                    style="width: 100%; padding: 16px 24px; background: rgba(27,38,59,0.6); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 16px; outline: none; transition: all 0.3s;"
+                    onfocus="this.style.borderColor='#FFD700'"
+                    onblur="this.style.borderColor='rgba(255,255,255,0.1)'"
+                />
+                <div id="search-results" style="margin-top: 15px;"></div>
+            </div>
+            
+            <div id="rankings-content">
+                <!-- Mensaje de carga minimalista -->
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">⏳</div>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 16px;">Cargando rankings...</p>
+                </div>
+            </div>
+            
+            <!-- Indicador sutil en esquina -->
+            <div id="loading-indicator" style="position: fixed; bottom: 20px; right: 20px; background: rgba(27,38,59,0.8); backdrop-filter: blur(10px); padding: 12px 20px; border-radius: 8px; border: 1px solid rgba(255,215,0,0.2); font-size: 13px; color: rgba(255,255,255,0.7); display: none;">
+                <span style="color: #FFD700;">●</span> 530+ jugadores cargados
             </div>
         </div>
         
-        <!-- Modal Detalle Jugador --><!-- Modal Detalle Jugador -->
+        <!-- Modal Detalle Jugador --><!-- Modal Detalle Jugador --><!-- Modal Detalle Jugador -->
         <div id="playerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; padding: 40px 20px;" onclick="if(event.target.id==='playerModal') closePlayerModal()">
             <div style="max-width: 900px; margin: 0 auto; background: linear-gradient(135deg, #1b263b, #0d1b2a); border-radius: 24px; padding: 40px; position: relative; border: 2px solid #FFD700;">
                 <button onclick="closePlayerModal()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 24px; line-height: 40px; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,215,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">×</button>
@@ -6870,6 +6892,17 @@ function toggleFavoritoYRefresh(nombre) {
         function renderRankings(players) {
             const content = document.getElementById('rankings-content');
             
+            // Mostrar indicador de carga exitosa
+            setTimeout(() => {
+                const indicator = document.getElementById('loading-indicator');
+                if (indicator) {
+                    indicator.style.display = 'block';
+                    setTimeout(() => {
+                        indicator.style.display = 'none';
+                    }, 5000);
+                }
+            }, 500);
+            
             // Calcular rankings
             const rankings = {
                 pts: players.filter(p => p.temporada_actual?.pts > 0).sort((a,b) => b.temporada_actual.pts - a.temporada_actual.pts).slice(0,5),
@@ -6880,7 +6913,7 @@ function toggleFavoritoYRefresh(nombre) {
                 fg3m: players.filter(p => p.temporada_actual?.fg3m > 0).sort((a,b) => b.temporada_actual.fg3m - a.temporada_actual.fg3m).slice(0,5)
             };
             
-            content.innerHTML = `
+            content.innerHTML = ``
                 <!-- Rankings Grid -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px; text-align: left;">
                     
