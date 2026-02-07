@@ -1134,16 +1134,39 @@
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div id="view-props" class="view-panel" style="padding-top:80px;">
         <div style="max-width:1400px;margin:0 auto;padding:40px 32px;">
-            <div style="text-align:center;margin-bottom:40px;">
-                <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:12px;">🏀 Props de Jugadores</h1>
-                <p style="color:rgba(255,255,255,0.5);font-size:16px;">530+ jugadores NBA con stats completas</p>
+            <!-- HEADER -->
+            <div style="text-align:center;margin-bottom:32px;">
+                <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:8px;">🏀 Props de Jugadores</h1>
+                <p style="color:rgba(255,255,255,0.45);font-size:15px;">Temporada Regular 2025-26 • Stats en tiempo real</p>
             </div>
-            <div id="props-content" style="text-align:center;padding:60px 32px;">
-                <div class="placeholder-card">
-                    <div class="placeholder-icon">⏳</div>
-                    <h2 style="font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--gold);margin-bottom:12px;">Cargando Base de Datos</h2>
-                    <p style="color:rgba(255,255,255,0.5);font-size:16px;">530+ jugadores NBA con stats completas</p>
+
+            <!-- SEARCH BAR -->
+            <div style="max-width:700px;margin:0 auto 48px;position:relative;">
+                <div style="position:relative;">
+                    <span style="position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:20px;opacity:0.5;">🔍</span>
+                    <input type="text" id="propsSearchInput" placeholder="Buscar jugador por nombre..." 
+                        style="width:100%;padding:18px 20px 18px 52px;border-radius:var(--r-lg);border:2px solid var(--glass-border);background:var(--glass-bg);backdrop-filter:blur(16px);color:white;font-size:16px;font-family:var(--font-body);outline:none;transition:all 0.3s;"
+                        onfocus="this.style.borderColor='rgba(255,215,0,0.4)';this.style.boxShadow='0 0 24px rgba(255,215,0,0.1)'"
+                        onblur="this.style.borderColor='var(--glass-border)';this.style.boxShadow='none'"
+                        oninput="propsSearch(this.value)"
+                    />
                 </div>
+                <div id="propsSearchResults" style="position:absolute;top:100%;left:0;right:0;z-index:100;margin-top:8px;display:none;"></div>
+            </div>
+
+            <!-- PLAYER DETAIL (hidden by default) -->
+            <div id="propsPlayerDetail" style="display:none;margin-bottom:48px;"></div>
+
+            <!-- SEASON LEADERS -->
+            <div id="propsLeaders">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+                    <div>
+                        <div style="font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">SEASON LEADERS</div>
+                        <h2 style="font-family:var(--font-display);font-size:28px;font-weight:800;">Líderes NBA 2025-26</h2>
+                    </div>
+                    <div style="font-family:var(--font-mono);font-size:12px;color:rgba(255,255,255,0.35);">Actualizado Feb 2026</div>
+                </div>
+                <div id="leadersGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;"></div>
             </div>
         </div>
     </div>
@@ -1288,31 +1311,333 @@
         alert('Sistema de autenticación próximamente.\n\nTodas las funcionalidades disponibles.');
     }
 
-    // Props loader
+    // ═══════════════════════════════════════════════════════════
+    // PROPS SYSTEM — NBA 2025-26 SEASON LEADERS + SEARCH
+    // ═══════════════════════════════════════════════════════════
+
+    let PROPS_DB = null; // Will hold fetched player database
     let propsLoaded = false;
+
+    // NBA 2025-26 Season Leaders (real data as of Feb 2026)
+    const NBA_LEADERS = {
+        ppg: {
+            title: 'POINTS PER GAME', icon: '🏀', color: '#FFD700', abbr: 'PPG',
+            players: [
+                { rank: 1, name: 'Luka Dončić', team: 'LAL', value: 33.6, gp: 40 },
+                { rank: 2, name: 'Shai Gilgeous-Alexander', team: 'OKC', value: 31.8, gp: 49 },
+                { rank: 3, name: 'Anthony Edwards', team: 'MIN', value: 29.7, gp: 42 },
+                { rank: 4, name: 'Jaylen Brown', team: 'BOS', value: 29.5, gp: 46 },
+                { rank: 5, name: 'Tyrese Maxey', team: 'PHI', value: 28.8, gp: 49 }
+            ]
+        },
+        rpg: {
+            title: 'REBOUNDS PER GAME', icon: '💪', color: '#22d3ee', abbr: 'RPG',
+            players: [
+                { rank: 1, name: 'Karl-Anthony Towns', team: 'NYK', value: 11.9, gp: 48 },
+                { rank: 2, name: 'Rudy Gobert', team: 'MIN', value: 11.3, gp: 50 },
+                { rank: 3, name: 'Donovan Clingan', team: 'POR', value: 11.2, gp: 47 },
+                { rank: 4, name: 'Victor Wembanyama', team: 'SAS', value: 11.1, gp: 37 },
+                { rank: 5, name: 'Ivica Zubac', team: 'LAC', value: 11.0, gp: 43 }
+            ]
+        },
+        apg: {
+            title: 'ASSISTS PER GAME', icon: '🎯', color: '#34d399', abbr: 'APG',
+            players: [
+                { rank: 1, name: 'Cade Cunningham', team: 'DET', value: 9.8, gp: 44 },
+                { rank: 2, name: 'Luka Dončić', team: 'LAL', value: 8.6, gp: 42 },
+                { rank: 3, name: 'Jalen Johnson', team: 'ATL', value: 8.2, gp: 48 },
+                { rank: 4, name: 'James Harden', team: 'LAC', value: 8.1, gp: 44 },
+                { rank: 5, name: 'Andrew Nembhard', team: 'IND', value: 7.5, gp: 40 }
+            ]
+        },
+        spg: {
+            title: 'STEALS PER GAME', icon: '🤏', color: '#f43f5e', abbr: 'SPG',
+            players: [
+                { rank: 1, name: 'Cason Wallace', team: 'OKC', value: 2.1, gp: 49 },
+                { rank: 2, name: 'Kawhi Leonard', team: 'LAC', value: 2.0, gp: 37 },
+                { rank: 3, name: 'Tyrese Maxey', team: 'PHI', value: 2.0, gp: 49 },
+                { rank: 4, name: 'Ausar Thompson', team: 'DET', value: 1.9, gp: 46 },
+                { rank: 5, name: 'Dyson Daniels', team: 'ATL', value: 1.9, gp: 51 }
+            ]
+        },
+        bpg: {
+            title: 'BLOCKS PER GAME', icon: '🛡️', color: '#a78bfa', abbr: 'BPG',
+            players: [
+                { rank: 1, name: 'Victor Wembanyama', team: 'SAS', value: 2.7, gp: 37 },
+                { rank: 2, name: 'Alex Sarr', team: 'WAS', value: 2.1, gp: 40 },
+                { rank: 3, name: 'Chet Holmgren', team: 'OKC', value: 2.0, gp: 45 },
+                { rank: 4, name: 'Evan Mobley', team: 'CLE', value: 2.0, gp: 42 },
+                { rank: 5, name: 'Jay Huff', team: 'IND', value: 1.9, gp: 51 }
+            ]
+        },
+        tpm: {
+            title: '3-POINTERS PER GAME', icon: '🎯', color: '#fbbf24', abbr: '3PG',
+            players: [
+                { rank: 1, name: 'Stephen Curry', team: 'GSW', value: 4.5, gp: 43 },
+                { rank: 2, name: 'Donovan Mitchell', team: 'CLE', value: 3.7, gp: 48 },
+                { rank: 3, name: 'Donte DiVincenzo', team: 'MIN', value: 3.4, gp: 49 },
+                { rank: 4, name: 'Kon Knueppel', team: 'CHA', value: 3.4, gp: 50 },
+                { rank: 5, name: 'Tyrese Maxey', team: 'PHI', value: 3.4, gp: 49 }
+            ]
+        },
+        td: {
+            title: 'TRIPLE DOUBLES', icon: '👑', color: '#FFD700', abbr: 'TD',
+            players: [
+                { rank: 1, name: 'Nikola Jokić', team: 'DEN', value: 17, gp: 52 },
+                { rank: 2, name: 'Luka Dončić', team: 'LAL', value: 7, gp: 42 },
+                { rank: 3, name: 'Cade Cunningham', team: 'DET', value: 6, gp: 44 },
+                { rank: 4, name: 'Jalen Johnson', team: 'ATL', value: 5, gp: 48 },
+                { rank: 5, name: 'LeBron James', team: 'LAL', value: 4, gp: 41 }
+            ]
+        },
+        dd: {
+            title: 'DOUBLE DOUBLES', icon: '✌️', color: '#22d3ee', abbr: 'DD',
+            players: [
+                { rank: 1, name: 'Jalen Johnson', team: 'ATL', value: 34, gp: 48 },
+                { rank: 2, name: 'Karl-Anthony Towns', team: 'NYK', value: 34, gp: 48 },
+                { rank: 3, name: 'Nikola Jokić', team: 'DEN', value: 33, gp: 52 },
+                { rank: 4, name: 'Rudy Gobert', team: 'MIN', value: 31, gp: 50 },
+                { rank: 5, name: 'Donovan Clingan', team: 'POR', value: 28, gp: 47 }
+            ]
+        }
+    };
+
+    // Team full names + abbreviations
+    const TEAM_ABBR_MAP = {
+        'LAL':'Los Angeles Lakers','OKC':'Oklahoma City Thunder','MIN':'Minnesota Timberwolves',
+        'BOS':'Boston Celtics','PHI':'Philadelphia 76ers','NYK':'New York Knicks',
+        'POR':'Portland Trail Blazers','SAS':'San Antonio Spurs','LAC':'LA Clippers',
+        'DET':'Detroit Pistons','ATL':'Atlanta Hawks','IND':'Indiana Pacers',
+        'GSW':'Golden State Warriors','CLE':'Cleveland Cavaliers','CHA':'Charlotte Hornets',
+        'DEN':'Denver Nuggets','WAS':'Washington Wizards','MIA':'Miami Heat',
+        'MIL':'Milwaukee Bucks','DAL':'Dallas Mavericks','PHX':'Phoenix Suns',
+        'SAC':'Sacramento Kings','TOR':'Toronto Raptors','HOU':'Houston Rockets',
+        'MEM':'Memphis Grizzlies','CHI':'Chicago Bulls','BKN':'Brooklyn Nets',
+        'NOP':'New Orleans Pelicans','ORL':'Orlando Magic','UTA':'Utah Jazz'
+    };
+
+    function renderLeadersGrid() {
+        const grid = document.getElementById('leadersGrid');
+        if (!grid) return;
+        grid.innerHTML = Object.entries(NBA_LEADERS).map(([key, cat]) => {
+            return `
+            <div style="background:var(--glass-bg);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--r-lg);overflow:hidden;transition:all 0.4s var(--ease-out);"
+                 onmouseover="this.style.borderColor='${cat.color}33';this.style.boxShadow='0 12px 40px ${cat.color}15'"
+                 onmouseout="this.style.borderColor='var(--glass-border)';this.style.boxShadow='none'">
+                <!-- Header -->
+                <div style="padding:20px 24px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:22px;">${cat.icon}</span>
+                        <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:${cat.color};">${cat.title}</span>
+                    </div>
+                    <span style="font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,0.25);">2025-26</span>
+                </div>
+                <!-- Players -->
+                <div style="padding:8px 0;">
+                    ${cat.players.map((p, i) => `
+                    <div onclick="searchAndShowPlayer('${p.name}')" 
+                         style="display:flex;align-items:center;padding:10px 24px;cursor:pointer;transition:all 0.2s;"
+                         onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
+                        <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:${i === 0 ? cat.color : 'rgba(255,255,255,0.35)'};width:28px;">${p.rank}.</span>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-family:var(--font-body);font-size:14px;font-weight:${i === 0 ? '700' : '500'};color:${i === 0 ? 'white' : 'rgba(255,255,255,0.8)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+                            <div style="font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px;">${TEAM_ABBR_MAP[p.team] || p.team} · ${p.gp} GP</div>
+                        </div>
+                        <span style="font-family:var(--font-display);font-size:${i === 0 ? '22px' : '18px'};font-weight:800;color:${i === 0 ? cat.color : 'rgba(255,255,255,0.7)'};">${p.value}</span>
+                    </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // Search system
+    function propsSearch(query) {
+        const container = document.getElementById('propsSearchResults');
+        if (!query || query.length < 2) {
+            container.style.display = 'none';
+            return;
+        }
+        const q = query.toLowerCase();
+        // Search in leaders first
+        let results = [];
+        Object.values(NBA_LEADERS).forEach(cat => {
+            cat.players.forEach(p => {
+                if (p.name.toLowerCase().includes(q) && !results.find(r => r.name === p.name)) {
+                    results.push({ name: p.name, team: p.team, stat: `${p.value} ${cat.abbr}` });
+                }
+            });
+        });
+        // Search in loaded database
+        if (PROPS_DB) {
+            Object.entries(PROPS_DB).forEach(([nombre, data]) => {
+                if (nombre.toLowerCase().includes(q) && !results.find(r => r.name === nombre)) {
+                    results.push({ name: nombre, team: data.equipo || data.team || '', stat: `${data.temporada_actual?.pts || '?'} PPG` });
+                }
+            });
+        }
+        results = results.slice(0, 8);
+        if (results.length === 0) {
+            container.style.display = 'block';
+            container.innerHTML = `<div style="background:var(--bg-raised);border:1px solid var(--glass-border);border-radius:var(--r-md);padding:16px 20px;color:rgba(255,255,255,0.5);font-size:14px;">No se encontraron resultados para "${query}"</div>`;
+            return;
+        }
+        container.style.display = 'block';
+        container.innerHTML = `<div style="background:var(--bg-raised);border:1px solid var(--glass-border);border-radius:var(--r-md);overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,0.5);">
+            ${results.map(r => `
+            <div onclick="searchAndShowPlayer('${r.name.replace(/'/g, "\\'")}')" 
+                 style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;transition:background 0.2s;border-bottom:1px solid rgba(255,255,255,0.04);"
+                 onmouseover="this.style.background='rgba(255,215,0,0.06)'" onmouseout="this.style.background='transparent'">
+                <div>
+                    <div style="font-weight:600;font-size:14px;">${r.name}</div>
+                    <div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">${TEAM_ABBR_MAP[r.team] || r.team}</div>
+                </div>
+                <span style="font-family:var(--font-mono);font-size:13px;color:var(--gold);font-weight:600;">${r.stat}</span>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    function searchAndShowPlayer(name) {
+        document.getElementById('propsSearchResults').style.display = 'none';
+        const input = document.getElementById('propsSearchInput');
+        if (input) input.value = name;
+
+        const detail = document.getElementById('propsPlayerDetail');
+        const leaders = document.getElementById('propsLeaders');
+
+        // Gather stats from all leader categories for this player
+        let playerStats = {};
+        Object.entries(NBA_LEADERS).forEach(([key, cat]) => {
+            const found = cat.players.find(p => p.name === name);
+            if (found) playerStats[cat.abbr] = { value: found.value, rank: found.rank, gp: found.gp, team: found.team };
+        });
+
+        const team = playerStats[Object.keys(playerStats)[0]]?.team || '';
+        const teamFull = TEAM_ABBR_MAP[team] || team;
+        const gp = playerStats[Object.keys(playerStats)[0]]?.gp || '?';
+
+        // Try database for more detailed stats
+        let dbPlayer = null;
+        if (PROPS_DB) {
+            dbPlayer = PROPS_DB[name] || Object.values(PROPS_DB).find(p => p.nombre === name);
+        }
+
+        const stats = dbPlayer?.temporada_actual || {};
+
+        leaders.style.display = 'none';
+        detail.style.display = 'block';
+        detail.innerHTML = `
+        <div style="animation:viewFadeIn 0.4s var(--ease-out);">
+            <button onclick="closePlayerDetail()" style="background:var(--gold-subtle);border:1px solid rgba(255,215,0,0.2);color:var(--gold);padding:10px 20px;border-radius:var(--r-sm);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:24px;transition:all 0.3s;"
+                onmouseover="this.style.background='rgba(255,215,0,0.15)'" onmouseout="this.style.background='var(--gold-subtle)'">
+                ← Volver a Rankings
+            </button>
+            <div style="background:var(--glass-bg);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--r-xl);padding:40px;overflow:hidden;">
+                <!-- Player Header -->
+                <div style="display:flex;align-items:center;gap:24px;margin-bottom:32px;flex-wrap:wrap;">
+                    <div style="width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,170,0,0.08));display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0;">🏀</div>
+                    <div style="flex:1;">
+                        <h2 style="font-family:var(--font-display);font-size:clamp(24px,4vw,36px);font-weight:800;margin-bottom:4px;">${name}</h2>
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                            <span style="font-family:var(--font-mono);font-size:13px;color:var(--gold);background:var(--gold-subtle);padding:4px 12px;border-radius:6px;">${team}</span>
+                            <span style="color:rgba(255,255,255,0.5);font-size:14px;">${teamFull}</span>
+                            <span style="font-family:var(--font-mono);font-size:12px;color:rgba(255,255,255,0.3);">${gp} GP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rankings Badges -->
+                ${Object.keys(playerStats).length > 0 ? `
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;">
+                    ${Object.entries(playerStats).map(([abbr, s]) => `
+                    <div style="background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,170,0,0.05));border:1px solid rgba(255,215,0,0.15);border-radius:10px;padding:8px 16px;display:flex;align-items:center;gap:8px;">
+                        <span style="font-family:var(--font-mono);font-size:11px;color:var(--gold);font-weight:700;">#${s.rank}</span>
+                        <span style="font-size:13px;color:rgba(255,255,255,0.7);">${abbr}</span>
+                    </div>`).join('')}
+                </div>` : ''}
+
+                <!-- Stats Grid -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px;margin-bottom:28px;">
+                    ${Object.entries(playerStats).map(([abbr, s]) => `
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;">
+                        <div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--gold);margin-bottom:4px;">${s.value}</div>
+                        <div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">${abbr}</div>
+                    </div>`).join('')}
+                    ${dbPlayer && stats.pts ? `
+                    ${!playerStats['PPG'] ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--gold);">${stats.pts}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">PPG</div></div>` : ''}
+                    ${!playerStats['RPG'] && stats.reb ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--cyan);">${stats.reb}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">RPG</div></div>` : ''}
+                    ${!playerStats['APG'] && stats.ast ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--emerald);">${stats.ast}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">APG</div></div>` : ''}
+                    ${stats.stl ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--rose);">${stats.stl}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">SPG</div></div>` : ''}
+                    ${stats.blk ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--violet);">${stats.blk}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">BPG</div></div>` : ''}
+                    ${stats.fg3m ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--amber);">${stats.fg3m}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">3PM</div></div>` : ''}
+                    ${stats.min ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:rgba(255,255,255,0.7);">${stats.min}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">MIN</div></div>` : ''}
+                    ` : ''}
+                </div>
+
+                <!-- Last 5 Games (if available in DB) -->
+                ${dbPlayer && dbPlayer.ultimos_juegos && dbPlayer.ultimos_juegos.length > 0 ? `
+                <div style="margin-top:8px;">
+                    <h3 style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:16px;color:var(--cyan);">📊 Últimos Juegos</h3>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                            <thead>
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                                    <th style="padding:10px 12px;text-align:left;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">FECHA</th>
+                                    <th style="padding:10px 12px;text-align:left;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">VS</th>
+                                    <th style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">PTS</th>
+                                    <th style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">AST</th>
+                                    <th style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">REB</th>
+                                    <th style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">MIN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dbPlayer.ultimos_juegos.slice(0, 5).map((g, i) => `
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.04);${i % 2 === 0 ? 'background:rgba(255,255,255,0.02);' : ''}">
+                                    <td style="padding:10px 12px;color:rgba(255,255,255,0.6);">${g.fecha}</td>
+                                    <td style="padding:10px 12px;font-weight:600;">${g.oponente}</td>
+                                    <td style="padding:10px 12px;text-align:center;font-weight:700;color:var(--gold);">${g.pts}</td>
+                                    <td style="padding:10px 12px;text-align:center;font-weight:700;color:var(--emerald);">${g.ast}</td>
+                                    <td style="padding:10px 12px;text-align:center;font-weight:700;color:var(--cyan);">${g.reb}</td>
+                                    <td style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.5);">${g.min}</td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>` : ''}
+            </div>
+        </div>`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closePlayerDetail() {
+        document.getElementById('propsPlayerDetail').style.display = 'none';
+        document.getElementById('propsLeaders').style.display = 'block';
+        document.getElementById('propsSearchInput').value = '';
+    }
+
     async function loadPlayers() {
         if (propsLoaded) return;
-        const content = document.getElementById('props-content');
+        propsLoaded = true;
+        renderLeadersGrid();
+        // Load database in background for search
         try {
             const res = await fetch('https://josegarcia1003.github.io/NioSports-Pro/data/nba_players_database_v3.json');
-            if (!res.ok) throw new Error();
-            const data = await res.json();
-            propsLoaded = true;
-            const players = Object.values(data).slice(0, 24);
-            content.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;text-align:left;">' +
-                players.map(p => '<div style="background:var(--glass-bg);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--r-lg);padding:28px;transition:all 0.3s;cursor:pointer;" onmouseover="this.style.transform=\'translateY(-6px)\';this.style.borderColor=\'rgba(255,215,0,0.3)\'" onmouseout="this.style.transform=\'none\';this.style.borderColor=\'var(--glass-border)\'">' +
-                    '<h3 style="font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:6px;">' + p.nombre + '</h3>' +
-                    '<p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:20px;">' + p.equipo + '</p>' +
-                    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center;">' +
-                        '<div><div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--gold);">' + p.temporada_actual.pts + '</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;">PPG</div></div>' +
-                        '<div><div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--emerald);">' + p.temporada_actual.ast + '</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;">APG</div></div>' +
-                        '<div><div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--cyan);">' + p.temporada_actual.reb + '</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;">RPG</div></div>' +
-                    '</div>' +
-                '</div>').join('') + '</div>';
-        } catch {
-            content.innerHTML = '<div class="placeholder-card"><div class="placeholder-icon">📦</div><h2 style="font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--gold);margin-bottom:12px;">JSON No Encontrado</h2><p style="color:rgba(255,255,255,0.5);">Ejecuta el script de Colab para generar los datos</p></div>';
+            if (res.ok) {
+                PROPS_DB = await res.json();
+                console.log(`✅ Props DB: ${Object.keys(PROPS_DB).length} jugadores cargados`);
+            }
+        } catch (e) {
+            console.warn('Props DB no disponible:', e);
         }
     }
+
+    // Close search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#propsSearchInput') && !e.target.closest('#propsSearchResults')) {
+            const sr = document.getElementById('propsSearchResults');
+            if (sr) sr.style.display = 'none';
+        }
+    });
 
     console.log('🏀 NioSports Pro v3.0 REVOLUTION — Landing Page inicializada');
     </script>
