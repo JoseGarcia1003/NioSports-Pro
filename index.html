@@ -3874,6 +3874,8 @@ function checkOT() {
 function render() {
     const app = document.getElementById('app');
     if (currentView === 'home') app.innerHTML = renderHome();
+    else if (currentView === 'aipicks') app.innerHTML = renderAIPicks();
+    else if (currentView === 'backtesting') app.innerHTML = renderBacktesting();
     else if (currentView === 'tendencia') app.innerHTML = renderTendencia();
     else if (currentView === 'ingesta') app.innerHTML = renderIngesta();
     else if (currentView === 'picks') app.innerHTML = renderPicks();
@@ -3891,6 +3893,70 @@ function render() {
         setTimeout(() => initDashboardCharts(), 100);
     }
 }
+
+
+// ═══════════════════════════════════════════════════════════════════
+// 🎨 RENDERS DE NUEVAS VISTAS
+// ═══════════════════════════════════════════════════════════════════
+
+function renderAIPicks() {
+    const picks = AI_PICKS_TODAY;
+    let html = `<div class="max-w-7xl mx-auto px-4 py-6"><button onclick="navigateTo('home')" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 px-4 py-2 rounded-lg mb-6 text-sm font-semibold" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);">← Volver</button><div class="flex flex-col md:flex-row justify-between mb-6 gap-4"><div><h1 class="text-4xl font-bold text-white mb-2">🤖 AI PICKS DEL DÍA</h1><p class="text-gray-400">Mejores oportunidades detectadas (75%+ prob)</p></div><div class="flex gap-3"><button onclick="generateAIPicks(); render();" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-bold text-sm">🔄 Regenerar</button><button onclick="exportAIPicksToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm">📥 CSV</button></div></div><div class="grid grid-cols-4 gap-4 mb-8"><div class="glass rounded-xl p-4 text-center"><div class="text-4xl font-bold text-yellow-400">${picks.length}</div><div class="text-xs text-gray-400">TOTAL</div></div><div class="glass rounded-xl p-4 text-center"><div class="text-4xl font-bold text-green-400">${picks.filter(p => p.betType === 'OVER').length}</div><div class="text-xs text-gray-400">OVERS</div></div><div class="glass rounded-xl p-4 text-center"><div class="text-4xl font-bold text-blue-400">${picks.filter(p => p.betType === 'UNDER').length}</div><div class="text-xs text-gray-400">UNDERS</div></div><div class="glass rounded-xl p-4 text-center"><div class="text-4xl font-bold text-purple-400">${picks.filter(p => p.confidence === 'VERY HIGH').length}</div><div class="text-xs text-gray-400">VERY HIGH</div></div></div>`;
+    
+    if (picks.length === 0) {
+        html += `<div class="glass rounded-xl p-12 text-center"><div class="text-6xl mb-4">🤖</div><h3 class="text-2xl font-bold text-white mb-2">No hay AI Picks</h3><p class="text-gray-400 mb-6">Genera picks automáticamente</p><button onclick="generateAIPicks(); render();" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl font-bold">🚀 Generar</button></div>`;
+    } else {
+        html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+        picks.forEach((pick, i) => {
+            const confColor = pick.confidence === 'VERY HIGH' ? 'bg-purple-500/20 text-purple-400' : pick.confidence === 'HIGH' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400';
+            const betColor = pick.betType === 'OVER' ? 'text-green-400' : 'text-blue-400';
+            html += `<div class="glass-card p-5 relative"><div class="absolute top-3 left-3 bg-yellow-500/20 rounded-full w-10 h-10 flex items-center justify-center"><span class="text-yellow-400 font-bold">#${i+1}</span></div><div class="absolute top-3 right-3"><span class="text-xs px-2 py-1 rounded ${confColor}">${pick.confidence}</span></div><div class="mt-12 mb-4"><div class="text-xl font-bold text-white">${pick.local}</div><div class="text-sm text-gray-400">vs</div><div class="text-xl font-bold text-white">${pick.away}</div></div><div class="grid grid-cols-2 gap-3 mb-4"><div class="bg-white/5 rounded p-3 text-center"><div class="text-xs text-gray-400">Período</div><div class="text-white font-bold">${pick.period}</div></div><div class="bg-white/5 rounded p-3 text-center"><div class="text-xs text-gray-400">Bet</div><div class="${betColor} font-bold">${pick.betType} ${pick.line}</div></div></div><div class="bg-yellow-500/20 border border-yellow-500/30 rounded p-3 mb-4 text-center"><div class="text-xs text-yellow-400">Tendencia</div><div class="text-2xl font-bold text-yellow-400">${pick.trend}</div></div><div class="bg-purple-500/20 border border-purple-500/30 rounded p-3 mb-4"><div class="flex justify-between"><div class="text-sm text-purple-400">Probabilidad</div><div class="text-3xl font-bold text-purple-400">${pick.probability}%</div></div></div><button onclick="addPickToBacktest({local:'${pick.local}',away:'${pick.away}',period:'${pick.period}',betType:'${pick.betType}',line:${pick.line},trend:${pick.trend},probability:${pick.probability},pace:'${pick.pace}'})" class="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded font-bold text-sm">📊 Track</button></div>`;
+        });
+        html += `</div>`;
+    }
+    html += `</div>`;
+    return html;
+}
+
+function renderBacktesting() {
+    const stats = getBacktestingStats();
+    const allPicks = Object.values(PICKS_DATABASE).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const pending = allPicks.filter(p => p.status === 'pending');
+    const resolved = allPicks.filter(p => p.status !== 'pending');
+    let html = `<div class="max-w-7xl mx-auto px-4 py-6"><button onclick="navigateTo('home')" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 px-4 py-2 rounded-lg mb-6 text-sm font-semibold" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);">← Volver</button><div class="flex justify-between mb-6"><div><h1 class="text-4xl font-bold text-white mb-2">📊 BACKTESTING</h1><p class="text-gray-400">Calibración del modelo</p></div><button onclick="exportBacktestingToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm">📥 CSV</button></div>`;
+    
+    if (stats) {
+        html += `<div class="glass rounded-xl p-6 mb-8"><h2 class="text-xl font-bold text-white mb-6">📈 Estadísticas</h2><div class="grid grid-cols-5 gap-4 mb-6"><div class="text-center"><div class="text-3xl font-bold text-white">${stats.total}</div><div class="text-xs text-gray-400">Total</div></div><div class="text-center"><div class="text-3xl font-bold text-green-400">${stats.wins}</div><div class="text-xs text-gray-400">Wins</div></div><div class="text-center"><div class="text-3xl font-bold text-red-400">${stats.losses}</div><div class="text-xs text-gray-400">Losses</div></div><div class="text-center"><div class="text-3xl font-bold text-yellow-400">${stats.winRate}%</div><div class="text-xs text-gray-400">Win Rate</div></div><div class="text-center"><div class="text-3xl font-bold ${parseFloat(stats.roi)>=0?'text-green-400':'text-red-400'}">${stats.roi}%</div><div class="text-xs text-gray-400">ROI</div></div></div></div>`;
+    } else {
+        html += `<div class="glass rounded-xl p-12 text-center mb-8"><div class="text-6xl mb-4">📊</div><h3 class="text-2xl font-bold text-white mb-2">No hay datos</h3><p class="text-gray-400 mb-6">Empieza a trackear picks</p><button onclick="navigateTo('aipicks')" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl font-bold">🤖 AI Picks</button></div>`;
+    }
+    
+    html += `<div class="grid grid-cols-2 gap-6"><div class="glass rounded-xl p-6"><h3 class="text-xl font-bold text-white mb-4">⏳ Pendientes (${pending.length})</h3><div class="space-y-3 max-h-96 overflow-y-auto">`;
+    
+    if (pending.length === 0) {
+        html += `<p class="text-gray-400 text-center py-8">Sin picks pendientes</p>`;
+    } else {
+        pending.forEach(p => {
+            html += `<div class="bg-white/5 rounded p-4"><div class="flex justify-between mb-2"><div><div class="text-white font-bold">${p.local||'N/A'} vs ${p.away||'N/A'}</div><div class="text-sm text-gray-400">${new Date(p.createdAt).toLocaleDateString()}</div></div><span class="pending-badge">${p.period}</span></div><div class="grid grid-cols-3 gap-2 text-center text-sm mb-3"><div><div class="text-gray-400 text-xs">Bet</div><div class="${p.betType==='OVER'?'text-green-400':'text-blue-400'} font-bold">${p.betType} ${p.line}</div></div><div><div class="text-gray-400 text-xs">Trend</div><div class="text-yellow-400 font-bold">${p.trend}</div></div><div><div class="text-gray-400 text-xs">Prob</div><div class="text-purple-400 font-bold">${p.probability}%</div></div></div><div class="flex gap-2"><input type="number" step="0.5" placeholder="Resultado" class="flex-1 bg-white/10 text-white px-3 py-2 rounded text-sm" id="result_${p.id}"><button onclick="updatePickResult('${p.id}',document.getElementById('result_${p.id}').value)" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-bold">✓</button><button onclick="deletePick('${p.id}')" class="bg-red-600 text-white px-4 py-2 rounded text-sm font-bold">✕</button></div></div>`;
+        });
+    }
+    
+    html += `</div></div><div class="glass rounded-xl p-6"><h3 class="text-xl font-bold text-white mb-4">✅ Resueltos (${resolved.length})</h3><div class="space-y-3 max-h-96 overflow-y-auto">`;
+    
+    if (resolved.length === 0) {
+        html += `<p class="text-gray-400 text-center py-8">Sin picks resueltos</p>`;
+    } else {
+        resolved.forEach(p => {
+            const badge = p.status === 'win' ? 'win-badge' : p.status === 'push' ? 'pending-badge' : 'loss-badge';
+            const text = p.status === 'win' ? '✅ WIN' : p.status === 'push' ? '↔️ PUSH' : '❌ LOSS';
+            html += `<div class="bg-white/5 rounded p-4"><div class="flex justify-between mb-2"><div><div class="text-white font-bold">${p.local||'N/A'} vs ${p.away||'N/A'}</div></div><span class="${badge}">${text}</span></div><div class="grid grid-cols-4 gap-2 text-center text-xs"><div><div class="text-gray-400">Bet</div><div class="text-white font-bold">${p.betType} ${p.line}</div></div><div><div class="text-gray-400">Trend</div><div class="text-yellow-400 font-bold">${p.trend}</div></div><div><div class="text-gray-400">Real</div><div class="text-purple-400 font-bold">${p.actualResult!==null?p.actualResult.toFixed(1):'N/A'}</div></div><div><div class="text-gray-400">Error</div><div class="text-gray-300 font-bold">${p.modelError!==null?p.modelError.toFixed(1):'N/A'}</div></div></div></div>`;
+        });
+    }
+    
+    html += `</div></div></div></div>`;
+    return html;
+}
+
 
 function renderHome() {
     const teams = getTeams();
@@ -3961,6 +4027,30 @@ function renderHome() {
             </div>
 
             <!-- BOTÓN PRINCIPAL - TENDENCIA -->
+            
+            <!-- 🚀 NUEVAS FUNCIONALIDADES v2.0 -->
+            <button onclick="navigateTo('aipicks')" class="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-pink-600 p-6 rounded-2xl shadow-2xl hover:scale-[1.02] transition-all mb-4 border border-purple-500/30">
+                <div class="flex items-center justify-between">
+                    <div class="text-left">
+                        <div class="text-white font-bold text-2xl mb-2">🤖 AI Picks del Día</div>
+                        <div class="text-purple-100 text-sm">Oportunidades detectadas automáticamente</div>
+                        <div class="text-purple-200 text-xs mt-2">${AI_PICKS_TODAY.length} picks disponibles con 75%+ probabilidad</div>
+                    </div>
+                    <div class="text-5xl opacity-80">→</div>
+                </div>
+            </button>
+            
+            <button onclick="navigateTo('backtesting')" class="w-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 p-6 rounded-2xl shadow-2xl hover:scale-[1.02] transition-all mb-4 border border-blue-500/30">
+                <div class="flex items-center justify-between">
+                    <div class="text-left">
+                        <div class="text-white font-bold text-2xl mb-2">📊 Backtesting</div>
+                        <div class="text-blue-100 text-sm">Sistema de calibración del modelo</div>
+                        <div class="text-blue-200 text-xs mt-2">${Object.keys(PICKS_DATABASE).length} picks trackeados • Win Rate tracking</div>
+                    </div>
+                    <div class="text-5xl opacity-80">→</div>
+                </div>
+            </button>
+
             <button onclick="navigateTo('tendencia')" class="btn-3d w-full p-6 rounded-2xl shadow-2xl mb-4 relative overflow-hidden group" style="background: linear-gradient(135deg, #FFD700 0%, #F59E0B 100%);">
                 <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
                 <div class="relative flex items-center justify-center gap-4">
@@ -7020,6 +7110,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadBankrollFromFirebase();
     // CARGAR DATOS DE JUGADORES AUTOMÁTICAMENTE
     await cargarDatosJugadores();
+    
+    // 🚀 NIOSPORTS PRO 2.0 - NUEVAS FEATURES
+    loadAIPicks();
+    loadPicksFromFirebase();
+    console.log('✅ NioSports Pro 2.0 - AI Picks y Backtesting cargados');
 });
     </script>
 </body>
