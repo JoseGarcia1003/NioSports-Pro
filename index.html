@@ -1823,12 +1823,6 @@
             }
         }
         
-        let USER_PICKS_TOTALES = {};
-        let USER_PICKS_PROPS = {};
-        let USER_PICKS_AI = {};
-        let USER_PICKS_BACKTESTING = {};
-        let USER_BANKROLL = { current: 0, initial: 0, history: [] };
-        
         function loadUserData() {
             if (!userId) return;
             database.ref(`users/${userId}/picks_totales`).on('value', (s) => { USER_PICKS_TOTALES = s.val() || {}; });
@@ -2347,12 +2341,6 @@
                 });
             }
         }
-        
-        let USER_PICKS_TOTALES = {};
-        let USER_PICKS_PROPS = {};
-        let USER_PICKS_AI = {};
-        let USER_PICKS_BACKTESTING = {};
-        let USER_BANKROLL = { current: 0, initial: 0, history: [] };
         
         function loadUserData() {
             if (!userId) return;
