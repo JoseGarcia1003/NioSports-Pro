@@ -1367,6 +1367,43 @@
     </div><!-- Cierre mainApp -->
 <script>
 
+
+        // ═══════════════════════════════════════════════════════════════
+        // SISTEMA DE NOTIFICACIONES (CRÍTICO - DEBE ESTAR PRIMERO)
+        // ═══════════════════════════════════════════════════════════
+
+        function showNotification(type, title, message) {
+            console.log(`Notification: [${type}] ${title} - ${message}`);
+            
+            const notification = document.getElementById('notification');
+            if (!notification) {
+                console.error('Elemento notification no encontrado');
+                alert(`${title}: ${message}`);
+                return;
+            }
+            
+            const icon = document.getElementById('notificationIcon');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            if (icon) icon.textContent = icons[type] || icons.info;
+            if (titleEl) titleEl.textContent = title;
+            if (messageEl) titleEl.textContent = message;
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
         /* ══════════════════════════════════════════════════════════════════════
            NIOSPORTS PRO v4.0 - SISTEMA DE PREDICCIONES NBA
            ══════════════════════════════════════════════════════════════════════
@@ -2116,6 +2153,11 @@ const firebaseConfig = {
 
 // Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
+
+        
+        // DEBUG: Verificar Firebase
+        console.log('🔥 Firebase Auth:', typeof auth !== 'undefined' ? 'Disponible' : 'NO DISPONIBLE');
+        console.log('🔥 Firebase Database:', typeof database !== 'undefined' ? 'Disponible' : 'NO DISPONIBLE');
 const database = firebase.database();
 
 // ═══════════════════════════════════════════════════════════════
@@ -9093,5 +9135,18 @@ function renderSettings() {
         }
 
     </script>
+
+    
+    <!-- Notification Toast -->
+    <div id="notification" class="notification">
+        <div class="flex items-center gap-3">
+            <div id="notificationIcon"></div>
+            <div>
+                <div id="notificationTitle" class="font-bold text-white"></div>
+                <div id="notificationMessage" class="text-sm text-gray-300"></div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
