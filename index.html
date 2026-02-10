@@ -1594,6 +1594,11 @@ const auth = firebase.auth();
             // Cargar datos del usuario
             loadUserData();
             
+            // Cargar datos de Firebase que requieren autenticación
+            if (typeof loadH2HFromFirebase === 'function') loadH2HFromFirebase();
+            if (typeof loadBankrollFromFirebase === 'function') loadBankrollFromFirebase();
+            if (typeof loadPicksFromFirebase === 'function') loadPicksFromFirebase();
+            
             // Renderizar vista inicial
             if (typeof render === 'function') {
                 render();
@@ -2604,8 +2609,9 @@ database.ref('.info/connected').on('value', (snap) => {
 
 // Cargar datos de Firebase al iniciar
 function loadH2HFromFirebase() {
+    if (!userId) { console.warn('⚠️ loadH2H: sin userId'); return; }
     showLoading('Cargando datos H2H...');
-    database.ref('h2h_games').on('value', (snapshot) => {
+    database.ref(`users/${userId}/h2h_games`).on('value', (snapshot) => {
         if (snapshot.exists()) {
             H2H_DATABASE = snapshot.val();
         } else {
@@ -2621,8 +2627,9 @@ function loadH2HFromFirebase() {
 
 // Cargar picks de Firebase
 function loadPicksFromFirebase() {
+    if (!userId) { console.warn('⚠️ loadPicks: sin userId'); return; }
     showLoading('Cargando historial de picks...');
-    database.ref('picks').on('value', (snapshot) => {
+    database.ref(`users/${userId}/picks`).on('value', (snapshot) => {
         if (snapshot.exists()) {
             PICKS_DATABASE = snapshot.val();
         } else {
@@ -2640,8 +2647,9 @@ function loadPicksFromFirebase() {
 
 // Guardar H2H en Firebase
 function saveH2HToFirebase() {
+    if (!userId) { showNotification('❌ Debes iniciar sesión', 'error'); return; }
     showLoading('Guardando en Firebase...');
-    database.ref('h2h_games').set(H2H_DATABASE)
+    database.ref(`users/${userId}/h2h_games`).set(H2H_DATABASE)
         .then(() => {
 
             hideLoading();
@@ -2656,7 +2664,8 @@ function saveH2HToFirebase() {
 
 // Guardar picks en Firebase
 function savePicksToFirebase() {
-    database.ref('picks').set(PICKS_DATABASE)
+    if (!userId) return;
+    database.ref(`users/${userId}/picks`).set(PICKS_DATABASE)
 
         .catch((error) => console.error('Error guardando picks:', error));
 }
@@ -7072,7 +7081,8 @@ function updateOdds(p, v) {
 // BANKROLL MANAGEMENT FUNCTIONS
 // ═══════════════════════════════════════════════════════════════
 function loadBankrollFromFirebase() {
-    database.ref('bankroll').on('value', (snapshot) => {
+    if (!userId) { console.warn('⚠️ loadBankroll: sin userId'); return; }
+    database.ref(`users/${userId}/bankroll_data`).on('value', (snapshot) => {
         if (snapshot.exists()) {
             BANKROLL_DATA = snapshot.val();
         }
@@ -7095,7 +7105,8 @@ function saveBankrollToFirebase() {
         alert('⚠️ No hay conexión con Firebase');
         return false;
     }
-    database.ref('bankroll').set(BANKROLL_DATA);
+    if (!userId) return false;
+    database.ref(`users/${userId}/bankroll_data`).set(BANKROLL_DATA);
     return true;
 }
 
@@ -7868,21 +7879,137 @@ function toggleFavoritoYRefresh(nombre) {
     render();
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// AI PICKS ENGINE - Generación automática de picks con IA
+// ═══════════════════════════════════════════════════════════════════
+
+let AI_PICKS_TODAY = [];
+let AI_PICKS_CACHE_DATE = null;
+
+function generateAIPicks() {
+    console.log('🤖 Generando AI Picks...');
+    showNotification('info', 'AI Picks', 'Analizando todos los matchups posibles...');
+    
+    const teams = getTeams();
+    const aiPicks = [];
+    const today = new Date().toDateString();
+    
+    for (let i = 0; i < teams.length; i++) {
+        for (let j = i + 1; j < teams.length; j++) {
+            const local = teams[i];
+            const away = teams[j];
+            
+            const localStats = TEAM_STATS[local];
+            const awayStats = TEAM_STATS[away];
+            
+            if (!localStats || !awayStats) continue;
+            
+            // Q1
+            const q1Pred = ((localStats.q1Home + awayStats.q1Away) / 2);
+            const q1Line = Math.round(q1Pred * 2) / 2;
+            const q1Diff = Math.abs(q1Pred - q1Line);
+            const q1Prob = Math.min(95, 50 + (q1Diff * 30));
+            
+            if (q1Prob >= 75) {
+                aiPicks.push({
+                    id: `ai_q1_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+                    local, away, period: 'Q1',
+                    betType: q1Pred > q1Line ? 'OVER' : 'UNDER',
+                    line: q1Line, trend: q1Pred.toFixed(1),
+                    probability: Math.round(q1Prob),
+                    confidence: q1Prob >= 85 ? 'VERY HIGH' : q1Prob >= 80 ? 'HIGH' : 'GOOD',
+                    generatedAt: new Date().toISOString()
+                });
+            }
+            
+            // 1H
+            const halfPred = ((localStats.halfHome + awayStats.halfAway) / 2);
+            const halfLine = Math.round(halfPred * 2) / 2;
+            const halfDiff = Math.abs(halfPred - halfLine);
+            const halfProb = Math.min(95, 50 + (halfDiff * 30));
+            
+            if (halfProb >= 75) {
+                aiPicks.push({
+                    id: `ai_1h_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+                    local, away, period: '1H',
+                    betType: halfPred > halfLine ? 'OVER' : 'UNDER',
+                    line: halfLine, trend: halfPred.toFixed(1),
+                    probability: Math.round(halfProb),
+                    confidence: halfProb >= 85 ? 'VERY HIGH' : halfProb >= 80 ? 'HIGH' : 'GOOD',
+                    generatedAt: new Date().toISOString()
+                });
+            }
+            
+            // FULL
+            const fullPred = ((localStats.fullHome + awayStats.fullAway) / 2);
+            const fullLine = Math.round(fullPred * 2) / 2;
+            const fullDiff = Math.abs(fullPred - fullLine);
+            const fullProb = Math.min(95, 50 + (fullDiff * 30));
+            
+            if (fullProb >= 75) {
+                aiPicks.push({
+                    id: `ai_full_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+                    local, away, period: 'FULL',
+                    betType: fullPred > fullLine ? 'OVER' : 'UNDER',
+                    line: fullLine, trend: fullPred.toFixed(1),
+                    probability: Math.round(fullProb),
+                    confidence: fullProb >= 85 ? 'VERY HIGH' : fullProb >= 80 ? 'HIGH' : 'GOOD',
+                    generatedAt: new Date().toISOString()
+                });
+            }
+        }
+    }
+    
+    aiPicks.sort((a, b) => b.probability - a.probability);
+    AI_PICKS_TODAY = aiPicks.slice(0, 30);
+    AI_PICKS_CACHE_DATE = today;
+    
+    localStorage.setItem('ai_picks_cache', JSON.stringify({
+        picks: AI_PICKS_TODAY,
+        date: today,
+        generatedAt: new Date().toISOString()
+    }));
+    
+    showNotification('success', '¡Listo!', `${AI_PICKS_TODAY.length} AI Picks generados`);
+    if (typeof render === 'function') render();
+}
+
+function loadAIPicks() {
+    const today = new Date().toDateString();
+    const cached = localStorage.getItem('ai_picks_cache');
+    
+    if (cached) {
+        try {
+            const data = JSON.parse(cached);
+            if (data.date === today && data.picks && data.picks.length > 0) {
+                AI_PICKS_TODAY = data.picks;
+                AI_PICKS_CACHE_DATE = data.date;
+                console.log(`✅ AI Picks cargados del cache: ${AI_PICKS_TODAY.length} picks`);
+                return;
+            }
+        } catch (e) {
+            console.warn('⚠️ Error leyendo cache de AI Picks:', e);
+        }
+    }
+    
+    // Si no hay cache válido, generar cuando las stats estén listas
+    if (typeof TEAM_STATS !== 'undefined' && Object.keys(TEAM_STATS).length > 0) {
+        generateAIPicks();
+    } else {
+        console.log('⏳ AI Picks: esperando a que se carguen las stats...');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Cargar VALUE_PICKS desde localStorage
     loadValuePicksFromStorage();
-    // Primero cargar estadísticas desde API
+    // Primero cargar estadísticas desde API (no requiere auth)
     await loadTeamStatsFromAPI();
-    // Luego cargar datos de Firebase
-    loadH2HFromFirebase();
-    loadBankrollFromFirebase();
-    // CARGAR DATOS DE JUGADORES AUTOMÁTICAMENTE
+    // CARGAR DATOS DE JUGADORES AUTOMÁTICAMENTE (no requiere auth)
     await cargarDatosJugadores();
-    
-    // 🚀 NIOSPORTS PRO 2.0 - NUEVAS FEATURES
+    // Cargar AI Picks desde cache local
     loadAIPicks();
-    loadPicksFromFirebase();
-    console.log('✅ NioSports Pro 2.0 - AI Picks y Backtesting cargados');
+    console.log('✅ NioSports Pro v4.0 - Datos públicos cargados. Esperando autenticación...');
 });
     
 
@@ -7992,29 +8119,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('Error:', error);
                 showNotification('error', 'Error', 'No se pudo exportar');
             }
-        }
-        
-        // Función para agregar AI Pick a tracking
-        function addAIPickToTracking(pickId) {
-            const pick = AI_PICKS_TODAY.find(p => p.id === pickId);
-            if (!pick) {
-                showNotification('warning', 'Pick no encontrado', '');
-                return;
-            }
-            
-            const userPickId = `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            
-            database.ref(`users/${userId}/picks_ai/${userPickId}`).set({
-                ...pick,
-                id: userPickId,
-                status: 'pending',
-                addedAt: new Date().toISOString()
-            }).then(() => {
-                showNotification('success', 'Pick Agregado', 'Añadido a Mis Picks');
-            }).catch(err => {
-                console.error('Error:', err);
-                showNotification('error', 'Error', 'No se pudo agregar');
-            });
         }
         
         // Función para actualizar status de pick
