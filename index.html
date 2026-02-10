@@ -1400,11 +1400,6 @@
     
     </div><!-- Cierre mainApp -->
 <script>
-            database.ref(`users/${userId}/picks_props`).on('value', (s) => { USER_PICKS_PROPS = s.val() || {}; });
-            database.ref(`users/${userId}/picks_ai`).on('value', (s) => { USER_PICKS_AI = s.val() || {}; });
-            database.ref(`users/${userId}/picks_backtesting`).on('value', (s) => { USER_PICKS_BACKTESTING = s.val() || {}; if (currentView === 'backtesting') render(); });
-            database.ref(`users/${userId}/bankroll`).on('value', (s) => { USER_BANKROLL = s.val() || { current: 0, initial: 0, history: [] }; if (currentView === 'bankroll') render(); });
-        }
 
 // ═══════════════════════════════════════════════════════════════
 // FIREBASE CONFIGURATION
@@ -1783,81 +1778,6 @@ const auth = firebase.auth();
 
         
         // ═══════════════════════════════════════════════════════════════
-        // SISTEMA DE AUTENTICACIÓN - NIOSPORTS PRO v4.0
-        // ═══════════════════════════════════════════════════════════
-
-        
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                currentUser = user;
-                userId = user.uid;
-                onUserLoggedIn(user);
-            } else {
-                currentUser = null;
-                userId = null;
-                showLogin();
-            }
-        });
-        
-        function showLogin() {
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('registerScreen').style.display = 'none';
-            document.getElementById('forgotPasswordScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-        
-        function showRegister() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('registerScreen').style.display = 'flex';
-            document.getElementById('forgotPasswordScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-        
-        function showForgotPassword() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('registerScreen').style.display = 'none';
-            document.getElementById('forgotPasswordScreen').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-        
-        function onUserLoggedIn(user) {
-            database.ref(`users/${user.uid}/profile`).once('value').then((snapshot) => {
-                const profile = snapshot.val();
-                if (profile) {
-                    const username = profile.username || profile.displayName || 'Usuario';
-                    const navName = document.getElementById('userName');
-                    if (navName) navName.textContent = username;
-                    const initials = username.substring(0, 1).toUpperCase();
-                    const navInitials = document.getElementById('userInitials');
-                    if (navInitials) navInitials.textContent = initials;
-                }
-            });
-            
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('registerScreen').style.display = 'none';
-            document.getElementById('forgotPasswordScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            
-            loadUserData();
-            render();
-        }
-        
-        function logout() {
-            if (confirm('¿Cerrar sesión?')) {
-                auth.signOut().then(() => {
-                    showNotification('info', 'Sesión cerrada', 'Hasta pronto');
-                });
-            }
-        }
-        
-        function loadUserData() {
-            if (!userId) return;
-            database.ref(`users/${userId}/picks_totales`).on('value', (s) => { USER_PICKS_TOTALES = s.val() || {}; });
-            database.ref(`users/${userId}/picks_props`).on('value', (s) => { USER_PICKS_PROPS = s.val() || {}; });
-            database.ref(`users/${userId}/picks_ai`).on('value', (s) => { USER_PICKS_AI = s.val() || {}; });
-            database.ref(`users/${userId}/picks_backtesting`).on('value', (s) => { USER_PICKS_BACKTESTING = s.val() || {}; if (currentView === 'backtesting') render(); });
-            database.ref(`users/${userId}/bankroll`).on('value', (s) => { USER_BANKROLL = s.val() || { current: 0, initial: 0, history: [] }; if (currentView === 'bankroll') render(); });
-        }
 
     // ═══════════════════════════════════════════════════════════
     // LANDING PAGE CONTROLLERS
@@ -2302,76 +2222,6 @@ const auth = firebase.auth();
     <script>
         
         // ═══════════════════════════════════════════════════════════════
-        // SISTEMA DE AUTENTICACIÓN - NIOSPORTS PRO v4.0
-        // ═══════════════════════════════════════════════════════════
-
-        
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                currentUser = user;
-                userId = user.uid;
-                onUserLoggedIn(user);
-            } else {
-                currentUser = null;
-                userId = null;
-                showLogin();
-            }
-        });
-        
-        function showLogin() {
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('registerScreen').style.display = 'none';
-            document.getElementById('forgotPasswordScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-        
-        function showRegister() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('registerScreen').style.display = 'flex';
-            document.getElementById('forgotPasswordScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-        
-        function showForgotPassword() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('registerScreen').style.display = 'none';
-            document.getElementById('forgotPasswordScreen').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-        
-        function onUserLoggedIn(user) {
-            database.ref(`users/${user.uid}/profile`).once('value').then((snapshot) => {
-                const profile = snapshot.val();
-                if (profile) {
-                    const username = profile.username || profile.displayName || 'Usuario';
-                    const navName = document.getElementById('userName');
-                    if (navName) navName.textContent = username;
-                    const initials = username.substring(0, 1).toUpperCase();
-                    const navInitials = document.getElementById('userInitials');
-                    if (navInitials) navInitials.textContent = initials;
-                }
-            });
-            
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('registerScreen').style.display = 'none';
-            document.getElementById('forgotPasswordScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            
-            loadUserData();
-            render();
-        }
-        
-        function logout() {
-            if (confirm('¿Cerrar sesión?')) {
-                auth.signOut().then(() => {
-                    showNotification('info', 'Sesión cerrada', 'Hasta pronto');
-                });
-            }
-        }
-        
-        function loadUserData() {
-            if (!userId) return;
-            database.ref(`users/${userId}/picks_totales`).on('value', (s) => { USER_PICKS_TOTALES = s.val() || {}; });
 
 // LOGO SVG - NUEVO DISEÑO AZUL MARINO + DORADO + BASKETBALL
 // ═══════════════════════════════════════════════════════════════
@@ -2707,7 +2557,16 @@ function hideLoading() {
     isLoading = false;
 }
 
-function showNotification(message, type = 'info') {
+function showNotification(arg1, arg2 = 'info', arg3 = null) {
+    // Handle both calling conventions: (message, type) and (type, title, message)
+    let type, title, message;
+    if (arg3 !== null) {
+        // Called as showNotification(type, title, message)
+        type = arg1; title = arg2; message = arg3;
+    } else {
+        // Called as showNotification(message, type)
+        message = arg1; type = arg2; title = '';
+    }
     const container = document.getElementById('notificationContainer');
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
@@ -4585,12 +4444,13 @@ function render() {
     if (currentView === 'home') app.innerHTML = renderHome();
     else if (currentView === 'aipicks') app.innerHTML = renderAIPicks();
     else if (currentView === 'backtesting') app.innerHTML = renderBacktesting();
-    else if (currentView === 'tendencia') app.innerHTML = renderTendencia();
+    else if (currentView === 'tendencia' || currentView === 'totales') app.innerHTML = renderTendencia();
     else if (currentView === 'ingesta') app.innerHTML = renderIngesta();
     else if (currentView === 'picks') app.innerHTML = renderPicks();
+    else if (currentView === 'mispicks') app.innerHTML = renderMisPicks();
     else if (currentView === 'bestPicks') app.innerHTML = renderBestPicks();
     else if (currentView === 'dashboard') app.innerHTML = renderDashboard();
-        else if (currentView === 'playerProps') app.innerHTML = renderPlayerProps();
+    else if (currentView === 'playerProps' || currentView === 'props') app.innerHTML = renderPlayerProps();
     else if (currentView === 'bankroll') {
         app.innerHTML = renderBankrollView();
         setTimeout(() => createBankrollChart(), 100);
@@ -4610,327 +4470,424 @@ function render() {
 
 function renderAIPicks() {
     const picks = AI_PICKS_TODAY;
-    let html = `<div class="max-w-7xl mx-auto px-4 py-6"><button onclick="navigateTo('home')" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 px-4 py-2 rounded-lg mb-6 text-sm font-semibold" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);">← Volver</button><div class="flex flex-col md:flex-row justify-between mb-6 gap-4"><div><h1 class="text-4xl font-bold text-white mb-2">🤖 AI PICKS DEL DÍA</h1><p class="text-gray-400">Mejores oportunidades detectadas (75%+ prob)</p></div><div class="flex gap-3"><button onclick="generateAIPicks(); render();" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-bold text-sm">🔄 Regenerar</button><button onclick="exportAIPicksToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm">📥 CSV</button></div></div><div class="grid grid-cols-4 gap-4 mb-8"><div class="glass rounded-xl p-4 text-center"><div class="text-4xl font-bold text-yellow-400">${picks.length}</div><div class="text-xs text-gray-400">TOTAL</div></div><div class="glass rounded-xl p-4 text-center"><div class="text-4xl font-bold text-green-400">${picks.filter(p => p.betType === 'OVER').length}</div><div class="text-xs text-gray-400">OVERS</div></div><div class="glass rounded-xl p-4 text-center"><div class="text-4xl font-bold text-blue-400">${picks.filter(p => p.betType === 'UNDER').length}</div><div class="text-xs text-gray-400">UNDERS</div></div><div class="glass rounded-xl p-4 text-center"><div class="text-4xl font-bold text-purple-400">${picks.filter(p => p.confidence === 'VERY HIGH').length}</div><div class="text-xs text-gray-400">VERY HIGH</div></div></div>`;
     
-    if (picks.length === 0) {
-        html += `<div class="glass rounded-xl p-12 text-center"><div class="text-6xl mb-4">🤖</div><h3 class="text-2xl font-bold text-white mb-2">No hay AI Picks</h3><p class="text-gray-400 mb-6">Genera picks automáticamente</p><button onclick="generateAIPicks(); render();" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl font-bold">🚀 Generar</button></div>`;
-    } else {
-        html += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
-        picks.forEach((pick, i) => {
-            const confColor = pick.confidence === 'VERY HIGH' ? 'bg-purple-500/20 text-purple-400' : pick.confidence === 'HIGH' ? 'bg-pink-500/20 text-pink-400' : 'bg-blue-500/20 text-blue-400';
-            const betColor = pick.betType === 'OVER' ? 'text-green-400' : 'text-blue-400';
-            html += `<div class="glass-card p-5 relative"><div class="absolute top-3 left-3 bg-yellow-500/20 rounded-full w-10 h-10 flex items-center justify-center"><span class="text-yellow-400 font-bold">#${i+1}</span></div><div class="absolute top-3 right-3"><span class="text-xs px-2 py-1 rounded ${confColor}">${pick.confidence}</span></div><div class="mt-12 mb-4"><div class="text-xl font-bold text-white">${pick.local}</div><div class="text-sm text-gray-400">vs</div><div class="text-xl font-bold text-white">${pick.away}</div></div><div class="grid grid-cols-2 gap-3 mb-4"><div class="bg-white/5 rounded p-3 text-center"><div class="text-xs text-gray-400">Período</div><div class="text-white font-bold">${pick.period}</div></div><div class="bg-white/5 rounded p-3 text-center"><div class="text-xs text-gray-400">Bet</div><div class="${betColor} font-bold">${pick.betType} ${pick.line}</div></div></div><div class="bg-yellow-500/20 border border-yellow-500/30 rounded p-3 mb-4 text-center"><div class="text-xs text-yellow-400">Tendencia</div><div class="text-2xl font-bold text-yellow-400">${pick.trend}</div></div><div class="bg-purple-500/20 border border-purple-500/30 rounded p-3 mb-4"><div class="flex justify-between"><div class="text-sm text-purple-400">Probabilidad</div><div class="text-3xl font-bold text-purple-400">${pick.probability}%</div></div></div><button onclick="addPickToBacktest({local:'${pick.local}',away:'${pick.away}',period:'${pick.period}',betType:'${pick.betType}',line:${pick.line},trend:${pick.trend},probability:${pick.probability},pace:'${pick.pace}'})" class="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded font-bold text-sm">📊 Track</button></div>`;
-        });
-        html += `</div>`;
-    }
-    html += `</div>`;
-    return html;
+    return `
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
+                ← Volver al Home
+            </button>
+            
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
+                        🤖 AI Picks del Día
+                    </h1>
+                    <p class="text-gray-400">Mejores oportunidades detectadas automáticamente (75%+ probabilidad)</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="generateAIPicks()" class="btn-secondary">
+                        🔄 Regenerar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="glass-card p-4 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-gold">${picks.length}</div>
+                    <div class="text-xs text-gray-400">Total Picks</div>
+                </div>
+                <div class="glass-card p-4 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-emerald">${picks.filter(p => p.betType === 'OVER').length}</div>
+                    <div class="text-xs text-gray-400">Overs</div>
+                </div>
+                <div class="glass-card p-4 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-cyan">${picks.filter(p => p.betType === 'UNDER').length}</div>
+                    <div class="text-xs text-gray-400">Unders</div>
+                </div>
+                <div class="glass-card p-4 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-violet">${picks.filter(p => p.confidence === 'VERY HIGH').length}</div>
+                    <div class="text-xs text-gray-400">Very High</div>
+                </div>
+            </div>
+            
+            ${picks.length === 0 ? `
+                <div class="glass-card p-12 rounded-2xl text-center">
+                    <div class="text-6xl mb-4">🤖</div>
+                    <h3 class="text-2xl font-bold text-white mb-2">No hay AI Picks generados</h3>
+                    <p class="text-gray-400 mb-6">Genera picks automáticamente analizando matchups</p>
+                    <button onclick="generateAIPicks()" class="btn-primary">
+                        Generar AI Picks
+                    </button>
+                </div>
+            ` : `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${picks.map((pick, i) => `
+                        <div class="glass-card p-5 rounded-2xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="bg-gold/20 rounded-full w-10 h-10 flex items-center justify-center">
+                                    <span class="text-gold font-bold">#${i+1}</span>
+                                </div>
+                                <span class="badge ${pick.confidence === 'VERY HIGH' ? 'badge-info' : pick.confidence === 'HIGH' ? 'badge-warning' : 'badge-success'}">
+                                    ${pick.confidence}
+                                </span>
+                            </div>
+                            
+                            <div class="text-center mb-4">
+                                <div class="text-lg font-bold text-white">${pick.local}</div>
+                                <div class="text-sm text-gray-400">vs</div>
+                                <div class="text-lg font-bold text-white">${pick.away}</div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div class="bg-white/5 rounded-lg p-3 text-center">
+                                    <div class="text-xs text-gray-400">Período</div>
+                                    <div class="text-white font-bold">${pick.period}</div>
+                                </div>
+                                <div class="bg-white/5 rounded-lg p-3 text-center">
+                                    <div class="text-xs text-gray-400">Apuesta</div>
+                                    <div class="${pick.betType === 'OVER' ? 'text-emerald' : 'text-cyan'} font-bold">
+                                        ${pick.betType} ${pick.line}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gold/20 border border-gold/30 rounded-lg p-3 mb-4 text-center">
+                                <div class="text-xs text-gold">Tendencia</div>
+                                <div class="text-2xl font-bold text-gold">${pick.trend}</div>
+                            </div>
+                            
+                            <div class="bg-violet/20 border border-violet/30 rounded-lg p-3 mb-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="text-sm text-violet">Probabilidad</div>
+                                    <div class="text-3xl font-bold text-violet">${pick.probability}%</div>
+                                </div>
+                            </div>
+                            
+                            <button onclick="addAIPickToTracking('${pick.id}')" class="btn-primary w-full">
+                                📊 Agregar a Mis Picks
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `}
+        </div>
+    `;
 }
+
+function addAIPickToTracking(pickId) {
+    const pick = AI_PICKS_TODAY.find(p => p.id === pickId);
+    if (!pick) return;
+    
+    const userPickId = `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    database.ref(`users/${userId}/picks_ai/${userPickId}`).set({
+        ...pick,
+        id: userPickId,
+        status: 'pending',
+        addedAt: new Date().toISOString()
+    }).then(() => {
+        showNotification('success', 'Pick Agregado', 'Añadido a tus picks');
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MÓDULO: BANKROLL
+// ═══════════════════════════════════════════════════════════════════
+
 
 function renderBacktesting() {
-    const stats = getBacktestingStats();
-    const allPicks = Object.values(PICKS_DATABASE).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-    const pending = allPicks.filter(p => p.status === 'pending');
-    const resolved = allPicks.filter(p => p.status !== 'pending');
-    let html = `<div class="max-w-7xl mx-auto px-4 py-6"><button onclick="navigateTo('home')" class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 px-4 py-2 rounded-lg mb-6 text-sm font-semibold" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);">← Volver</button><div class="flex justify-between mb-6"><div><h1 class="text-4xl font-bold text-white mb-2">📊 BACKTESTING</h1><p class="text-gray-400">Calibración del modelo</p></div><button onclick="exportBacktestingToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm">📥 CSV</button></div>`;
+    const picks = Object.values(USER_PICKS_BACKTESTING);
+    const resolved = picks.filter(p => p.status !== 'pending');
+    const pending = picks.filter(p => p.status === 'pending');
     
-    if (stats) {
-        html += `<div class="glass rounded-xl p-6 mb-8"><h2 class="text-xl font-bold text-white mb-6">📈 Estadísticas</h2><div class="grid grid-cols-5 gap-4 mb-6"><div class="text-center"><div class="text-3xl font-bold text-white">${stats.total}</div><div class="text-xs text-gray-400">Total</div></div><div class="text-center"><div class="text-3xl font-bold text-green-400">${stats.wins}</div><div class="text-xs text-gray-400">Wins</div></div><div class="text-center"><div class="text-3xl font-bold text-red-400">${stats.losses}</div><div class="text-xs text-gray-400">Losses</div></div><div class="text-center"><div class="text-3xl font-bold text-yellow-400">${stats.winRate}%</div><div class="text-xs text-gray-400">Win Rate</div></div><div class="text-center"><div class="text-3xl font-bold ${parseFloat(stats.roi)>=0?'text-green-400':'text-red-400'}">${stats.roi}%</div><div class="text-xs text-gray-400">ROI</div></div></div></div>`;
-    } else {
-        html += `<div class="glass rounded-xl p-12 text-center mb-8"><div class="text-6xl mb-4">📊</div><h3 class="text-2xl font-bold text-white mb-2">No hay datos</h3><p class="text-gray-400 mb-6">Empieza a trackear picks</p><button onclick="navigateTo('aipicks')" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl font-bold">🤖 AI Picks</button></div>`;
-    }
+    const wins = resolved.filter(p => p.status === 'win').length;
+    const losses = resolved.filter(p => p.status === 'loss').length;
+    const pushes = resolved.filter(p => p.status === 'push').length;
+    const winRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
     
-    html += `<div class="grid grid-cols-2 gap-6"><div class="glass rounded-xl p-6"><h3 class="text-xl font-bold text-white mb-4">⏳ Pendientes (${pending.length})</h3><div class="space-y-3 max-h-96 overflow-y-auto">`;
-    
-    if (pending.length === 0) {
-        html += `<p class="text-gray-400 text-center py-8">Sin picks pendientes</p>`;
-    } else {
-        pending.forEach(p => {
-            html += `<div class="bg-white/5 rounded p-4"><div class="flex justify-between mb-2"><div><div class="text-white font-bold">${p.local||'N/A'} vs ${p.away||'N/A'}</div><div class="text-sm text-gray-400">${new Date(p.createdAt).toLocaleDateString()}</div></div><span class="pending-badge">${p.period}</span></div><div class="grid grid-cols-3 gap-2 text-center text-sm mb-3"><div><div class="text-gray-400 text-xs">Bet</div><div class="${p.betType==='OVER'?'text-green-400':'text-blue-400'} font-bold">${p.betType} ${p.line}</div></div><div><div class="text-gray-400 text-xs">Trend</div><div class="text-yellow-400 font-bold">${p.trend}</div></div><div><div class="text-gray-400 text-xs">Prob</div><div class="text-purple-400 font-bold">${p.probability}%</div></div></div><div class="flex gap-2"><input type="number" step="0.5" placeholder="Resultado" class="flex-1 bg-white/10 text-white px-3 py-2 rounded text-sm" id="result_${p.id}"><button onclick="updatePickResult('${p.id}',document.getElementById('result_${p.id}').value)" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-bold">✓</button><button onclick="deletePick('${p.id}')" class="bg-red-600 text-white px-4 py-2 rounded text-sm font-bold">✕</button></div></div>`;
-        });
-    }
-    
-    html += `</div></div><div class="glass rounded-xl p-6"><h3 class="text-xl font-bold text-white mb-4">✅ Resueltos (${resolved.length})</h3><div class="space-y-3 max-h-96 overflow-y-auto">`;
-    
-    if (resolved.length === 0) {
-        html += `<p class="text-gray-400 text-center py-8">Sin picks resueltos</p>`;
-    } else {
-        resolved.forEach(p => {
-            const badge = p.status === 'win' ? 'win-badge' : p.status === 'push' ? 'pending-badge' : 'loss-badge';
-            const text = p.status === 'win' ? '✅ WIN' : p.status === 'push' ? '↔️ PUSH' : '❌ LOSS';
-            html += `<div class="bg-white/5 rounded p-4"><div class="flex justify-between mb-2"><div><div class="text-white font-bold">${p.local||'N/A'} vs ${p.away||'N/A'}</div></div><span class="${badge}">${text}</span></div><div class="grid grid-cols-4 gap-2 text-center text-xs"><div><div class="text-gray-400">Bet</div><div class="text-white font-bold">${p.betType} ${p.line}</div></div><div><div class="text-gray-400">Trend</div><div class="text-yellow-400 font-bold">${p.trend}</div></div><div><div class="text-gray-400">Real</div><div class="text-purple-400 font-bold">${p.actualResult!==null?p.actualResult.toFixed(1):'N/A'}</div></div><div><div class="text-gray-400">Error</div><div class="text-gray-300 font-bold">${p.modelError!==null?p.modelError.toFixed(1):'N/A'}</div></div></div></div>`;
-        });
-    }
-    
-    html += `</div></div></div></div>`;
-    return html;
-}
-
-
-function renderHome() {
-    const teams = getTeams();
-    const top5 = [...teams].sort((a,b) => (TEAM_STATS[b]?.full||0) - (TEAM_STATS[a]?.full||0)).slice(0,5);
-    const h2hC = Object.keys(H2H_DATABASE).length;
-    const totalG = Object.values(H2H_DATABASE).reduce((s,a) => s + (Array.isArray(a) ? a.length : 0), 0);
-    const picksStats = getPicksStats();
-
-    let topH = top5.map((t,i) => `
-        <div class="flex justify-between items-center bg-white/5 hover:bg-white/10 rounded-xl p-3 mb-2 transition-all border border-transparent hover:border-yellow-500/30">
-            <span class="text-white font-semibold">${i+1}. ${t}</span>
-            <div class="text-right">
-                <span class="text-yellow-400 font-bold text-lg">${TEAM_STATS[t]?.full?.toFixed(1)}</span>
-                <span class="text-gray-500 text-xs ml-2">(H:${TEAM_STATS[t]?.fullHome} / A:${TEAM_STATS[t]?.fullAway})</span>
-            </div>
-        </div>
-    `).join('');
-
     return `
-        <div class="p-4 max-w-4xl mx-auto">
-            <!-- HEADER CON ESTADIO SVG DE FONDO -->
-            <div class="relative mb-8 overflow-hidden rounded-3xl" style="background: linear-gradient(135deg, #0d1b2a 0%, #1b3a5f 50%, #0d1b2a 100%);">
-                <!-- Elementos decorativos NBA -->
-                <div class="absolute inset-0 opacity-5">
-                    <svg viewBox="0 0 400 200" class="w-full h-full">
-                        <!-- Cancha de basketball simplificada -->
-                        <rect x="20" y="20" width="360" height="160" fill="none" stroke="#FFD700" stroke-width="2"/>
-                        <circle cx="200" cy="100" r="40" fill="none" stroke="#FFD700" stroke-width="2"/>
-                        <line x1="200" y1="20" x2="200" y2="180" stroke="#FFD700" stroke-width="2"/>
-                        <!-- Áreas de tiro -->
-                        <path d="M20 60 L60 60 L60 140 L20 140" fill="none" stroke="#FFD700" stroke-width="2"/>
-                        <path d="M380 60 L340 60 L340 140 L380 140" fill="none" stroke="#FFD700" stroke-width="2"/>
-                        <circle cx="60" cy="100" r="30" fill="none" stroke="#FFD700" stroke-width="2"/>
-                        <circle cx="340" cy="100" r="30" fill="none" stroke="#FFD700" stroke-width="2"/>
-                    </svg>
+        <div class="max-w-6xl mx-auto px-4 py-8">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
+                ← Volver al Home
+            </button>
+            
+            <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
+                📊 Backtesting
+            </h1>
+            <p class="text-gray-400 mb-8">Sistema de calibración y validación del modelo</p>
+            
+            ${resolved.length > 0 ? `
+                <!-- Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                    <div class="glass-card p-4 rounded-xl text-center">
+                        <div class="text-3xl font-bold text-white">${resolved.length}</div>
+                        <div class="text-xs text-gray-400">Total</div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl text-center">
+                        <div class="text-3xl font-bold text-emerald">${wins}</div>
+                        <div class="text-xs text-gray-400">Wins</div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl text-center">
+                        <div class="text-3xl font-bold text-rose">${losses}</div>
+                        <div class="text-xs text-gray-400">Losses</div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl text-center">
+                        <div class="text-3xl font-bold text-gold">${winRate}%</div>
+                        <div class="text-xs text-gray-400">Win Rate</div>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl text-center">
+                        <div class="text-3xl font-bold text-cyan">${pushes}</div>
+                        <div class="text-xs text-gray-400">Pushes</div>
+                    </div>
                 </div>
-
-                <div class="relative z-10 p-8 text-center">
-                    <!-- Logo -->
-                    <div class="flex items-center justify-center gap-5 mb-4">
-                        ${LOGO_SVG}
-                        <div>
-                            <h1 class="text-5xl md:text-6xl font-black font-display tracking-wider relative"
-                                style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
-                                       -webkit-background-clip: text;
-                                       -webkit-text-fill-color: transparent;
-                                       background-clip: text;
-                                       filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.5));
-                                       letter-spacing: 0.15em;">
-                                NIOSPORTS
-                            </h1>
-                            <div class="flex items-center justify-center gap-2 mt-1">
-                                <span class="text-yellow-400 text-base font-semibold" style="text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);">🏀 NBA Analytics</span>
+            ` : ''}
+            
+            <!-- Lists -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Pending -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-xl font-bold text-white mb-4">⏳ Pendientes (${pending.length})</h3>
+                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                        ${pending.length === 0 ? `
+                            <div class="text-center py-8 text-gray-400">No hay picks pendientes</div>
+                        ` : pending.map(p => `
+                            <div class="bg-white/5 rounded-lg p-4">
+                                <div class="font-medium text-white mb-2">
+                                    ${p.local} vs ${p.away} • ${p.period}
+                                </div>
+                                <div class="text-sm text-gray-400 mb-3">
+                                    ${p.betType} ${p.line} • Trend: ${p.trend}
+                                </div>
+                                <div class="flex gap-2">
+                                    <input type="number" step="0.5" placeholder="Resultado" 
+                                           class="input-field flex-1 !py-2 text-sm" id="bt_${p.id}">
+                                    <button onclick="resolveBacktestPick('${p.id}')" 
+                                            class="btn-secondary !py-2 !px-4">✓</button>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-400 text-sm">Sistema Profesional de Predicciones NBA con Inteligencia Artificial</p>
-                </div>
-
-                <!-- Barra de estado -->
-                <div class="bg-black/30 backdrop-blur px-4 py-2 flex items-center justify-center gap-3">
-                    ${apiConnected ? '<div class="live-dot"></div>' : '<span class="text-yellow-500">⚠️</span>'}
-                    <span class="font-medium text-sm ${apiConnected ? 'text-green-400' : 'text-yellow-400'}">
-                        ${apiConnected ? 'LIVE' : 'OFFLINE'} • ${statsSource}
-                    </span>
-                    ${statsLastUpdated ? `<span class="text-xs text-gray-500">• ${new Date(statsLastUpdated).toLocaleString('es-ES', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</span>` : ''}
-                </div>
-            </div>
-
-            <!-- BOTÓN PRINCIPAL - TENDENCIA -->
-            
-            <!-- 🚀 NUEVAS FUNCIONALIDADES v2.0 -->
-            <button onclick="navigateTo('aipicks')" class="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-pink-600 p-6 rounded-2xl shadow-2xl hover:scale-[1.02] transition-all mb-4 border border-purple-500/30">
-                <div class="flex items-center justify-between">
-                    <div class="text-left">
-                        <div class="text-white font-bold text-2xl mb-2">🤖 AI Picks del Día</div>
-                        <div class="text-purple-100 text-sm">Oportunidades detectadas automáticamente</div>
-                        <div class="text-purple-200 text-xs mt-2">${AI_PICKS_TODAY.length} picks disponibles con 75%+ probabilidad</div>
-                    </div>
-                    <div class="text-5xl opacity-80">→</div>
-                </div>
-            </button>
-            
-            <button onclick="navigateTo('backtesting')" class="w-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-600 p-6 rounded-2xl shadow-2xl hover:scale-[1.02] transition-all mb-4 border border-blue-500/30">
-                <div class="flex items-center justify-between">
-                    <div class="text-left">
-                        <div class="text-white font-bold text-2xl mb-2">📊 Backtesting</div>
-                        <div class="text-blue-100 text-sm">Sistema de calibración del modelo</div>
-                        <div class="text-blue-200 text-xs mt-2">${Object.keys(PICKS_DATABASE).length} picks trackeados • Win Rate tracking</div>
-                    </div>
-                    <div class="text-5xl opacity-80">→</div>
-                </div>
-            </button>
-
-            <button onclick="navigateTo('tendencia')" class="btn-3d w-full p-6 rounded-2xl shadow-2xl mb-4 relative overflow-hidden group" style="background: linear-gradient(135deg, #FFD700 0%, #F59E0B 100%);">
-                <div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
-                <div class="relative flex items-center justify-center gap-4">
-                    <div class="text-5xl">🏀</div>
-                    <div class="text-left">
-                        <h3 class="text-2xl font-bold" style="color: #0d1b2a;">Analizar Partido</h3>
-                        <p class="text-sm opacity-80" style="color: #0d1b2a;">Tendencia + H2H + Factores Contextuales</p>
+                        `).join('')}
                     </div>
                 </div>
-            </button>
-
-            <!-- BOTÓN PROPS DE JUGADORES -->
-            <button onclick="navigateTo('playerProps')" class="btn-3d w-full p-6 rounded-2xl shadow-2xl mb-4 transition-all border-2 border-cyan-500/50 hover:border-cyan-400 bg-gradient-to-br from-cyan-900/40 via-blue-900/40 to-cyan-800/40">
-                <div class="flex items-center justify-between">
-                    <div class="text-left">
-                        <div class="text-5xl mb-2">👤</div>
-                        <h3 class="text-2xl font-bold text-cyan-400 gradient-text">Props de Jugadores</h3>
-                        <p class="text-sm text-cyan-300/70 mt-1">Análisis Individual + Stats Actuales</p>
-                    </div>
-                    <div class="ml-auto bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full badge-new">
-                        NUEVO
-                    </div>
-                </div>
-            </button>
-
-            <!-- BOTONES SECUNDARIOS -->
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <button onclick="navigateTo('bestPicks')" class="btn-3d p-5 rounded-2xl shadow-xl border border-yellow-500/30 hover:border-yellow-400 transition-all" style="background: linear-gradient(135deg, #1b263b 0%, #22354a 100%);">
-                    <div class="text-3xl mb-2">🔥</div>
-                    <h3 class="text-lg font-bold text-yellow-400">Best Picks</h3>
-                    <p class="text-gray-400 text-xs">Sugerencias del Modelo</p>
-                </button>
-
-                <button onclick="navigateTo('picks')" class="btn-3d p-5 rounded-2xl shadow-xl border border-white/10 hover:border-yellow-500/30 transition-all" style="background: linear-gradient(135deg, #1b263b 0%, #22354a 100%);">
-                    <div class="text-3xl mb-2">📊</div>
-                    <h3 class="text-lg font-bold text-white">Mis Picks</h3>
-                    <p class="text-gray-400 text-xs">Historial Completo</p>
-                </button>
-            </div>
-
-            <!-- DASHBOARD Y DATA -->
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <button onclick="navigateTo('dashboard')" class="btn-3d p-4 rounded-2xl shadow-xl border border-blue-500/30 hover:border-blue-400 transition-all" style="background: linear-gradient(135deg, #0d1b2a 0%, #1b3a5f 100%);">
-                    <div class="flex items-center gap-3">
-                        <div class="text-2xl">📈</div>
-                        <div class="text-left">
-                            <h3 class="font-bold text-blue-400">Dashboard</h3>
-                            <p class="text-gray-500 text-xs">Gráficos & Stats</p>
-                        </div>
-                    </div>
-                </button>
-
-                <button onclick="navigateTo('ingesta')" class="btn-3d p-4 rounded-2xl shadow-xl border border-purple-500/30 hover:border-purple-400 transition-all" style="background: linear-gradient(135deg, #1b263b 0%, #2d1b4a 100%);">
-                    <div class="flex items-center gap-3">
-                        <div class="text-2xl">📝</div>
-                        <div class="text-left">
-                            <h3 class="font-bold text-purple-400">Ingesta H2H</h3>
-                            <p class="text-gray-500 text-xs">Agregar Datos</p>
-                        </div>
-                    </div>
-                </button>
-            </div>
-
-            <!-- BANKROLL - ANCHO COMPLETO -->
-            <button onclick="navigateTo('bankroll')" class="btn-3d w-full p-5 rounded-2xl shadow-xl border border-green-500/30 hover:border-green-400 transition-all mb-6" style="background: linear-gradient(135deg, #0d3d1b 0%, #1b4a2d 100%);">
-                <div class="relative flex items-center justify-center gap-4">
-                    <div class="text-5xl">💰</div>
-                    <div class="text-left">
-                        <h3 class="text-2xl font-bold text-green-400">Bankroll</h3>
-                        <p class="text-sm text-green-300/70">Gestión Profesional & Estadísticas</p>
+                
+                <!-- Resolved -->
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-xl font-bold text-white mb-4">✅ Resueltos (${resolved.length})</h3>
+                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                        ${resolved.length === 0 ? `
+                            <div class="text-center py-8 text-gray-400">No hay picks resueltos</div>
+                        ` : resolved.slice(0, 10).map(p => `
+                            <div class="bg-white/5 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="font-medium text-white">
+                                        ${p.local} vs ${p.away}
+                                    </div>
+                                    ${p.status === 'win' ? '<span class="win-badge">WIN</span>' :
+                                      p.status === 'loss' ? '<span class="loss-badge">LOSS</span>' :
+                                      '<span class="pending-badge">PUSH</span>'}
+                                </div>
+                                <div class="text-sm text-gray-400">
+                                    ${p.betType} ${p.line} • Real: ${p.actualResult}
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
-            </button>
-
-            <!-- MI RÉCORD PERSONAL -->
-            <div class="rounded-2xl p-5 mb-6 border border-yellow-500/30" style="background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
-                        <span class="text-2xl">🏆</span>
-                        <h3 class="text-lg font-bold text-white">Mi Récord Personal</h3>
-                    </div>
-                    <button onclick="navigateTo('picks')" class="text-xs bg-yellow-500 hover:bg-yellow-400 text-gray-900 px-3 py-1 rounded-lg font-semibold transition-all">Ver todo</button>
-                </div>
-
-                <!-- Stats principales -->
-                <div class="grid grid-cols-4 gap-3 text-center mb-4">
-                    <div class="rounded-xl p-3" style="background: rgba(255,255,255,0.05);">
-                        <p class="text-2xl font-black ${parseFloat(picksStats.winRate) >= 55 ? 'text-green-400' : parseFloat(picksStats.winRate) >= 45 ? 'text-yellow-400' : 'text-red-400'}">${picksStats.winRate}%</p>
-                        <p class="text-gray-500 text-xs">Win Rate</p>
-                    </div>
-                    <div class="rounded-xl p-3" style="background: rgba(34,197,94,0.1);">
-                        <p class="text-2xl font-black text-green-400">${picksStats.wins}</p>
-                        <p class="text-gray-500 text-xs">Wins</p>
-                    </div>
-                    <div class="rounded-xl p-3" style="background: rgba(239,68,68,0.1);">
-                        <p class="text-2xl font-black text-red-400">${picksStats.losses}</p>
-                        <p class="text-gray-500 text-xs">Losses</p>
-                    </div>
-                    <div class="rounded-xl p-3" style="background: rgba(255,215,0,0.1);">
-                        <p class="text-2xl font-black text-yellow-400">${picksStats.pending}</p>
-                        <p class="text-gray-500 text-xs">Pending</p>
-                    </div>
-                </div>
-
-                <!-- Profit y ROI -->
-                <div class="grid grid-cols-3 gap-3 text-center">
-                    <div class="rounded-xl p-3 border border-white/5" style="background: rgba(0,0,0,0.3);">
-                        <p class="text-xl font-black ${parseFloat(picksStats.profit) >= 0 ? 'text-green-400' : 'text-red-400'}">${parseFloat(picksStats.profit) > 0 ? '+' : ''}${picksStats.profit}u</p>
-                        <p class="text-gray-500 text-xs">Profit</p>
-                    </div>
-                    <div class="rounded-xl p-3 border border-white/5" style="background: rgba(0,0,0,0.3);">
-                        <p class="text-xl font-black ${parseFloat(picksStats.roi) >= 0 ? 'text-blue-400' : 'text-red-400'}">${parseFloat(picksStats.roi) > 0 ? '+' : ''}${picksStats.roi}%</p>
-                        <p class="text-gray-500 text-xs">ROI</p>
-                    </div>
-                    <div class="rounded-xl p-3 border border-white/5" style="background: rgba(0,0,0,0.3);">
-                        ${picksStats.streak.count > 0 ? `
-                            <p class="text-xl font-black ${picksStats.streak.type === 'win' ? 'text-green-400' : 'text-red-400'}">${picksStats.streak.count}${picksStats.streak.type === 'win' ? 'W' : 'L'}</p>
-                            <p class="text-gray-500 text-xs">${picksStats.streak.type === 'win' ? '🔥' : '❄️'} Streak</p>
-                        ` : `
-                            <p class="text-xl font-black text-gray-500">-</p>
-                            <p class="text-gray-500 text-xs">Streak</p>
-                        `}
-                    </div>
-                </div>
-
-                <!-- Por período -->
-                ${picksStats.total > 0 ? `
-                <div class="mt-4 pt-4 border-t border-white/10">
-                    <p class="text-xs text-gray-500 mb-3 text-center">📊 Rendimiento por Período</p>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="rounded-lg p-2 text-center" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.2);">
-                            <p class="text-yellow-400 font-bold text-sm">1Q</p>
-                            <p class="text-white text-xs">${picksStats.byPeriod['1Q'].wins}W-${picksStats.byPeriod['1Q'].losses}L</p>
-                            <p class="text-xs ${picksStats.byPeriod['1Q'].profit >= 0 ? 'text-green-400' : 'text-red-400'}">${picksStats.byPeriod['1Q'].profit >= 0 ? '+' : ''}${picksStats.byPeriod['1Q'].profit.toFixed(2)}u</p>
-                        </div>
-                        <div class="rounded-lg p-2 text-center" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);">
-                            <p class="text-blue-400 font-bold text-sm">1H</p>
-                            <p class="text-white text-xs">${picksStats.byPeriod['1H'].wins}W-${picksStats.byPeriod['1H'].losses}L</p>
-                            <p class="text-xs ${picksStats.byPeriod['1H'].profit >= 0 ? 'text-green-400' : 'text-red-400'}">${picksStats.byPeriod['1H'].profit >= 0 ? '+' : ''}${picksStats.byPeriod['1H'].profit.toFixed(2)}u</p>
-                        </div>
-                        <div class="rounded-lg p-2 text-center" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
-                            <p class="text-green-400 font-bold text-sm">FULL</p>
-                            <p class="text-white text-xs">${picksStats.byPeriod['FULL'].wins}W-${picksStats.byPeriod['FULL'].losses}L</p>
-                            <p class="text-xs ${picksStats.byPeriod['FULL'].profit >= 0 ? 'text-green-400' : 'text-red-400'}">${picksStats.byPeriod['FULL'].profit >= 0 ? '+' : ''}${picksStats.byPeriod['FULL'].profit.toFixed(2)}u</p>
-                        </div>
-                    </div>
-                </div>
-                ` : ''}
-            </div>
-
-            <div class="glass rounded-xl p-4 mb-6">
-                <h3 class="text-lg font-bold text-white mb-3">📊 Base de Datos H2H <span class="text-green-400 text-sm">(Firebase)</span></h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-purple-500/20 rounded-lg p-3 text-center">
-                        <p class="text-3xl font-black text-purple-400">${h2hC}</p>
-                        <p class="text-gray-400 text-sm">Matchups</p>
-                    </div>
-                    <div class="bg-green-500/20 rounded-lg p-3 text-center">
-                        <p class="text-3xl font-black text-green-400">${totalG}</p>
-                        <p class="text-gray-400 text-sm">Partidos</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass rounded-xl p-4">
-                <h3 class="text-lg font-bold text-white mb-3">🔥 Top 5 Equipos PPG 2025-26</h3>
-                ${topH}
             </div>
         </div>
     `;
 }
+
+function resolveBacktestPick(pickId) {
+    const input = document.getElementById(`bt_${pickId}`);
+    if (!input) return;
+    
+    const result = parseFloat(input.value);
+    if (isNaN(result)) {
+        showNotification('error', 'Error', 'Resultado inválido');
+        return;
+    }
+    
+    database.ref(`users/${userId}/picks_backtesting/${pickId}`).once('value').then(snapshot => {
+        const pick = snapshot.val();
+        if (!pick) return;
+        
+        const line = parseFloat(pick.line);
+        let status = 'pending';
+        
+        if (result === line) status = 'push';
+        else if (pick.betType === 'OVER') status = result > line ? 'win' : 'loss';
+        else status = result < line ? 'win' : 'loss';
+        
+        database.ref(`users/${userId}/picks_backtesting/${pickId}`).update({
+            status, actualResult: result, resolvedAt: new Date().toISOString()
+        }).then(() => {
+            showNotification('success', 'Actualizado', status.toUpperCase());
+            render();
+        });
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MÓDULO: PROFILE
+// ═══════════════════════════════════════════════════════════════════
+
+
+function renderHome() {
+    const totalPicks = Object.keys({...USER_PICKS_TOTALES, ...USER_PICKS_PROPS, ...USER_PICKS_AI}).length;
+    const bankroll = USER_BANKROLL.current || 0;
+    const initial = USER_BANKROLL.initial || 0;
+    const profit = bankroll - initial;
+    const profitPercent = initial > 0 ? ((profit / initial) * 100).toFixed(1) : '0.0';
+    
+    // Stats de picks
+    const allPicks = [...Object.values(USER_PICKS_TOTALES), ...Object.values(USER_PICKS_PROPS), ...Object.values(USER_PICKS_AI), ...Object.values(USER_PICKS_BACKTESTING)];
+    const resolved = allPicks.filter(p => p.status && p.status !== 'pending');
+    const wins = resolved.filter(p => p.status === 'win').length;
+    const losses = resolved.filter(p => p.status === 'loss').length;
+    const winRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
+    
+    return `
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <!-- Welcome Header -->
+            <div class="mb-8">
+                <h1 class="text-4xl md:text-5xl font-bold text-white mb-2" style="font-family: var(--font-display);">
+                    ¡Bienvenido de vuelta! 🏀
+                </h1>
+                <p class="text-gray-400 text-lg">
+                    Tu centro de comando NBA profesional
+                </p>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="glass-card p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-400 text-sm">Bankroll</span>
+                        <span class="text-2xl">💰</span>
+                    </div>
+                    <div class="text-3xl font-bold text-gold">$${bankroll.toFixed(2)}</div>
+                    <div class="text-sm ${profit >= 0 ? 'text-emerald' : 'text-rose'} mt-1">
+                        ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)} (${profitPercent}%)
+                    </div>
+                </div>
+                
+                <div class="glass-card p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-400 text-sm">Picks Activos</span>
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <div class="text-3xl font-bold text-white">${totalPicks}</div>
+                    <div class="text-sm text-gray-400 mt-1">En seguimiento</div>
+                </div>
+                
+                <div class="glass-card p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-400 text-sm">Win Rate</span>
+                        <span class="text-2xl">🎯</span>
+                    </div>
+                    <div class="text-3xl font-bold text-cyan">${winRate}%</div>
+                    <div class="text-sm text-gray-400 mt-1">${wins}W - ${losses}L</div>
+                </div>
+                
+                <div class="glass-card p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-400 text-sm">Total Jugadas</span>
+                        <span class="text-2xl">📈</span>
+                    </div>
+                    <div class="text-3xl font-bold text-violet">${resolved.length}</div>
+                    <div class="text-sm text-gray-400 mt-1">Resueltas</div>
+                </div>
+            </div>
+            
+            <!-- Quick Access Modules -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Totales -->
+                <button onclick="navigateTo('totales')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">📊 Calculadora de Totales</h3>
+                            <p class="text-gray-400">Sistema de predicción Q1, 1H y Full</p>
+                        </div>
+                        <div class="text-5xl opacity-50">→</div>
+                    </div>
+                    <div class="text-sm text-gray-500">Click para analizar partidos NBA</div>
+                </button>
+                
+                <!-- Props -->
+                <button onclick="navigateTo('props')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">👤 Props de Jugadores</h3>
+                            <p class="text-gray-400">Análisis individual de jugadores</p>
+                        </div>
+                        <div class="text-5xl opacity-50">→</div>
+                    </div>
+                    <div class="text-sm text-gray-500">Stats y predicciones de jugadores</div>
+                </button>
+                
+                <!-- AI Picks -->
+                <button onclick="navigateTo('aipicks')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left bg-gradient-to-br from-purple-600/10 to-pink-600/10 border-purple-500/30">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">🤖 AI Picks Automáticas</h3>
+                            <p class="text-purple-300">Picks generadas por inteligencia artificial</p>
+                        </div>
+                        <div class="text-5xl opacity-50">→</div>
+                    </div>
+                    <div class="text-sm text-purple-400">${Object.keys(USER_PICKS_AI).length} picks activas • 75%+ probabilidad</div>
+                </button>
+                
+                <!-- Mis Picks -->
+                <button onclick="navigateTo('mispicks')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left bg-gradient-to-br from-cyan-600/10 to-blue-600/10 border-cyan-500/30">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-2">📋 Mis Picks</h3>
+                            <p class="text-cyan-300">Todas tus jugadas en un solo lugar</p>
+                        </div>
+                        <div class="text-5xl opacity-50">→</div>
+                    </div>
+                    <div class="text-sm text-cyan-400">${totalPicks} picks totales en seguimiento</div>
+                </button>
+            </div>
+            
+            <!-- Bankroll Section -->
+            <div class="glass-card p-6 rounded-2xl mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-white">💰 Gestión de Bankroll</h3>
+                    <button onclick="navigateTo('bankroll')" class="btn-secondary">
+                        Ver Detalles →
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white/5 p-4 rounded-xl">
+                        <div class="text-sm text-gray-400 mb-1">Bankroll Actual</div>
+                        <div class="text-2xl font-bold text-gold">$${bankroll.toFixed(2)}</div>
+                    </div>
+                    <div class="bg-white/5 p-4 rounded-xl">
+                        <div class="text-sm text-gray-400 mb-1">Bankroll Inicial</div>
+                        <div class="text-2xl font-bold text-white">$${initial.toFixed(2)}</div>
+                    </div>
+                    <div class="bg-white/5 p-4 rounded-xl">
+                        <div class="text-sm text-gray-400 mb-1">Ganancia/Pérdida</div>
+                        <div class="text-2xl font-bold ${profit >= 0 ? 'text-emerald' : 'text-rose'}">
+                            ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MÓDULO: TOTALES (Calculadora Reconstruida)
+// ═══════════════════════════════════════════════════════════════════
+
+let selectedLocalTeam = '';
+let selectedAwayTeam = '';
+
 
 function renderTendencia() {
     const teams = getTeams();
@@ -6832,6 +6789,108 @@ function renderTotals() {
 // ═══════════════════════════════════════════════════════════════
 // NAVEGACIÓN Y EVENTOS
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// MÓDULO: MIS PICKS (Unificado v4.0)
+// ═══════════════════════════════════════════════════════════════════
+function renderMisPicks() {
+    const allPicks = [
+        ...Object.values(USER_PICKS_TOTALES).map(p => ({...p, type: 'Totales'})),
+        ...Object.values(USER_PICKS_PROPS).map(p => ({...p, type: 'Props'})),
+        ...Object.values(USER_PICKS_AI).map(p => ({...p, type: 'AI'})),
+        ...Object.values(USER_PICKS_BACKTESTING).map(p => ({...p, type: 'Backtesting'}))
+    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    const pending = allPicks.filter(p => p.status === 'pending');
+    const resolved = allPicks.filter(p => p.status !== 'pending');
+    
+    return `
+        <div class="max-w-6xl mx-auto px-4 py-8">
+            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
+                ← Volver al Home
+            </button>
+            
+            <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
+                📋 Mis Picks
+            </h1>
+            <p class="text-gray-400 mb-8">Todas tus jugadas en un solo lugar</p>
+            
+            <!-- Tabs -->
+            <div class="flex gap-4 mb-6 border-b border-white/10">
+                <button onclick="filterMisPicks('all')" class="px-4 py-2 text-gold border-b-2 border-gold font-medium">
+                    Todos (${allPicks.length})
+                </button>
+                <button onclick="filterMisPicks('pending')" class="px-4 py-2 text-gray-400 hover:text-white transition-all">
+                    Pendientes (${pending.length})
+                </button>
+                <button onclick="filterMisPicks('resolved')" class="px-4 py-2 text-gray-400 hover:text-white transition-all">
+                    Resueltos (${resolved.length})
+                </button>
+            </div>
+            
+            <!-- Picks List -->
+            <div class="space-y-4" id="misPicksList">
+                ${allPicks.length === 0 ? `
+                    <div class="glass-card p-12 rounded-2xl text-center">
+                        <div class="text-6xl mb-4">📊</div>
+                        <h3 class="text-2xl font-bold text-white mb-2">No tienes picks aún</h3>
+                        <p class="text-gray-400 mb-6">Empieza a usar el sistema para trackear tus jugadas</p>
+                        <button onclick="navigateTo('totales')" class="btn-primary">
+                            Crear mi primer pick
+                        </button>
+                    </div>
+                ` : allPicks.map(pick => `
+                    <div class="glass-card p-5 rounded-xl hover:scale-[1.01] transition-all">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-3">
+                                <span class="badge ${pick.type === 'AI' ? 'badge-info' : pick.type === 'Totales' ? 'badge-warning' : 'badge-success'}">
+                                    ${pick.type}
+                                </span>
+                                ${pick.status === 'pending' ? 
+                                    '<span class="pending-badge">Pendiente</span>' :
+                                    pick.status === 'win' ?
+                                    '<span class="win-badge">✅ WIN</span>' :
+                                    pick.status === 'loss' ?
+                                    '<span class="loss-badge">❌ LOSS</span>' :
+                                    '<span class="pending-badge">↔️ PUSH</span>'
+                                }
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                ${new Date(pick.createdAt).toLocaleDateString()}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="text-lg font-bold text-white">
+                                ${pick.local || 'N/A'} vs ${pick.away || 'N/A'}
+                            </div>
+                            <div class="text-sm text-gray-400">
+                                ${pick.period} • ${pick.betType} ${pick.line}
+                                ${pick.prediction ? ` • Predicción: ${pick.prediction}` : ''}
+                            </div>
+                        </div>
+                        
+                        ${pick.status === 'pending' ? `
+                            <div class="flex gap-2">
+                                <input type="number" step="0.5" placeholder="Resultado real" class="input-field flex-1 !py-2 text-sm" id="result_${pick.id}">
+                                <button onclick="updatePickStatus('${pick.id}', '${pick.type}')" class="btn-secondary !py-2 !px-4">
+                                    Actualizar
+                                </button>
+                            </div>
+                        ` : pick.actualResult ? `
+                            <div class="bg-white/5 rounded-lg p-3 text-sm">
+                                <span class="text-gray-400">Resultado Real:</span>
+                                <span class="text-white font-bold ml-2">${pick.actualResult}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+
+
 function navigateTo(v) {
     currentView = v;
     if (v === 'home') {
@@ -7829,1226 +7888,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         
 // ═══════════════════════════════════════════════════════════════════
-// NIOSPORTS PRO v4.0 - TODOS LOS MÓDULOS COMPLETOS
-// ═══════════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════════
-// MÓDULO: HOME DASHBOARD
-// ═══════════════════════════════════════════════════════════════════
-
-function renderHome() {
-    const totalPicks = Object.keys({...USER_PICKS_TOTALES, ...USER_PICKS_PROPS, ...USER_PICKS_AI}).length;
-    const bankroll = USER_BANKROLL.current || 0;
-    const initial = USER_BANKROLL.initial || 0;
-    const profit = bankroll - initial;
-    const profitPercent = initial > 0 ? ((profit / initial) * 100).toFixed(1) : '0.0';
-    
-    // Stats de picks
-    const allPicks = [...Object.values(USER_PICKS_TOTALES), ...Object.values(USER_PICKS_PROPS), ...Object.values(USER_PICKS_AI), ...Object.values(USER_PICKS_BACKTESTING)];
-    const resolved = allPicks.filter(p => p.status && p.status !== 'pending');
-    const wins = resolved.filter(p => p.status === 'win').length;
-    const losses = resolved.filter(p => p.status === 'loss').length;
-    const winRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
-    
-    return `
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <!-- Welcome Header -->
-            <div class="mb-8">
-                <h1 class="text-4xl md:text-5xl font-bold text-white mb-2" style="font-family: var(--font-display);">
-                    ¡Bienvenido de vuelta! 🏀
-                </h1>
-                <p class="text-gray-400 text-lg">
-                    Tu centro de comando NBA profesional
-                </p>
-            </div>
-            
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="glass-card p-6 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-gray-400 text-sm">Bankroll</span>
-                        <span class="text-2xl">💰</span>
-                    </div>
-                    <div class="text-3xl font-bold text-gold">$${bankroll.toFixed(2)}</div>
-                    <div class="text-sm ${profit >= 0 ? 'text-emerald' : 'text-rose'} mt-1">
-                        ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)} (${profitPercent}%)
-                    </div>
-                </div>
-                
-                <div class="glass-card p-6 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-gray-400 text-sm">Picks Activos</span>
-                        <span class="text-2xl">📊</span>
-                    </div>
-                    <div class="text-3xl font-bold text-white">${totalPicks}</div>
-                    <div class="text-sm text-gray-400 mt-1">En seguimiento</div>
-                </div>
-                
-                <div class="glass-card p-6 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-gray-400 text-sm">Win Rate</span>
-                        <span class="text-2xl">🎯</span>
-                    </div>
-                    <div class="text-3xl font-bold text-cyan">${winRate}%</div>
-                    <div class="text-sm text-gray-400 mt-1">${wins}W - ${losses}L</div>
-                </div>
-                
-                <div class="glass-card p-6 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-gray-400 text-sm">Total Jugadas</span>
-                        <span class="text-2xl">📈</span>
-                    </div>
-                    <div class="text-3xl font-bold text-violet">${resolved.length}</div>
-                    <div class="text-sm text-gray-400 mt-1">Resueltas</div>
-                </div>
-            </div>
-            
-            <!-- Quick Access Modules -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <!-- Totales -->
-                <button onclick="navigateTo('totales')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="text-2xl font-bold text-white mb-2">📊 Calculadora de Totales</h3>
-                            <p class="text-gray-400">Sistema de predicción Q1, 1H y Full</p>
-                        </div>
-                        <div class="text-5xl opacity-50">→</div>
-                    </div>
-                    <div class="text-sm text-gray-500">Click para analizar partidos NBA</div>
-                </button>
-                
-                <!-- Props -->
-                <button onclick="navigateTo('props')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="text-2xl font-bold text-white mb-2">👤 Props de Jugadores</h3>
-                            <p class="text-gray-400">Análisis individual de jugadores</p>
-                        </div>
-                        <div class="text-5xl opacity-50">→</div>
-                    </div>
-                    <div class="text-sm text-gray-500">Stats y predicciones de jugadores</div>
-                </button>
-                
-                <!-- AI Picks -->
-                <button onclick="navigateTo('aipicks')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left bg-gradient-to-br from-purple-600/10 to-pink-600/10 border-purple-500/30">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="text-2xl font-bold text-white mb-2">🤖 AI Picks Automáticas</h3>
-                            <p class="text-purple-300">Picks generadas por inteligencia artificial</p>
-                        </div>
-                        <div class="text-5xl opacity-50">→</div>
-                    </div>
-                    <div class="text-sm text-purple-400">${Object.keys(USER_PICKS_AI).length} picks activas • 75%+ probabilidad</div>
-                </button>
-                
-                <!-- Mis Picks -->
-                <button onclick="navigateTo('mispicks')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left bg-gradient-to-br from-cyan-600/10 to-blue-600/10 border-cyan-500/30">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="text-2xl font-bold text-white mb-2">📋 Mis Picks</h3>
-                            <p class="text-cyan-300">Todas tus jugadas en un solo lugar</p>
-                        </div>
-                        <div class="text-5xl opacity-50">→</div>
-                    </div>
-                    <div class="text-sm text-cyan-400">${totalPicks} picks totales en seguimiento</div>
-                </button>
-            </div>
-            
-            <!-- Bankroll Section -->
-            <div class="glass-card p-6 rounded-2xl mb-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-bold text-white">💰 Gestión de Bankroll</h3>
-                    <button onclick="navigateTo('bankroll')" class="btn-secondary">
-                        Ver Detalles →
-                    </button>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white/5 p-4 rounded-xl">
-                        <div class="text-sm text-gray-400 mb-1">Bankroll Actual</div>
-                        <div class="text-2xl font-bold text-gold">$${bankroll.toFixed(2)}</div>
-                    </div>
-                    <div class="bg-white/5 p-4 rounded-xl">
-                        <div class="text-sm text-gray-400 mb-1">Bankroll Inicial</div>
-                        <div class="text-2xl font-bold text-white">$${initial.toFixed(2)}</div>
-                    </div>
-                    <div class="bg-white/5 p-4 rounded-xl">
-                        <div class="text-sm text-gray-400 mb-1">Ganancia/Pérdida</div>
-                        <div class="text-2xl font-bold ${profit >= 0 ? 'text-emerald' : 'text-rose'}">
-                            ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MÓDULO: TOTALES (Calculadora Reconstruida)
-// ═══════════════════════════════════════════════════════════════════
-
-let selectedLocalTeam = '';
-let selectedAwayTeam = '';
-
-function renderTotales() {
-    const teams = getTeams();
-    
-    return `
-        <div class="max-w-5xl mx-auto px-4 py-8">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
-                ← Volver al Home
-            </button>
-            
-            <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
-                📊 Calculadora de Totales
-            </h1>
-            <p class="text-gray-400 mb-8">Sistema de predicción de puntos Q1, 1H y Full Game</p>
-            
-            <!-- Team Selection -->
-            <div class="glass-card p-6 rounded-2xl mb-6">
-                <h3 class="text-xl font-bold text-white mb-4">Seleccionar Equipos</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Local -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Equipo Local</label>
-                        <select id="localTeamSelect" onchange="selectedLocalTeam = this.value; calculateTotales()" class="input-field">
-                            <option value="">-- Seleccionar equipo --</option>
-                            ${teams.map(t => `<option value="${t}">${t}</option>`).join('')}
-                        </select>
-                    </div>
-                    
-                    <!-- Visitante -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Equipo Visitante</label>
-                        <select id="awayTeamSelect" onchange="selectedAwayTeam = this.value; calculateTotales()" class="input-field">
-                            <option value="">-- Seleccionar equipo --</option>
-                            ${teams.map(t => `<option value="${t}">${t}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Results -->
-            <div id="totalesResults"></div>
-        </div>
-    `;
-}
-
-function calculateTotales() {
-    if (!selectedLocalTeam || !selectedAwayTeam) {
-        document.getElementById('totalesResults').innerHTML = '';
-        return;
-    }
-    
-    const local = TEAM_STATS[selectedLocalTeam];
-    const away = TEAM_STATS[selectedAwayTeam];
-    
-    if (!local || !away) return;
-    
-    // Cálculos básicos
-    const q1Pred = ((local.q1Home + away.q1Away) / 2).toFixed(1);
-    const halfPred = ((local.halfHome + away.halfAway) / 2).toFixed(1);
-    const fullPred = ((local.fullHome + away.fullAway) / 2).toFixed(1);
-    
-    // Ajuste PACE
-    const avgPace = (local.pace + away.pace) / 2;
-    const paceAdjust = avgPace > 100 ? 1.05 : avgPace < 98 ? 0.95 : 1.0;
-    
-    const q1Final = (parseFloat(q1Pred) * paceAdjust).toFixed(1);
-    const halfFinal = (parseFloat(halfPred) * paceAdjust).toFixed(1);
-    const fullFinal = (parseFloat(fullPred) * paceAdjust).toFixed(1);
-    
-    const html = `
-        <div class="space-y-4">
-            <!-- Q1 -->
-            <div class="glass-card p-6 rounded-2xl">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-white">1er Cuarto (Q1)</h3>
-                    <span class="badge badge-warning">Q1</span>
-                </div>
-                <div class="text-center mb-4">
-                    <div class="text-5xl font-bold text-gold mb-2">${q1Final}</div>
-                    <div class="text-sm text-gray-400">Puntos predichos</div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="text-center">
-                        <div class="text-gray-400">Local Promedio</div>
-                        <div class="text-white font-bold">${local.q1Home}</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-gray-400">Visitante Promedio</div>
-                        <div class="text-white font-bold">${away.q1Away}</div>
-                    </div>
-                </div>
-                <button onclick="saveTotalesPick('Q1', ${q1Final})" class="btn-primary w-full mt-4">
-                    Guardar Pick Q1
-                </button>
-            </div>
-            
-            <!-- 1H -->
-            <div class="glass-card p-6 rounded-2xl">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-white">1er Tiempo (1H)</h3>
-                    <span class="badge badge-info">1H</span>
-                </div>
-                <div class="text-center mb-4">
-                    <div class="text-5xl font-bold text-cyan mb-2">${halfFinal}</div>
-                    <div class="text-sm text-gray-400">Puntos predichos</div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="text-center">
-                        <div class="text-gray-400">Local Promedio</div>
-                        <div class="text-white font-bold">${local.halfHome}</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-gray-400">Visitante Promedio</div>
-                        <div class="text-white font-bold">${away.halfAway}</div>
-                    </div>
-                </div>
-                <button onclick="saveTotalesPick('1H', ${halfFinal})" class="btn-primary w-full mt-4">
-                    Guardar Pick 1H
-                </button>
-            </div>
-            
-            <!-- FULL -->
-            <div class="glass-card p-6 rounded-2xl">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-white">Juego Completo (FULL)</h3>
-                    <span class="badge badge-success">FULL</span>
-                </div>
-                <div class="text-center mb-4">
-                    <div class="text-5xl font-bold text-emerald mb-2">${fullFinal}</div>
-                    <div class="text-sm text-gray-400">Puntos predichos</div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="text-center">
-                        <div class="text-gray-400">Local Promedio</div>
-                        <div class="text-white font-bold">${local.fullHome}</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-gray-400">Visitante Promedio</div>
-                        <div class="text-white font-bold">${away.fullAway}</div>
-                    </div>
-                </div>
-                <button onclick="saveTotalesPick('FULL', ${fullFinal})" class="btn-primary w-full mt-4">
-                    Guardar Pick FULL
-                </button>
-            </div>
-            
-            <!-- PACE Info -->
-            <div class="glass-card p-4 rounded-xl bg-white/5">
-                <div class="text-sm text-gray-400">
-                    ⚡ PACE Promedio: <span class="text-gold font-bold">${avgPace.toFixed(1)}</span>
-                    • Ajuste: <span class="text-cyan font-bold">${((paceAdjust - 1) * 100).toFixed(1)}%</span>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('totalesResults').innerHTML = html;
-}
-
-function saveTotalesPick(period, prediction) {
-    if (!userId) {
-        showNotification('error', 'Error', 'Debes estar logueado');
-        return;
-    }
-    
-    const line = prompt(`Ingresa la línea de la casa de apuestas para ${period}:`);
-    if (!line) return;
-    
-    const lineValue = parseFloat(line);
-    if (isNaN(lineValue)) {
-        showNotification('error', 'Error', 'Línea inválida');
-        return;
-    }
-    
-    const pickId = `totales_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const betType = prediction > lineValue ? 'OVER' : 'UNDER';
-    
-    const pick = {
-        id: pickId,
-        local: selectedLocalTeam,
-        away: selectedAwayTeam,
-        period: period,
-        prediction: prediction,
-        line: lineValue,
-        betType: betType,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-    };
-    
-    database.ref(`users/${userId}/picks_totales/${pickId}`).set(pick)
-        .then(() => {
-            showNotification('success', 'Pick Guardado', `${betType} ${lineValue} en ${period}`);
-        })
-        .catch(err => {
-            showNotification('error', 'Error', 'No se pudo guardar el pick');
-        });
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MÓDULO: PROPS (Estructura básica)
-// ═══════════════════════════════════════════════════════════════════
-
-function renderProps() {
-    return `
-        <div class="max-w-5xl mx-auto px-4 py-8">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
-                ← Volver al Home
-            </button>
-            
-            <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
-                👤 Props de Jugadores
-            </h1>
-            <p class="text-gray-400 mb-8">Análisis individual de jugadores NBA</p>
-            
-            <div class="glass-card p-12 rounded-2xl text-center">
-                <div class="text-6xl mb-4">🔜</div>
-                <h3 class="text-2xl font-bold text-white mb-2">Próximamente</h3>
-                <p class="text-gray-400 mb-6">
-                    Este módulo se activará cuando tengamos la API de jugadores conectada.
-                    <br>Podrás analizar props de puntos, asistencias, rebotes y más.
-                </p>
-                <div class="inline-block bg-violet/20 border border-violet/30 rounded-lg px-4 py-2 text-violet text-sm">
-                    🚀 En desarrollo - API Premium pendiente
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MÓDULO: MIS PICKS (Unificado)
-// ═══════════════════════════════════════════════════════════════════
-
-function renderMisPicks() {
-    const allPicks = [
-        ...Object.values(USER_PICKS_TOTALES).map(p => ({...p, type: 'Totales'})),
-        ...Object.values(USER_PICKS_PROPS).map(p => ({...p, type: 'Props'})),
-        ...Object.values(USER_PICKS_AI).map(p => ({...p, type: 'AI'})),
-        ...Object.values(USER_PICKS_BACKTESTING).map(p => ({...p, type: 'Backtesting'}))
-    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    const pending = allPicks.filter(p => p.status === 'pending');
-    const resolved = allPicks.filter(p => p.status !== 'pending');
-    
-    return `
-        <div class="max-w-6xl mx-auto px-4 py-8">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
-                ← Volver al Home
-            </button>
-            
-            <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
-                📋 Mis Picks
-            </h1>
-            <p class="text-gray-400 mb-8">Todas tus jugadas en un solo lugar</p>
-            
-            <!-- Tabs -->
-            <div class="flex gap-4 mb-6 border-b border-white/10">
-                <button onclick="filterMisPicks('all')" class="px-4 py-2 text-gold border-b-2 border-gold font-medium">
-                    Todos (${allPicks.length})
-                </button>
-                <button onclick="filterMisPicks('pending')" class="px-4 py-2 text-gray-400 hover:text-white transition-all">
-                    Pendientes (${pending.length})
-                </button>
-                <button onclick="filterMisPicks('resolved')" class="px-4 py-2 text-gray-400 hover:text-white transition-all">
-                    Resueltos (${resolved.length})
-                </button>
-            </div>
-            
-            <!-- Picks List -->
-            <div class="space-y-4" id="misPicksList">
-                ${allPicks.length === 0 ? `
-                    <div class="glass-card p-12 rounded-2xl text-center">
-                        <div class="text-6xl mb-4">📊</div>
-                        <h3 class="text-2xl font-bold text-white mb-2">No tienes picks aún</h3>
-                        <p class="text-gray-400 mb-6">Empieza a usar el sistema para trackear tus jugadas</p>
-                        <button onclick="navigateTo('totales')" class="btn-primary">
-                            Crear mi primer pick
-                        </button>
-                    </div>
-                ` : allPicks.map(pick => `
-                    <div class="glass-card p-5 rounded-xl hover:scale-[1.01] transition-all">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center gap-3">
-                                <span class="badge ${pick.type === 'AI' ? 'badge-info' : pick.type === 'Totales' ? 'badge-warning' : 'badge-success'}">
-                                    ${pick.type}
-                                </span>
-                                ${pick.status === 'pending' ? 
-                                    '<span class="pending-badge">Pendiente</span>' :
-                                    pick.status === 'win' ?
-                                    '<span class="win-badge">✅ WIN</span>' :
-                                    pick.status === 'loss' ?
-                                    '<span class="loss-badge">❌ LOSS</span>' :
-                                    '<span class="pending-badge">↔️ PUSH</span>'
-                                }
-                            </div>
-                            <div class="text-sm text-gray-500">
-                                ${new Date(pick.createdAt).toLocaleDateString()}
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <div class="text-lg font-bold text-white">
-                                ${pick.local || 'N/A'} vs ${pick.away || 'N/A'}
-                            </div>
-                            <div class="text-sm text-gray-400">
-                                ${pick.period} • ${pick.betType} ${pick.line}
-                                ${pick.prediction ? ` • Predicción: ${pick.prediction}` : ''}
-                            </div>
-                        </div>
-                        
-                        ${pick.status === 'pending' ? `
-                            <div class="flex gap-2">
-                                <input type="number" step="0.5" placeholder="Resultado real" class="input-field flex-1 !py-2 text-sm" id="result_${pick.id}">
-                                <button onclick="updatePickStatus('${pick.id}', '${pick.type}')" class="btn-secondary !py-2 !px-4">
-                                    Actualizar
-                                </button>
-                            </div>
-                        ` : pick.actualResult ? `
-                            <div class="bg-white/5 rounded-lg p-3 text-sm">
-                                <span class="text-gray-400">Resultado Real:</span>
-                                <span class="text-white font-bold ml-2">${pick.actualResult}</span>
-                            </div>
-                        ` : ''}
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-}
-
-function updatePickStatus(pickId, type) {
-    const inputId = `result_${pickId}`;
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    
-    const result = parseFloat(input.value);
-    if (isNaN(result)) {
-        showNotification('error', 'Error', 'Ingresa un número válido');
-        return;
-    }
-    
-    const dbPath = type === 'Totales' ? 'picks_totales' :
-                   type === 'Props' ? 'picks_props' :
-                   type === 'AI' ? 'picks_ai' :
-                   'picks_backtesting';
-    
-    database.ref(`users/${userId}/${dbPath}/${pickId}`).once('value').then(snapshot => {
-        const pick = snapshot.val();
-        if (!pick) return;
-        
-        const line = parseFloat(pick.line);
-        let status = 'pending';
-        
-        if (result === line) {
-            status = 'push';
-        } else if (pick.betType === 'OVER') {
-            status = result > line ? 'win' : 'loss';
-        } else {
-            status = result < line ? 'win' : 'loss';
-        }
-        
-        database.ref(`users/${userId}/${dbPath}/${pickId}`).update({
-            status: status,
-            actualResult: result,
-            resolvedAt: new Date().toISOString()
-        }).then(() => {
-            showNotification('success', 'Pick Actualizado', `Estado: ${status.toUpperCase()}`);
-            render();
-        });
-    });
-}
-
-// Continúa en siguiente parte...
-
-// ═══════════════════════════════════════════════════════════════════
-// NIOSPORTS PRO v4.0 - MÓDULOS RESTANTES COMPLETOS
-// ═══════════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════════
-// MÓDULO: AI PICKS (Adaptado Multi-Usuario)
-// ═══════════════════════════════════════════════════════════════════
-
-let AI_PICKS_TODAY = [];
-let AI_PICKS_CACHE_DATE = null;
-
-function generateAIPicks() {
-    console.log('🤖 Generando AI Picks...');
-    showNotification('info', 'AI Picks', 'Analizando todos los matchups posibles...');
-    
-    const teams = getTeams();
-    const aiPicks = [];
-    const today = new Date().toDateString();
-    
-    for (let i = 0; i < teams.length; i++) {
-        for (let j = i + 1; j < teams.length; j++) {
-            const local = teams[i];
-            const away = teams[j];
-            
-            const localStats = TEAM_STATS[local];
-            const awayStats = TEAM_STATS[away];
-            
-            if (!localStats || !awayStats) continue;
-            
-            // Q1
-            const q1Pred = ((localStats.q1Home + awayStats.q1Away) / 2);
-            const q1Line = Math.round(q1Pred * 2) / 2;
-            const q1Diff = Math.abs(q1Pred - q1Line);
-            const q1Prob = Math.min(95, 50 + (q1Diff * 30));
-            
-            if (q1Prob >= 75) {
-                aiPicks.push({
-                    id: `ai_q1_${local}_${away}_${Date.now()}`,
-                    local, away, period: 'Q1',
-                    betType: q1Pred > q1Line ? 'OVER' : 'UNDER',
-                    line: q1Line, trend: q1Pred.toFixed(1),
-                    probability: Math.round(q1Prob),
-                    confidence: q1Prob >= 85 ? 'VERY HIGH' : q1Prob >= 80 ? 'HIGH' : 'GOOD',
-                    generatedAt: new Date().toISOString()
-                });
-            }
-            
-            // 1H
-            const halfPred = ((localStats.halfHome + awayStats.halfAway) / 2);
-            const halfLine = Math.round(halfPred * 2) / 2;
-            const halfDiff = Math.abs(halfPred - halfLine);
-            const halfProb = Math.min(95, 50 + (halfDiff * 30));
-            
-            if (halfProb >= 75) {
-                aiPicks.push({
-                    id: `ai_1h_${local}_${away}_${Date.now()}`,
-                    local, away, period: '1H',
-                    betType: halfPred > halfLine ? 'OVER' : 'UNDER',
-                    line: halfLine, trend: halfPred.toFixed(1),
-                    probability: Math.round(halfProb),
-                    confidence: halfProb >= 85 ? 'VERY HIGH' : halfProb >= 80 ? 'HIGH' : 'GOOD',
-                    generatedAt: new Date().toISOString()
-                });
-            }
-            
-            // FULL
-            const fullPred = ((localStats.fullHome + awayStats.fullAway) / 2);
-            const fullLine = Math.round(fullPred * 2) / 2;
-            const fullDiff = Math.abs(fullPred - fullLine);
-            const fullProb = Math.min(95, 50 + (fullDiff * 30));
-            
-            if (fullProb >= 75) {
-                aiPicks.push({
-                    id: `ai_full_${local}_${away}_${Date.now()}`,
-                    local, away, period: 'FULL',
-                    betType: fullPred > fullLine ? 'OVER' : 'UNDER',
-                    line: fullLine, trend: fullPred.toFixed(1),
-                    probability: Math.round(fullProb),
-                    confidence: fullProb >= 85 ? 'VERY HIGH' : fullProb >= 80 ? 'HIGH' : 'GOOD',
-                    generatedAt: new Date().toISOString()
-                });
-            }
-        }
-    }
-    
-    aiPicks.sort((a, b) => b.probability - a.probability);
-    AI_PICKS_TODAY = aiPicks.slice(0, 30);
-    AI_PICKS_CACHE_DATE = today;
-    
-    localStorage.setItem('ai_picks_cache', JSON.stringify({
-        picks: AI_PICKS_TODAY,
-        date: today,
-        generatedAt: new Date().toISOString()
-    }));
-    
-    showNotification('success', '¡Listo!', `${AI_PICKS_TODAY.length} AI Picks generados`);
-    render();
-}
-
-function loadAIPicks() {
-    const today = new Date().toDateString();
-    const cached = localStorage.getItem('ai_picks_cache');
-    
-    if (cached) {
-        try {
-            const data = JSON.parse(cached);
-            if (data.date === today && data.picks && data.picks.length > 0) {
-                AI_PICKS_TODAY = data.picks;
-                AI_PICKS_CACHE_DATE = data.date;
-                return;
-            }
-        } catch (e) {}
-    }
-    
-    generateAIPicks();
-}
-
-function renderAIPicks() {
-    const picks = AI_PICKS_TODAY;
-    
-    return `
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
-                ← Volver al Home
-            </button>
-            
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
-                        🤖 AI Picks del Día
-                    </h1>
-                    <p class="text-gray-400">Mejores oportunidades detectadas automáticamente (75%+ probabilidad)</p>
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="generateAIPicks()" class="btn-secondary">
-                        🔄 Regenerar
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div class="glass-card p-4 rounded-xl text-center">
-                    <div class="text-3xl font-bold text-gold">${picks.length}</div>
-                    <div class="text-xs text-gray-400">Total Picks</div>
-                </div>
-                <div class="glass-card p-4 rounded-xl text-center">
-                    <div class="text-3xl font-bold text-emerald">${picks.filter(p => p.betType === 'OVER').length}</div>
-                    <div class="text-xs text-gray-400">Overs</div>
-                </div>
-                <div class="glass-card p-4 rounded-xl text-center">
-                    <div class="text-3xl font-bold text-cyan">${picks.filter(p => p.betType === 'UNDER').length}</div>
-                    <div class="text-xs text-gray-400">Unders</div>
-                </div>
-                <div class="glass-card p-4 rounded-xl text-center">
-                    <div class="text-3xl font-bold text-violet">${picks.filter(p => p.confidence === 'VERY HIGH').length}</div>
-                    <div class="text-xs text-gray-400">Very High</div>
-                </div>
-            </div>
-            
-            ${picks.length === 0 ? `
-                <div class="glass-card p-12 rounded-2xl text-center">
-                    <div class="text-6xl mb-4">🤖</div>
-                    <h3 class="text-2xl font-bold text-white mb-2">No hay AI Picks generados</h3>
-                    <p class="text-gray-400 mb-6">Genera picks automáticamente analizando matchups</p>
-                    <button onclick="generateAIPicks()" class="btn-primary">
-                        Generar AI Picks
-                    </button>
-                </div>
-            ` : `
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    ${picks.map((pick, i) => `
-                        <div class="glass-card p-5 rounded-2xl">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="bg-gold/20 rounded-full w-10 h-10 flex items-center justify-center">
-                                    <span class="text-gold font-bold">#${i+1}</span>
-                                </div>
-                                <span class="badge ${pick.confidence === 'VERY HIGH' ? 'badge-info' : pick.confidence === 'HIGH' ? 'badge-warning' : 'badge-success'}">
-                                    ${pick.confidence}
-                                </span>
-                            </div>
-                            
-                            <div class="text-center mb-4">
-                                <div class="text-lg font-bold text-white">${pick.local}</div>
-                                <div class="text-sm text-gray-400">vs</div>
-                                <div class="text-lg font-bold text-white">${pick.away}</div>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 gap-3 mb-4">
-                                <div class="bg-white/5 rounded-lg p-3 text-center">
-                                    <div class="text-xs text-gray-400">Período</div>
-                                    <div class="text-white font-bold">${pick.period}</div>
-                                </div>
-                                <div class="bg-white/5 rounded-lg p-3 text-center">
-                                    <div class="text-xs text-gray-400">Apuesta</div>
-                                    <div class="${pick.betType === 'OVER' ? 'text-emerald' : 'text-cyan'} font-bold">
-                                        ${pick.betType} ${pick.line}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-gold/20 border border-gold/30 rounded-lg p-3 mb-4 text-center">
-                                <div class="text-xs text-gold">Tendencia</div>
-                                <div class="text-2xl font-bold text-gold">${pick.trend}</div>
-                            </div>
-                            
-                            <div class="bg-violet/20 border border-violet/30 rounded-lg p-3 mb-4">
-                                <div class="flex items-center justify-between">
-                                    <div class="text-sm text-violet">Probabilidad</div>
-                                    <div class="text-3xl font-bold text-violet">${pick.probability}%</div>
-                                </div>
-                            </div>
-                            
-                            <button onclick="addAIPickToTracking('${pick.id}')" class="btn-primary w-full">
-                                📊 Agregar a Mis Picks
-                            </button>
-                        </div>
-                    `).join('')}
-                </div>
-            `}
-        </div>
-    `;
-}
-
-function addAIPickToTracking(pickId) {
-    const pick = AI_PICKS_TODAY.find(p => p.id === pickId);
-    if (!pick) return;
-    
-    const userPickId = `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    database.ref(`users/${userId}/picks_ai/${userPickId}`).set({
-        ...pick,
-        id: userPickId,
-        status: 'pending',
-        addedAt: new Date().toISOString()
-    }).then(() => {
-        showNotification('success', 'Pick Agregado', 'Añadido a tus picks');
-    });
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MÓDULO: BANKROLL
-// ═══════════════════════════════════════════════════════════════════
-
-function renderBankroll() {
-    const bankroll = USER_BANKROLL.current || 0;
-    const initial = USER_BANKROLL.initial || 0;
-    const history = USER_BANKROLL.history || [];
-    const profit = bankroll - initial;
-    const profitPercent = initial > 0 ? ((profit / initial) * 100).toFixed(1) : '0.0';
-    
-    return `
-        <div class="max-w-5xl mx-auto px-4 py-8">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
-                ← Volver al Home
-            </button>
-            
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
-                        💰 Gestión de Bankroll
-                    </h1>
-                    <p class="text-gray-400">Control profesional de tu capital de apuestas</p>
-                </div>
-                <button onclick="showUpdateBankrollModal()" class="btn-primary">
-                    💵 Actualizar Bankroll
-                </button>
-            </div>
-            
-            <!-- Main Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="glass-card p-6 rounded-2xl">
-                    <div class="text-sm text-gray-400 mb-2">Bankroll Actual</div>
-                    <div class="text-4xl font-bold text-gold mb-1">$${bankroll.toFixed(2)}</div>
-                    <div class="text-sm ${profit >= 0 ? 'text-emerald' : 'text-rose'}">
-                        ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)} (${profitPercent}%)
-                    </div>
-                </div>
-                
-                <div class="glass-card p-6 rounded-2xl">
-                    <div class="text-sm text-gray-400 mb-2">Bankroll Inicial</div>
-                    <div class="text-4xl font-bold text-white mb-1">$${initial.toFixed(2)}</div>
-                    <div class="text-sm text-gray-400">Capital base</div>
-                </div>
-                
-                <div class="glass-card p-6 rounded-2xl">
-                    <div class="text-sm text-gray-400 mb-2">Ganancia/Pérdida</div>
-                    <div class="text-4xl font-bold ${profit >= 0 ? 'text-emerald' : 'text-rose'} mb-1">
-                        ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
-                    </div>
-                    <div class="text-sm text-gray-400">Total neto</div>
-                </div>
-            </div>
-            
-            <!-- History -->
-            <div class="glass-card p-6 rounded-2xl">
-                <h3 class="text-xl font-bold text-white mb-4">📊 Historial de Movimientos</h3>
-                
-                ${history.length === 0 ? `
-                    <div class="text-center py-12 text-gray-400">
-                        No hay movimientos registrados aún
-                    </div>
-                ` : `
-                    <div class="space-y-3">
-                        ${history.slice().reverse().map(item => `
-                            <div class="bg-white/5 rounded-lg p-4 flex items-center justify-between">
-                                <div>
-                                    <div class="font-medium ${item.amount >= 0 ? 'text-emerald' : 'text-rose'}">
-                                        ${item.amount >= 0 ? '+' : ''}$${item.amount.toFixed(2)}
-                                    </div>
-                                    <div class="text-sm text-gray-400">${item.reason || 'Ajuste'}</div>
-                                </div>
-                                <div class="text-sm text-gray-500">
-                                    ${new Date(item.date).toLocaleString()}
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `}
-            </div>
-            
-            <!-- Info -->
-            <div class="glass-card p-4 rounded-xl mt-6 bg-cyan/10 border-cyan/30">
-                <div class="text-sm text-cyan">
-                    💡 <strong>Tip:</strong> Mantén un control estricto de tu bankroll. Se recomienda apostar entre 1-5% del bankroll total por jugada.
-                </div>
-            </div>
-        </div>
-        
-        <!-- Modal Update Bankroll -->
-        <div id="updateBankrollModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: none; align-items: center; justify-content: center;">
-            <div class="glass p-8 rounded-2xl max-w-md w-full mx-4">
-                <h3 class="text-2xl font-bold text-white mb-4">💵 Actualizar Bankroll</h3>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Nuevo Monto Total</label>
-                        <input type="number" step="0.01" id="newBankrollAmount" class="input-field" placeholder="1000.00">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Razón</label>
-                        <select id="bankrollReason" class="input-field">
-                            <option value="Recarga">Recarga / Depósito</option>
-                            <option value="Retiro">Retiro</option>
-                            <option value="Pérdida Total">Pérdida Total</option>
-                            <option value="Ajuste">Ajuste Manual</option>
-                        </select>
-                    </div>
-                    
-                    <div class="flex gap-3 mt-6">
-                        <button onclick="closeUpdateBankrollModal()" class="btn-secondary flex-1">
-                            Cancelar
-                        </button>
-                        <button onclick="updateBankroll()" class="btn-primary flex-1">
-                            Actualizar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function showUpdateBankrollModal() {
-    const modal = document.getElementById('updateBankrollModal');
-    modal.style.display = 'flex';
-}
-
-function closeUpdateBankrollModal() {
-    const modal = document.getElementById('updateBankrollModal');
-    modal.style.display = 'none';
-}
-
-function updateBankroll() {
-    const newAmount = parseFloat(document.getElementById('newBankrollAmount').value);
-    const reason = document.getElementById('bankrollReason').value;
-    
-    if (isNaN(newAmount) || newAmount < 0) {
-        showNotification('error', 'Error', 'Monto inválido');
-        return;
-    }
-    
-    const currentBankroll = USER_BANKROLL.current || 0;
-    const difference = newAmount - currentBankroll;
-    
-    const newHistory = USER_BANKROLL.history || [];
-    newHistory.push({
-        amount: difference,
-        reason: reason,
-        date: new Date().toISOString(),
-        previousBalance: currentBankroll,
-        newBalance: newAmount
-    });
-    
-    database.ref(`users/${userId}/bankroll`).update({
-        current: newAmount,
-        initial: USER_BANKROLL.initial || newAmount,
-        history: newHistory
-    }).then(() => {
-        showNotification('success', 'Bankroll Actualizado', `Nuevo saldo: $${newAmount.toFixed(2)}`);
-        closeUpdateBankrollModal();
-        render();
-    });
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MÓDULO: BACKTESTING
-// ═══════════════════════════════════════════════════════════════════
-
-function renderBacktesting() {
-    const picks = Object.values(USER_PICKS_BACKTESTING);
-    const resolved = picks.filter(p => p.status !== 'pending');
-    const pending = picks.filter(p => p.status === 'pending');
-    
-    const wins = resolved.filter(p => p.status === 'win').length;
-    const losses = resolved.filter(p => p.status === 'loss').length;
-    const pushes = resolved.filter(p => p.status === 'push').length;
-    const winRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
-    
-    return `
-        <div class="max-w-6xl mx-auto px-4 py-8">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
-                ← Volver al Home
-            </button>
-            
-            <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
-                📊 Backtesting
-            </h1>
-            <p class="text-gray-400 mb-8">Sistema de calibración y validación del modelo</p>
-            
-            ${resolved.length > 0 ? `
-                <!-- Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                    <div class="glass-card p-4 rounded-xl text-center">
-                        <div class="text-3xl font-bold text-white">${resolved.length}</div>
-                        <div class="text-xs text-gray-400">Total</div>
-                    </div>
-                    <div class="glass-card p-4 rounded-xl text-center">
-                        <div class="text-3xl font-bold text-emerald">${wins}</div>
-                        <div class="text-xs text-gray-400">Wins</div>
-                    </div>
-                    <div class="glass-card p-4 rounded-xl text-center">
-                        <div class="text-3xl font-bold text-rose">${losses}</div>
-                        <div class="text-xs text-gray-400">Losses</div>
-                    </div>
-                    <div class="glass-card p-4 rounded-xl text-center">
-                        <div class="text-3xl font-bold text-gold">${winRate}%</div>
-                        <div class="text-xs text-gray-400">Win Rate</div>
-                    </div>
-                    <div class="glass-card p-4 rounded-xl text-center">
-                        <div class="text-3xl font-bold text-cyan">${pushes}</div>
-                        <div class="text-xs text-gray-400">Pushes</div>
-                    </div>
-                </div>
-            ` : ''}
-            
-            <!-- Lists -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Pending -->
-                <div class="glass-card p-6 rounded-2xl">
-                    <h3 class="text-xl font-bold text-white mb-4">⏳ Pendientes (${pending.length})</h3>
-                    <div class="space-y-3 max-h-96 overflow-y-auto">
-                        ${pending.length === 0 ? `
-                            <div class="text-center py-8 text-gray-400">No hay picks pendientes</div>
-                        ` : pending.map(p => `
-                            <div class="bg-white/5 rounded-lg p-4">
-                                <div class="font-medium text-white mb-2">
-                                    ${p.local} vs ${p.away} • ${p.period}
-                                </div>
-                                <div class="text-sm text-gray-400 mb-3">
-                                    ${p.betType} ${p.line} • Trend: ${p.trend}
-                                </div>
-                                <div class="flex gap-2">
-                                    <input type="number" step="0.5" placeholder="Resultado" 
-                                           class="input-field flex-1 !py-2 text-sm" id="bt_${p.id}">
-                                    <button onclick="resolveBacktestPick('${p.id}')" 
-                                            class="btn-secondary !py-2 !px-4">✓</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <!-- Resolved -->
-                <div class="glass-card p-6 rounded-2xl">
-                    <h3 class="text-xl font-bold text-white mb-4">✅ Resueltos (${resolved.length})</h3>
-                    <div class="space-y-3 max-h-96 overflow-y-auto">
-                        ${resolved.length === 0 ? `
-                            <div class="text-center py-8 text-gray-400">No hay picks resueltos</div>
-                        ` : resolved.slice(0, 10).map(p => `
-                            <div class="bg-white/5 rounded-lg p-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div class="font-medium text-white">
-                                        ${p.local} vs ${p.away}
-                                    </div>
-                                    ${p.status === 'win' ? '<span class="win-badge">WIN</span>' :
-                                      p.status === 'loss' ? '<span class="loss-badge">LOSS</span>' :
-                                      '<span class="pending-badge">PUSH</span>'}
-                                </div>
-                                <div class="text-sm text-gray-400">
-                                    ${p.betType} ${p.line} • Real: ${p.actualResult}
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function resolveBacktestPick(pickId) {
-    const input = document.getElementById(`bt_${pickId}`);
-    if (!input) return;
-    
-    const result = parseFloat(input.value);
-    if (isNaN(result)) {
-        showNotification('error', 'Error', 'Resultado inválido');
-        return;
-    }
-    
-    database.ref(`users/${userId}/picks_backtesting/${pickId}`).once('value').then(snapshot => {
-        const pick = snapshot.val();
-        if (!pick) return;
-        
-        const line = parseFloat(pick.line);
-        let status = 'pending';
-        
-        if (result === line) status = 'push';
-        else if (pick.betType === 'OVER') status = result > line ? 'win' : 'loss';
-        else status = result < line ? 'win' : 'loss';
-        
-        database.ref(`users/${userId}/picks_backtesting/${pickId}`).update({
-            status, actualResult: result, resolvedAt: new Date().toISOString()
-        }).then(() => {
-            showNotification('success', 'Actualizado', status.toUpperCase());
-            render();
-        });
-    });
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MÓDULO: PROFILE
-// ═══════════════════════════════════════════════════════════════════
-
-function renderProfile() {
-    return `
-        <div class="max-w-3xl mx-auto px-4 py-8">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
-                ← Volver al Home
-            </button>
-            
-            <h1 class="text-4xl font-bold text-white mb-8" style="font-family: var(--font-display);">
-                👤 Mi Perfil
-            </h1>
-            
-            <div class="glass-card p-8 rounded-2xl text-center">
-                <div class="w-24 h-24 bg-gradient-to-br from-gold to-gold-ember rounded-full flex items-center justify-center text-black text-4xl font-bold mx-auto mb-4">
-                    ${(currentUser?.email?.charAt(0) || 'U').toUpperCase()}
-                </div>
-                <h2 class="text-2xl font-bold text-white mb-2">${currentUser?.email || 'Usuario'}</h2>
-                <p class="text-gray-400 mb-6">Miembro desde ${currentUser?.metadata?.creationTime ? new Date(currentUser.metadata.creationTime).toLocaleDateString() : 'hoy'}</p>
-                
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="bg-white/5 rounded-lg p-3">
-                        <div class="text-gray-400">Email</div>
-                        <div class="text-white font-medium">${currentUser?.email || 'N/A'}</div>
-                    </div>
-                    <div class="bg-white/5 rounded-lg p-3">
-                        <div class="text-gray-400">ID</div>
-                        <div class="text-white font-medium text-xs">${userId?.substring(0, 8) || 'N/A'}...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MÓDULO: SETTINGS
-// ═══════════════════════════════════════════════════════════════════
-
-function renderSettings() {
-    return `
-        <div class="max-w-3xl mx-auto px-4 py-8">
-            <button onclick="navigateTo('home')" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
-                ← Volver al Home
-            </button>
-            
-            <h1 class="text-4xl font-bold text-white mb-8" style="font-family: var(--font-display);">
-                ⚙️ Configuración
-            </h1>
-            
-            <div class="glass-card p-6 rounded-2xl">
-                <h3 class="text-xl font-bold text-white mb-4">Preferencias</h3>
-                <p class="text-gray-400">Próximamente: Notificaciones, temas, preferencias de análisis y más.</p>
-            </div>
-        </div>
-    `;
-}
-
-
-        // ═══════════════════════════════════════════════════════════════
-        // EVENT LISTENERS DE AUTENTICACIÓN
-        // ═══════════════════════════════════════════════════════════
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                loginForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const emailOrUsername = document.getElementById('loginEmailOrUsername').value.trim();
-                    const password = document.getElementById('loginPassword').value;
-                    try {
-                        let email = emailOrUsername;
-                        if (!emailOrUsername.includes('@')) {
-                            const usernamesRef = await database.ref('usernames').once('value');
-                            const usernames = usernamesRef.val() || {};
-                            const foundUserId = Object.keys(usernames).find(uid => usernames[uid] === emailOrUsername);
-                            if (foundUserId) {
-                                const userRef = await database.ref(`users/${foundUserId}/profile`).once('value');
-                                const userProfile = userRef.val();
-                                if (userProfile && userProfile.email) email = userProfile.email;
-                                else throw new Error('Usuario no encontrado');
-                            } else throw new Error('Usuario no encontrado');
-                        }
-                        await auth.signInWithEmailAndPassword(email, password);
-                        showNotification('success', '¡Bienvenido!', 'Sesión iniciada');
-                    } catch (error) {
-                        console.error('Error login:', error);
-                        let msg = 'Error al iniciar sesión';
-                        if (error.code === 'auth/user-not-found') msg = 'Usuario no encontrado';
-                        if (error.code === 'auth/wrong-password') msg = 'Contraseña incorrecta';
-                        showNotification('error', 'Error', msg);
-                    }
-                });
-            }
-            
-            const registerForm = document.getElementById('registerForm');
-            if (registerForm) {
-                registerForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const username = document.getElementById('registerUsername').value.trim();
-                    const email = document.getElementById('registerEmail').value.trim();
-                    const password = document.getElementById('registerPassword').value;
-                    const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
-                    if (password !== passwordConfirm) { showNotification('error', 'Error', 'Las contraseñas no coinciden'); return; }
-                    if (password.length < 6) { showNotification('error', 'Error', 'Mínimo 6 caracteres'); return; }
-                    try {
-                        const usernamesRef = await database.ref('usernames').once('value');
-                        const usernames = usernamesRef.val() || {};
-                        if (Object.values(usernames).includes(username)) { showNotification('error', 'Error', 'Username ya existe'); return; }
-                        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                        const user = userCredential.user;
-                        await database.ref(`users/${user.uid}/profile`).set({ username, email, createdAt: new Date().toISOString(), displayName: username });
-                        await database.ref(`usernames/${user.uid}`).set(username);
-                        await database.ref(`users/${user.uid}/bankroll`).set({ current: 0, initial: 0, history: [] });
-                        showNotification('success', '¡Cuenta creada!', 'Bienvenido');
-                    } catch (error) {
-                        console.error('Error:', error);
-                        showNotification('error', 'Error', error.message);
-                    }
-                });
-            }
-            
-            const forgotForm = document.getElementById('forgotPasswordForm');
-            if (forgotForm) {
-                forgotForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const email = document.getElementById('forgotEmail').value.trim();
-                    try {
-                        await auth.sendPasswordResetEmail(email);
-                        showNotification('success', 'Email enviado', 'Revisa tu correo');
-                        setTimeout(() => showLogin(), 2000);
-                    } catch (error) {
-                        showNotification('error', 'Error', 'No se pudo enviar');
-                    }
-                });
-            }
-        });
-
-
-
         // ═══════════════════════════════════════════════════════════════
         // FUNCIONES AUXILIARES ADICIONALES - NIOSPORTS PRO v4.0
         // ═══════════════════════════════════════════════════════════
