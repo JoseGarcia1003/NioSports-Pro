@@ -24,6 +24,46 @@
 
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+        /* Premium Select Dropdown */
+        .select-premium {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background: rgba(13, 27, 42, 0.95);
+            color: #ffffff;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px 40px 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23FFD700' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 14px;
+            outline: none;
+        }
+        .select-premium:hover {
+            border-color: rgba(255, 215, 0, 0.6);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
+        }
+        .select-premium:focus {
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.25);
+        }
+        .select-premium option {
+            background: #0d1b2a;
+            color: #ffffff;
+            padding: 10px;
+            font-size: 14px;
+        }
+        .select-premium option:hover,
+        .select-premium option:checked {
+            background: linear-gradient(135deg, #1a3566, #0d1f3c);
+            color: #FFD700;
+        }
+
         :root {
             /* Deep Navy Spectrum */
             --bg-abyss: #030711;
@@ -4823,18 +4863,6 @@ function renderHome() {
                     <div class="text-sm text-yellow-400/60">Click para analizar partidos NBA</div>
                 </button>
                 
-                <!-- Props -->
-                <button onclick="navigateTo('props')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left bg-gradient-to-br from-blue-600/10 to-indigo-600/10 border border-blue-500/20 hover:border-blue-400/40" style="box-shadow: 0 0 20px rgba(59,130,246,0.03);">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="text-2xl font-bold text-white mb-2">👤 Props de Jugadores</h3>
-                            <p class="text-blue-200/70">Análisis individual de jugadores</p>
-                        </div>
-                        <div class="text-5xl opacity-50" style="color: #60a5fa;">→</div>
-                    </div>
-                    <div class="text-sm text-blue-400/60">Stats y predicciones de jugadores</div>
-                </button>
-                
                 <!-- AI Picks -->
                 <button onclick="navigateTo('aipicks')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left bg-gradient-to-br from-purple-600/10 to-pink-600/10 border border-purple-500/20 hover:border-purple-400/40" style="box-shadow: 0 0 20px rgba(147,51,234,0.03);">
                     <div class="flex items-center justify-between mb-4">
@@ -7168,13 +7196,23 @@ function addPickToBankroll(pickData) {
     render();
 }
 
-function updatePickStatus(pickId, status) {
+function updateBankrollPickStatus(pickId, status) {
     const pick = BANKROLL_DATA.picks.find(p => p.id === pickId);
-    if (pick) {
-        pick.status = status;
-        saveBankrollToFirebase();
-        render();
+    if (!pick) return;
+    
+    pick.status = status;
+    
+    // Recalcular bankroll
+    if (status === 'won') {
+        BANKROLL_DATA.current = (BANKROLL_DATA.current || 0) + pick.profit;
+    } else if (status === 'lost') {
+        BANKROLL_DATA.current = (BANKROLL_DATA.current || 0) - pick.stake;
     }
+    
+    saveBankrollToFirebase();
+    showNotification('success', status === 'won' ? '✅ Pick GANADO' : '❌ Pick PERDIDO', 
+        `Stake: $${pick.stake.toFixed(2)} | ${status === 'won' ? 'Ganancia: $' + pick.profit.toFixed(2) : 'Pérdida: -$' + pick.stake.toFixed(2)}`);
+    render();
 }
 
 function deletePickFromBankroll(pickId) {
@@ -7598,10 +7636,10 @@ function renderBankrollView() {
                                 </div>
                                 <div class="flex gap-2">
                                     ${pick.status === 'pending' ? `
-                                        <button onclick="updatePickStatus(${pick.id}, 'won')" class="px-3 py-2 rounded-lg text-white font-bold hover:scale-110 transition-all text-sm" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">
+                                        <button onclick="updateBankrollPickStatus(${pick.id}, 'won')" class="px-3 py-2 rounded-lg text-white font-bold hover:scale-110 transition-all text-sm" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">
                                             ✅
                                         </button>
-                                        <button onclick="updatePickStatus(${pick.id}, 'lost')" class="px-3 py-2 rounded-lg text-white font-bold hover:scale-110 transition-all text-sm" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                                        <button onclick="updateBankrollPickStatus(${pick.id}, 'lost')" class="px-3 py-2 rounded-lg text-white font-bold hover:scale-110 transition-all text-sm" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
                                             ❌
                                         </button>
                                     ` : ''}
