@@ -788,34 +788,30 @@
             position: fixed;
             top: 80px;
             right: 20px;
-            z-index: 9998;
+            z-index: 99999;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
+            pointer-events: none;
         }
 
-        /* NOTIFICACIONES - CRÍTICO */
+        /* NOTIFICACIONES */
         .notification {
-            position: fixed !important;
-            top: 2rem !important;
-            right: 2rem !important;
-            background: rgba(13, 31, 60, 0.98) !important;
-            backdrop-filter: blur(20px) !important;
-            border: 2px solid var(--gold) !important;
-            border-radius: 16px !important;
-            padding: 1.25rem 1.75rem !important;
-            box-shadow: 0 12px 40px rgba(255, 215, 0, 0.3) !important;
-            z-index: 99999 !important;
-            opacity: 0 !important;
-            transform: translateX(500px) !important;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-            min-width: 300px !important;
-            max-width: 400px !important;
+            position: relative;
+            background: rgba(13, 31, 60, 0.98);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--gold, #FFD700);
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 12px 40px rgba(255, 215, 0, 0.2);
+            min-width: 300px;
+            max-width: 420px;
+            pointer-events: auto;
         }
         
         .notification.show {
-            opacity: 1 !important;
-            transform: translateX(0) !important;
+            opacity: 1;
+            transform: translateX(0);
         }
         
         .notification-icon {
@@ -835,9 +831,11 @@
             color: rgba(226, 232, 240, 0.9) !important;
         }
 
-        .notification.success { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(52, 211, 153, 0.2); }
-        .notification.warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(251, 191, 36, 0.2); }
-        .notification.info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(96, 165, 250, 0.2); }
+        .notification.success { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(52, 211, 153, 0.3); }
+        .notification.error { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(248, 113, 113, 0.3); }
+        .notification.warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(251, 191, 36, 0.3); }
+        .notification.info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); }
+        .notification.value { background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(192, 132, 252, 0.3); }
 
         @keyframes notifSlide {
             from { transform: translateX(100%); opacity: 0; }
@@ -1471,46 +1469,12 @@ const auth = firebase.auth();
 
         // [debug] console.log('%c🚀 NIOSPORTS PRO v4.0 INICIANDO...', 'color: #FFD700; font-size: 20px; font-weight: bold;');
         
-        // SISTEMA DE NOTIFICACIONES (DEBE SER LO PRIMERO)
+        // SISTEMA DE NOTIFICACIONES — Early bootstrap version
+        // (Will be overridden by full version in main script)
+        let _pendingNotifications = [];
         function showNotification(type, title, message) {
-            // [debug] console.log(`%c📢 NOTIFICACIÓN [${type.toUpperCase()}]: ${title} - ${message}`, 
-                type === 'success' ? 'color: #34d399' : 
-                type === 'error' ? 'color: #f43f5e' : 
-                type === 'warning' ? 'color: #fbbf24' : 'color: #22d3ee');
-            
-            const notification = document.getElementById('notification');
-            const icon = document.getElementById('notificationIcon');
-            const titleEl = document.getElementById('notificationTitle');
-            const messageEl = document.getElementById('notificationMessage');
-            
-            if (!notification || !icon || !titleEl || !messageEl) {
-                console.error('❌ Elementos de notificación no encontrados, usando alert');
-                alert(`${title}\n${message}`);
-                return;
-            }
-            
-            const icons = {
-                success: '✅',
-                error: '❌',
-                warning: '⚠️',
-                info: 'ℹ️'
-            };
-            
-            icon.textContent = icons[type] || '📢';
-            titleEl.textContent = title;
-            messageEl.textContent = message;
-            
-            notification.classList.remove('show');
-            
-            setTimeout(() => {
-                notification.classList.add('show');
-                // [debug] console.log('✅ Notificación mostrada en pantalla');
-            }, 100);
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-                // [debug] console.log('✅ Notificación ocultada');
-            }, 5000);
+            // Queue notifications until main script loads
+            _pendingNotifications.push({type, title, message});
         }
         
         // Variables globales
@@ -1528,15 +1492,6 @@ const auth = firebase.auth();
         } else {
             // [debug] console.log('✅ Firebase configurado correctamente');
         }
-        
-        // Monitor de conexión Firebase
-        database.ref('.info/connected').on('value', (snapshot) => {
-            if (snapshot.val() === true) {
-                // [debug] console.log('✅ FIREBASE CONECTADO');
-            } else {
-                // [debug] console.warn('⚠️ FIREBASE DESCONECTADO');
-            }
-        });
         
         // Observer de autenticación
         auth.onAuthStateChanged((user) => {
@@ -1690,12 +1645,23 @@ const auth = firebase.auth();
         // Logout
         function logout() {
             if (confirm('¿Seguro que quieres cerrar sesión?')) {
-                // [debug] console.log('👋 Cerrando sesión...');
+                // Clean up Firebase listeners to prevent memory leaks
+                if (userId) {
+                    try {
+                        database.ref(`users/${userId}/picks_totales`).off();
+                        database.ref(`users/${userId}/picks_props`).off();
+                        database.ref(`users/${userId}/picks_ai`).off();
+                        database.ref(`users/${userId}/picks_backtesting`).off();
+                        database.ref(`users/${userId}/bankroll`).off();
+                        database.ref(`users/${userId}/h2h_games`).off();
+                        database.ref(`users/${userId}/picks`).off();
+                        database.ref(`users/${userId}/bankroll_data`).off();
+                    } catch(e) { /* silent */ }
+                }
                 auth.signOut().then(() => {
                     showNotification('info', 'Sesión cerrada', 'Hasta pronto');
-                    // [debug] console.log('✅ Sesión cerrada exitosamente');
                 }).catch(err => {
-                    console.error('❌ Error al cerrar sesión:', err);
+                    console.error('Error al cerrar sesión:', err);
                 });
             }
         }
@@ -1928,7 +1894,21 @@ const auth = firebase.auth();
     }
 
     function showAuth() {
-        alert('Sistema de autenticación próximamente.\n\nTodas las funcionalidades disponibles.');
+        if (typeof currentUser !== 'undefined' && currentUser) {
+            // User is logged in — show account options
+            const action = confirm(`Sesión activa: ${currentUser.email}\n\n¿Deseas cerrar sesión?`);
+            if (action && typeof logout === 'function') {
+                logout();
+            }
+        } else {
+            // User is not logged in — show login screen
+            if (typeof showLogin === 'function') {
+                showLogin();
+            } else {
+                const loginScreen = document.getElementById('loginScreen');
+                if (loginScreen) loginScreen.style.display = 'flex';
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -2099,7 +2079,7 @@ const auth = firebase.auth();
         results = results.slice(0, 8);
         if (results.length === 0) {
             container.style.display = 'block';
-            container.innerHTML = `<div style="background:var(--bg-raised);border:1px solid var(--glass-border);border-radius:var(--r-md);padding:16px 20px;color:rgba(255,255,255,0.5);font-size:14px;">No se encontraron resultados para "${query}"</div>`;
+            container.innerHTML = `<div style="background:var(--bg-raised);border:1px solid var(--glass-border);border-radius:var(--r-md);padding:16px 20px;color:rgba(255,255,255,0.5);font-size:14px;">No se encontraron resultados para "${typeof sanitizeHTML === 'function' ? sanitizeHTML(query) : query}"</div>`;
             return;
         }
         container.style.display = 'block';
@@ -2627,15 +2607,71 @@ function showNotification(arg1, arg2 = 'info', arg3 = null) {
         // Called as showNotification(message, type)
         message = arg1; type = arg2; title = '';
     }
+    
     const container = document.getElementById('notificationContainer');
+    if (!container) return;
+    
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️', value: '🔥' };
+    
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
-    notification.innerHTML = message;
+    notification.style.cssText = 'opacity:0; transform:translateX(100%);';
+    
+    // Build content safely (no innerHTML with user data)
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'notification-icon';
+    iconSpan.textContent = icons[type] || '📢';
+    
+    const textDiv = document.createElement('div');
+    textDiv.style.cssText = 'flex:1;min-width:0;';
+    
+    if (title) {
+        const titleEl = document.createElement('div');
+        titleEl.className = 'notification-title';
+        titleEl.textContent = title;
+        textDiv.appendChild(titleEl);
+    }
+    
+    const msgEl = document.createElement('div');
+    msgEl.className = 'notification-message';
+    msgEl.textContent = message;
+    textDiv.appendChild(msgEl);
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;font-size:16px;padding:0 0 0 8px;opacity:0.6;';
+    closeBtn.onclick = () => dismissNotification(notification);
+    
+    notification.style.display = 'flex';
+    notification.style.alignItems = 'center';
+    notification.style.gap = '12px';
+    notification.appendChild(iconSpan);
+    notification.appendChild(textDiv);
+    notification.appendChild(closeBtn);
     container.appendChild(notification);
+    
+    // Animate in
+    requestAnimationFrame(() => {
+        notification.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    });
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => dismissNotification(notification), 5000);
+}
 
-    setTimeout(() => {
-        notification.remove();
-    }, 5000);
+function dismissNotification(el) {
+    if (!el || !el.parentNode) return;
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(100%)';
+    setTimeout(() => { if (el.parentNode) el.remove(); }, 400);
+}
+
+// Flush any notifications that were queued before this script loaded
+if (typeof _pendingNotifications !== 'undefined' && _pendingNotifications.length > 0) {
+    _pendingNotifications.forEach(n => showNotification(n.type, n.title, n.message));
+    _pendingNotifications = [];
 }
 
 // ═══════════════════════════════════════════════════════════════
