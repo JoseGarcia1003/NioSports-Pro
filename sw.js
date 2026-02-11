@@ -1,9 +1,9 @@
-// ═══════════════════════════════════════════════════════════
-// NIOSPORTS PRO — Service Worker v1.0
-// Cache Strategy: Network-First for API, Cache-First for assets
-// ═══════════════════════════════════════════════════════════
+// NIOSPORTS PRO — Service Worker v2.0
+// Offline data caching + static asset caching
 
-const CACHE_NAME = 'niosports-v1.0';
+const CACHE_NAME = 'niosports-v2.0';
+const DATA_CACHE = 'niosports-data-v1';
+
 const STATIC_ASSETS = [
     '/NioSports-Pro/',
     '/NioSports-Pro/index.html',
@@ -14,80 +14,75 @@ const STATIC_ASSETS = [
     'https://cdn.jsdelivr.net/npm/chart.js'
 ];
 
-// Install — cache static assets
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('[SW] Caching static assets');
-                return cache.addAll(STATIC_ASSETS);
-            })
+            .then(cache => cache.addAll(STATIC_ASSETS))
             .then(() => self.skipWaiting())
     );
 });
 
-// Activate — clean old caches
 self.addEventListener('activate', event => {
     event.waitUntil(
-        caches.keys().then(keys => {
-            return Promise.all(
-                keys.filter(key => key !== CACHE_NAME)
-                    .map(key => caches.delete(key))
-            );
-        }).then(() => self.clients.claim())
+        caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE_NAME && k !== DATA_CACHE).map(k => caches.delete(k)))
+        ).then(() => self.clients.claim())
     );
 });
 
-// Fetch — Network-first for API/data, Cache-first for static assets
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
-    
-    // Skip non-GET requests
     if (event.request.method !== 'GET') return;
-    
-    // Skip Firebase Realtime Database requests (always need fresh data)
-    if (url.hostname.includes('firebaseio.com') || 
-        url.hostname.includes('googleapis.com')) {
-        return;
-    }
-    
-    // Skip Tailwind CDN (too large to cache efficiently)
+    if (url.hostname.includes('firebaseio.com') && url.pathname.includes('.ws')) return;
     if (url.hostname === 'cdn.tailwindcss.com') return;
-    
-    // For API calls (balldontlie, ESPN, etc.) — Network first, fall back to cache
-    if (url.hostname.includes('balldontlie') || 
-        url.hostname.includes('espn.com') ||
-        url.pathname.includes('/data/')) {
-        event.respondWith(
-            fetch(event.request)
-                .then(response => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                    return response;
-                })
-                .catch(() => caches.match(event.request))
-        );
+
+    // API / Firebase data — Network first, cache fallback
+    if (url.hostname.includes('balldontlie') || url.hostname.includes('espn') ||
+        (url.hostname.includes('firebaseio.com') && !url.pathname.includes('.ws'))) {
+        event.respondWith(networkFirst(event.request, DATA_CACHE));
         return;
     }
-    
-    // For static assets — Cache first, fall back to network
-    event.respondWith(
-        caches.match(event.request)
-            .then(cached => {
-                if (cached) return cached;
-                return fetch(event.request).then(response => {
-                    if (response.ok) {
-                        const clone = response.clone();
-                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                    }
-                    return response;
-                });
-            })
-            .catch(() => {
-                // Offline fallback for HTML pages
-                if (event.request.headers.get('accept').includes('text/html')) {
-                    return caches.match('/NioSports-Pro/index.html');
-                }
-            })
-    );
+
+    // Static — Cache first
+    event.respondWith(cacheFirst(event.request));
+});
+
+async function networkFirst(request, cacheName) {
+    try {
+        const resp = await fetch(request);
+        if (resp.ok) {
+            const cache = await caches.open(cacheName);
+            cache.put(request, resp.clone());
+        }
+        return resp;
+    } catch(e) {
+        const cached = await caches.match(request);
+        return cached || new Response(JSON.stringify({error:'offline'}), {headers:{'Content-Type':'application/json'}});
+    }
+}
+
+async function cacheFirst(request) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    try {
+        const resp = await fetch(request);
+        if (resp.ok) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(request, resp.clone());
+        }
+        return resp;
+    } catch(e) {
+        if (request.headers.get('accept')?.includes('text/html'))
+            return caches.match('/NioSports-Pro/index.html');
+        return new Response('Offline', {status:503});
+    }
+}
+
+self.addEventListener('message', event => {
+    if (event.data === 'SKIP_WAITING') self.skipWaiting();
+    if (event.data?.type === 'CACHE_DATA') {
+        caches.open(DATA_CACHE).then(cache => {
+            cache.put(event.data.key, new Response(JSON.stringify(event.data.payload)));
+        });
+    }
 });
