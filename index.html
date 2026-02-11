@@ -12,7 +12,7 @@
     <meta property="og:title" content="NioSports Pro - Sistema Predictivo NBA #1">
     <meta property="og:description" content="Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
     <meta property="og:type" content="website">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2531,7 +2531,7 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
         renderLeadersGrid();
         // Load database in background for search
         try {
-            const res = await fetch('https://josegarcia1003.github.io/NioSports-Pro/data/nba_players_database_v3.json');
+            const res = await fetch('https://josegarcia1003.github.io/data/nba_players_database_v3.json');
             if (res.ok) {
                 PROPS_DB = await res.json();
                 // [debug] console.log(`✅ Props DB: ${Object.keys(PROPS_DB).length} jugadores cargados`);
@@ -9194,7 +9194,7 @@ document.addEventListener('click', function(e) {
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
+                navigator.serviceWorker.register('/sw.js')
                     .then(reg => logger.log('SW registered:', reg.scope))
                     .catch(err => logger.log('SW failed:', err));
             });
