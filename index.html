@@ -1621,6 +1621,124 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const auth = firebase.auth();
 
+
+// ═══════════════════════════════════════════════════════════════
+// AUTH HARDENING + ANTI "SESIONES FANTASMAS" (added)
+// ═════════════════════════════════════════════════════════════==
+
+// 1) Persistencia estable (reduce estados raros tras deploys)
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((e) => {
+    console.warn('Auth persistence error:', e);
+});
+
+// 2) Validación de sesión (token refresh). Si falla, forzamos logout "duro".
+async function validateCurrentSession(user) {
+    try {
+        await user.getIdToken(true); // refresh
+        return true;
+    } catch (e) {
+        console.warn('Token refresh failed:', e);
+        return false;
+    }
+}
+
+// 3) Session binding (anti ghost sessions)
+function getOrCreateDeviceId() {
+    const key = 'ns_device_id';
+    let id = localStorage.getItem(key);
+    if (!id) {
+        id = (crypto?.randomUUID?.() || ('dev_' + Math.random().toString(16).slice(2))) + '_' + Date.now();
+        localStorage.setItem(key, id);
+    }
+    return id;
+}
+
+function newSessionId() {
+    return crypto?.randomUUID?.() || ('sess_' + Math.random().toString(16).slice(2) + '_' + Date.now());
+}
+
+async function bindSession(user) {
+    const deviceId = getOrCreateDeviceId();
+    const sessionId = newSessionId();
+
+    localStorage.setItem('ns_session_id', sessionId);
+
+    try {
+        await database.ref(`users/${user.uid}/session`).update({
+            currentSessionId: sessionId,
+            deviceId,
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
+        });
+    } catch (e) {
+        console.warn('Could not bind session in RTDB:', e);
+        // Aun si falla, seguimos (no bloquea login)
+    }
+
+    return sessionId;
+}
+
+async function enforceSessionBinding(user) {
+    const localSessionId = localStorage.getItem('ns_session_id');
+    let remoteSessionId = null;
+
+    try {
+        const snap = await database.ref(`users/${user.uid}/session/currentSessionId`).once('value');
+        remoteSessionId = snap.val();
+    } catch (e) {
+        console.warn('Could not read remote session from RTDB:', e);
+        // Si no podemos leer, no bloqueamos el acceso (fail-open)
+        return true;
+    }
+
+    if (!remoteSessionId) {
+        await bindSession(user);
+        return true;
+    }
+
+    if (!localSessionId) {
+        localStorage.setItem('ns_session_id', remoteSessionId);
+        return true;
+    }
+
+    if (localSessionId !== remoteSessionId) {
+        console.warn('Session mismatch -> hard logout for safety');
+        await safeHardLogout('Sesión reiniciada por seguridad. Inicia sesión otra vez.');
+        return false;
+    }
+
+    return true;
+}
+
+// 4) Logout "duro": borra sesión, cache y service worker (arregla estados corruptos)
+async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
+    try { await auth.signOut(); } catch {}
+    try { localStorage.removeItem('ns_session_id'); } catch {}
+    try { sessionStorage.clear(); } catch {}
+
+    // Cache Storage
+    try {
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+        }
+    } catch {}
+
+    // Service Worker
+    try {
+        if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r => r.unregister()));
+        }
+    } catch {}
+
+    if (typeof showNotification === 'function') {
+        showNotification('warning', 'Sesión', message);
+    } else {
+        alert(message);
+    }
+}
+
+
 // ═══════════════════════════════════════════════════════════════
 
 // Auth code moved here
@@ -1657,12 +1775,31 @@ const auth = firebase.auth();
         }
         
         // Observer de autenticación
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
             // [debug] console.log('🔐 Estado de autenticación cambió:', user ? 'Usuario logueado' : 'Sin usuario');
             if (user) {
+                // 1) Token válido (evita sesiones corruptas)
+                const okToken = await validateCurrentSession(user);
+                if (!okToken) {
+                    await safeHardLogout('Tu sesión estaba corrupta. Inicia sesión otra vez.');
+                    return;
+                }
+
+                // 2) Anti "sesiones fantasmas" (cache/SW/deploys)
+                const okSession = await enforceSessionBinding(user);
+                if (!okSession) return;
+
                 // [debug] console.log('👤 Usuario:', user.email, '| UID:', user.uid);
                 currentUser = user;
                 userId = user.uid;
+
+                // Heartbeat (no bloqueante)
+                try {
+                    database.ref(`users/${user.uid}/session`).update({
+                        lastSeenAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+                } catch {}
+
                 onUserLoggedIn(user);
             } else {
                 // [debug] console.log('👋 No hay usuario, mostrando login');
@@ -1671,8 +1808,7 @@ const auth = firebase.auth();
                 showLogin();
             }
         });
-        
-        // Funciones de navegación entre pantallas
+// Funciones de navegación entre pantallas
         function showLogin() {
             // [debug] console.log('📺 Mostrando pantalla de LOGIN');
             const loginScreen = document.getElementById('loginScreen');
@@ -8620,6 +8756,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         logger.log('  - Email:', email);
                         
                         const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                        await bindSession(userCredential.user);
                         
                         logger.log('✅✅✅ LOGIN EXITOSO ✅✅✅');
                         logger.log('👤 Usuario:', userCredential.user.email);
@@ -8863,6 +9000,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 const result = await auth.signInWithPopup(provider);
                 const user = result.user;
+                await bindSession(user);
                 
                 logger.log('✅ Login con Google exitoso');
                 logger.log('Usuario:', user.displayName, user.email);
