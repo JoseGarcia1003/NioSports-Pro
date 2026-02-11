@@ -1090,6 +1090,169 @@
         /* Screen reader only utility */
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
         .sr-only:focus, .focus\:not-sr-only:focus { position: static; width: auto; height: auto; padding: revert; margin: revert; overflow: visible; clip: auto; white-space: normal; }
+
+        /* ═══════════ MOBILE BOTTOM NAV ═══════════ */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 9990;
+            background: rgba(5, 11, 24, 0.97);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 215, 0, 0.15);
+            padding: 6px 0 env(safe-area-inset-bottom, 6px);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .mobile-bottom-nav .nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .mobile-bottom-nav .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 10px;
+            font-weight: 600;
+            min-width: 60px;
+        }
+        .mobile-bottom-nav .nav-item .nav-icon { font-size: 22px; line-height: 1; }
+        .mobile-bottom-nav .nav-item.active {
+            color: #FFD700;
+            background: rgba(255, 215, 0, 0.08);
+        }
+        .mobile-bottom-nav .nav-item:active { transform: scale(0.92); }
+
+        @media (max-width: 768px) {
+            .mobile-bottom-nav { display: block; }
+            /* Add bottom padding to prevent content being hidden behind bottom nav */
+            #app, .view-panel.active { padding-bottom: 80px !important; }
+            /* Hide top nav on mobile when logged into app */
+            .hide-top-nav-mobile { display: none !important; }
+        }
+
+        /* ═══════════ MOBILE RESPONSIVE IMPROVEMENTS ═══════════ */
+        @media (max-width: 480px) {
+            /* Smaller padding on very small screens */
+            .p-3.md\:p-4 { padding: 10px; }
+            /* Notification positioning for mobile */
+            #notificationContainer {
+                right: 10px;
+                left: 10px;
+                top: 12px;
+            }
+            #notificationContainer .notification {
+                min-width: auto;
+                max-width: 100%;
+                font-size: 13px;
+            }
+            /* Bank text too big on mobile */
+            .text-5xl { font-size: 2rem; }
+            /* Fix bankroll filter bar stacking */
+            .bankroll-filters {
+                flex-direction: column;
+            }
+            .bankroll-filters .ml-auto {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Stats cards: 2 columns on mobile instead of 1 */
+            .stats-grid-mobile {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            /* Better touch targets */
+            button, a, select, .nav-item {
+                min-height: 44px;
+            }
+            /* Reduce oversized headings */
+            .text-5xl { font-size: 2.25rem; }
+            .text-4xl { font-size: 1.75rem; }
+            /* Safe area for notch phones */
+            body {
+                padding-top: env(safe-area-inset-top, 0);
+            }
+        }
+
+        /* ═══════════ PULL TO REFRESH BUTTON ═══════════ */
+        .refresh-btn {
+            position: fixed;
+            bottom: 85px;
+            right: 16px;
+            z-index: 9000;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFD700, #F59E0B);
+            color: #0d1b2a;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+            transition: all 0.3s ease;
+            display: none;
+        }
+        .refresh-btn:active { transform: scale(0.9); }
+        .refresh-btn.spinning { animation: spin 0.8s linear; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @media (max-width: 768px) { .refresh-btn { display: flex; align-items: center; justify-content: center; } }
+
+        /* ═══════════ LAST UPDATED BADGE ═══════════ */
+        .last-updated {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .last-updated .pulse-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* ═══════════ IMPROVED EMPTY STATES ═══════════ */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .empty-state-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+        }
+        .empty-state-desc {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.35);
+            max-width: 280px;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
@@ -1599,6 +1762,12 @@ const auth = firebase.auth();
             if (typeof render === 'function') {
                 render();
             }
+            
+            // Show mobile bottom nav
+            const mobileNav = document.getElementById('mobileBottomNav');
+            if (mobileNav) mobileNav.style.display = '';
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) refreshBtn.style.display = '';
         }
         
         // Cargar datos del usuario
@@ -1660,6 +1829,11 @@ const auth = firebase.auth();
                 }
                 auth.signOut().then(() => {
                     showNotification('info', 'Sesión cerrada', 'Hasta pronto');
+                    // Hide mobile nav
+                    const mobileNav = document.getElementById('mobileBottomNav');
+                    if (mobileNav) mobileNav.style.display = 'none';
+                    const refreshBtn = document.getElementById('refreshBtn');
+                    if (refreshBtn) refreshBtn.style.display = 'none';
                 }).catch(err => {
                     console.error('Error al cerrar sesión:', err);
                 });
@@ -4860,7 +5034,7 @@ function renderHome() {
             </div>
             
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8 stats-grid-mobile">
                 <div class="glass-card p-6 rounded-xl">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-gray-400 text-sm">Bankroll</span>
@@ -5025,7 +5199,10 @@ function renderTendencia() {
                     ${LOGO_SVG}
                     <div>
                         <h1 class="text-2xl md:text-3xl font-bold text-white font-display tracking-wide">ANÁLISIS DE PARTIDO</h1>
-                        <p class="text-yellow-400 text-sm font-semibold">🏀 Tendencia + H2H + Factores Contextuales</p>
+                        <div class="flex items-center gap-3 justify-center mt-1">
+                            <p class="text-yellow-400 text-sm font-semibold">🏀 Tendencia + H2H + Factores Contextuales</p>
+                            <span class="last-updated"><span class="pulse-dot"></span> <span id="lastUpdated">${new Date().toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'})}</span></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -6990,6 +7167,15 @@ function navigateTo(v) {
         ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
     }
     render();
+    
+    // Sync mobile bottom nav
+    if (typeof updateMobileNav === 'function') {
+        const navMap = { 'home':'home', 'totales':'totales', 'tendencia':'totales', 'props':'props', 'playerProps':'props', 'bankroll':'bankroll', 'mispicks':'mispicks', 'picks':'mispicks' };
+        updateMobileNav(navMap[v] || 'home');
+    }
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function goToIngestWithTeams() {
@@ -7528,7 +7714,7 @@ function renderBankrollView() {
                         <div>
                             <h2 class="text-3xl font-display gradient-text-animated mb-1">BANKROLL</h2>
                             <p class="text-gray-400 text-sm">Bank Actual</p>
-                            <p class="text-5xl font-display gradient-text-animated mt-2">$${stats.currentBank.toFixed(2)}</p>
+                            <p class="text-3xl md:text-5xl font-display gradient-text-animated mt-2">$${stats.currentBank.toFixed(2)}</p>
                             <div class="flex items-center gap-3 mt-2">
                                 <div class="px-3 py-1 rounded-lg" style="background: ${stats.totalProfit >= 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'};">
                                     <p class="text-${stats.totalProfit >= 0 ? 'green' : 'red'}-400 font-bold">
@@ -7559,7 +7745,7 @@ function renderBankrollView() {
             </div>
 
             <!-- Filtros Compactos -->
-            <div class="rounded-xl p-3 mb-6 border border-white/10 flex items-center gap-3 flex-wrap" style="background: rgba(27, 38, 59, 0.6);">
+            <div class="bankroll-filters rounded-xl p-3 mb-6 border border-white/10 flex items-center gap-3 flex-wrap" style="background: rgba(27, 38, 59, 0.6);">
                 <select onchange="filterPeriod=this.value;render()" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: rgba(13, 27, 42, 0.8); border: 2px solid rgba(255, 215, 0, 0.2);">
                     <option value="all">📅 Todo</option>
                     <option value="today">📅 Hoy</option>
@@ -7661,15 +7847,18 @@ function renderBankrollView() {
                 </h3>
                 <div class="space-y-3">
                     ${(!BANKROLL_DATA.picks || BANKROLL_DATA.picks.length === 0) ? `
-                        <div class="text-center py-8">
-                            <div class="text-5xl mb-3">📊</div>
-                            <p class="text-gray-400 text-lg mb-1">No hay picks registrados</p>
-                            <p class="text-gray-500 text-sm">Comienza agregando tu primer pick</p>
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <div class="empty-state-title">No hay picks registrados</div>
+                            <div class="empty-state-desc">Comienza agregando tu primer pick usando el botón "➕ Agregar Pick" de arriba</div>
+                            <button onclick="showAddPickModal()" class="mt-4 px-6 py-3 rounded-xl font-bold text-sm hover:scale-105 transition-all" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+                                ➕ Agregar mi primer pick
+                            </button>
                         </div>
                     ` : BANKROLL_DATA.picks.slice(0, 10).map(pick => `
                         <div class="rounded-xl p-3 hover:scale-[1.01] transition-all" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);">
                             <div class="flex items-center justify-between flex-wrap gap-3">
-                                <div class="flex-1 min-w-[250px]">
+                                <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-2 flex-wrap">
                                         <span class="${pick.status === 'won' ? 'win-badge' : pick.status === 'lost' ? 'loss-badge' : 'pending-badge'} px-2 py-1 rounded-full text-xs font-bold">
                                             ${pick.status === 'won' ? '✅ WIN' : pick.status === 'lost' ? '❌ LOSS' : '⏳ PEND'}
@@ -8730,6 +8919,94 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+    
+// ═══════════════════════════════════════════════════════════════
+
+// Keyboard shortcuts for power users
+document.addEventListener('keydown', function(e) {
+    // Only when no input is focused
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA') return;
+    
+    if (e.key === 'h' || e.key === 'H') { if (typeof navigateTo === 'function') navigateTo('home'); }
+    else if (e.key === 't' || e.key === 'T') { if (typeof navigateTo === 'function') navigateTo('totales'); }
+    else if (e.key === 'b' || e.key === 'B') { if (typeof navigateTo === 'function') navigateTo('bankroll'); }
+    else if (e.key === 'p' || e.key === 'P') { if (typeof navigateTo === 'function') navigateTo('props'); }
+    else if (e.key === 'r' || e.key === 'R') { if (typeof refreshData === 'function') refreshData(); }
+});
+// MOBILE BOTTOM NAV + REFRESH
+// ═══════════════════════════════════════════════════════════════
+function mobileNav(view) {
+    // Map mobile nav items to actual views
+    const viewMap = {
+        'home': 'home',
+        'totales': 'totales',
+        'props': 'props',
+        'bankroll': 'bankroll',
+        'mispicks': 'mispicks'
+    };
+    
+    const target = viewMap[view] || view;
+    
+    // Check if we're in the landing page system or app system
+    if (typeof navigateTo === 'function' && typeof currentView !== 'undefined') {
+        navigateTo(target);
+    } else if (typeof switchView === 'function') {
+        switchView(target === 'totales' ? 'totals' : target);
+    }
+    
+    // Update active state
+    updateMobileNav(view);
+}
+
+function updateMobileNav(active) {
+    const nav = document.getElementById('mobileBottomNav');
+    if (!nav) return;
+    nav.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    const activeItem = document.getElementById('mnav-' + active);
+    if (activeItem) activeItem.classList.add('active');
+}
+
+// Keep mobile nav in sync with currentView
+const _origNavigateTo = typeof navigateTo === 'function' ? navigateTo : null;
+
+function refreshData() {
+    const btn = document.getElementById('refreshBtn');
+    if (btn) {
+        btn.classList.add('spinning');
+        setTimeout(() => btn.classList.remove('spinning'), 800);
+    }
+    
+    // Reload data from Firebase
+    if (typeof loadH2HFromFirebase === 'function') loadH2HFromFirebase();
+    if (typeof loadBankrollFromFirebase === 'function') loadBankrollFromFirebase();
+    if (typeof loadPicksFromFirebase === 'function') loadPicksFromFirebase();
+    
+    // Update timestamp
+    updateLastUpdated();
+    
+    showNotification('✅ Datos actualizados', 'success');
+}
+
+function updateLastUpdated() {
+    const el = document.getElementById('lastUpdated');
+    if (el) {
+        const now = new Date();
+        el.textContent = now.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+    }
+}
+
+// Close mobile nav when clicking outside
+document.addEventListener('click', function(e) {
+    const navLinks = document.querySelector('.nav-links.open');
+    const toggle = document.querySelector('.nav-mobile-toggle');
+    if (navLinks && !navLinks.contains(e.target) && !toggle.contains(e.target)) {
+        navLinks.classList.remove('open');
+    }
+});
+
+
     </script>
 
     
@@ -8744,6 +9021,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     </div>
 
+
+
+    <!-- MOBILE BOTTOM NAV -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" style="display:none" aria-label="Navegación móvil">
+        <div class="nav-items">
+            <button class="nav-item active" onclick="mobileNav('home')" id="mnav-home" aria-label="Inicio">
+                <span class="nav-icon">🏠</span>
+                <span>Inicio</span>
+            </button>
+            <button class="nav-item" onclick="mobileNav('totales')" id="mnav-totales" aria-label="Totales">
+                <span class="nav-icon">📊</span>
+                <span>Totales</span>
+            </button>
+            <button class="nav-item" onclick="mobileNav('props')" id="mnav-props" aria-label="Props">
+                <span class="nav-icon">👤</span>
+                <span>Props</span>
+            </button>
+            <button class="nav-item" onclick="mobileNav('bankroll')" id="mnav-bankroll" aria-label="Bankroll">
+                <span class="nav-icon">💰</span>
+                <span>Bank</span>
+            </button>
+            <button class="nav-item" onclick="mobileNav('mispicks')" id="mnav-mispicks" aria-label="Mis Picks">
+                <span class="nav-icon">🎯</span>
+                <span>Picks</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MOBILE REFRESH BUTTON -->
+    <button class="refresh-btn" id="refreshBtn" style="display:none" onclick="refreshData()" aria-label="Actualizar datos">🔄</button>
 
     <!-- Service Worker Registration -->
     <script>
