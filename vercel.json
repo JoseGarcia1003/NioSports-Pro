@@ -17,13 +17,16 @@
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
         { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" },
         { "key": "Cross-Origin-Resource-Policy", "value": "same-site" },
         { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://www.gstatic.com https://accounts.google.com https://apis.google.com https://cdn.jsdelivr.net; connect-src 'self' https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://www.googleapis.com https://apis.google.com https://api.balldontlie.io; img-src 'self' data: https://*.googleusercontent.com; style-src 'self' 'unsafe-inline'; frame-src https://accounts.google.com https://*.firebaseapp.com; frame-ancestors 'none';"
+          "value": "default-src 'self'; script-src 'self' https://www.gstatic.com https://accounts.google.com https://apis.google.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; connect-src 'self' https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://www.googleapis.com https://apis.google.com https://api.balldontlie.io; img-src 'self' data: https://*.googleusercontent.com; style-src 'self' 'unsafe-inline'; frame-src https://accounts.google.com https://*.firebaseapp.com; frame-ancestors 'none';"
         }
       ]
     },
