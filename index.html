@@ -7,8 +7,8 @@
   <meta name="description" content="El sistema predictivo NBA más avanzado del mercado. Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
   <meta name="theme-color" content="#050b18">
   <meta name="apple-mobile-web-app-capable" content="yes">
-      <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="NioSports">
   <meta property="og:title" content="NioSports Pro - Sistema Predictivo NBA #1">
   <meta property="og:description" content="Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
@@ -1704,9 +1704,9 @@ async function enforceSessionBinding(user) {
     }
 
     if (localSessionId !== remoteSessionId) {
-        console.warn('Session mismatch -> hard logout for safety');
-        await safeHardLogout('Sesión reiniciada por seguridad. Inicia sesión otra vez.');
-        return false;
+        console.warn('Session mismatch -> resync local session id');
+        localStorage.setItem('ns_session_id', remoteSessionId);
+        return true;
     }
 
     return true;
