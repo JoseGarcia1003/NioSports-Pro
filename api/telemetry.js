@@ -1,70 +1,88 @@
-// api/telemetry.js
-// Túnel local para Sentry (Browser SDK -> /api/telemetry -> Sentry ingest)
-// Ventaja: tu CSP NO necesita permitir *.ingest.sentry.io en connect-src.
+// api/telemetry.js — Sentry tunnel (keeps CSP tight: connect-src 'self')
+// Forwards Sentry envelopes to Sentry ingest endpoint.
 
-function parseDsn(dsn) {
-  // DSN típico: https://PUBLIC_KEY@o123456.ingest.sentry.io/7890123
-  try {
-    const u = new URL(dsn);
-    const publicKey = u.username; // antes del '@'
-    const host = u.host;          // o123456.ingest.sentry.io
-    const projectId = u.pathname.replace("/", "");
-    if (!publicKey || !host || !projectId) return null;
+const SENTRY_INGEST_ENVELOPE_URL =
+  "https://o4510870707765248.ingest.us.sentry.io/api/4510870715760640/envelope/";
 
-    return {
-      publicKey,
-      host,
-      projectId,
-      envelopeUrl: `https://${host}/api/${projectId}/envelope/`,
-    };
-  } catch (_) {
-    return null;
+// Tiny in-memory rate limit to avoid abuse of the tunnel (best-effort in serverless).
+const RL_WINDOW_MS = 60_000;
+const RL_MAX_PER_IP = 120;
+
+function getIp(req) {
+  const xf = req.headers["x-forwarded-for"];
+  if (!xf) return "unknown";
+  return String(xf).split(",")[0].trim() || "unknown";
+}
+
+function rateLimitOk(ip) {
+  if (!globalThis.__telemetryRL) globalThis.__telemetryRL = new Map();
+  const now = Date.now();
+
+  const entry = globalThis.__telemetryRL.get(ip) || { ts: now, n: 0 };
+  if (now - entry.ts > RL_WINDOW_MS) {
+    entry.ts = now;
+    entry.n = 0;
   }
+  entry.n += 1;
+  globalThis.__telemetryRL.set(ip, entry);
+
+  return entry.n <= RL_MAX_PER_IP;
 }
 
 export default async function handler(req, res) {
-  // CORS (same-origin normalmente). Lo dejamos abierto por si algún día usas subdominios.
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Sentry-Auth");
+  // CORS: same-origin only (tunnel should be used by your site)
+  const origin = req.headers.origin || "";
+  const allow = [
+    "https://nio-sports-pro.vercel.app",
+    "https://nio-sports-pro-git-main-niosports-pros-projects.vercel.app",
+    "https://josegarcia1003.github.io"
+  ];
+  if (allow.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "content-type");
+  res.setHeader("Access-Control-Max-Age", "600");
 
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
+  if (req.method === "OPTIONS") return res.status(204).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  const ip = getIp(req);
+  if (!rateLimitOk(ip)) {
+    // Don't leak details; Sentry SDK will drop this.
+    return res.status(429).end("rate_limited");
   }
 
-  if (req.method !== "POST") {
-    return res.status(405).send("Method Not Allowed");
-  }
-
-  const dsn = process.env.SENTRY_DSN || process.env.SENTRY_DSN_PUBLIC;
-  const parsed = dsn ? parseDsn(dsn) : null;
-  if (!parsed) {
-    return res.status(500).send("Sentry DSN not configured");
-  }
-
-  // Leer body raw
-  const chunks = [];
+  // Limit payload size (Sentry envelopes can be big; keep reasonable)
+  const MAX_BYTES = 1_000_000; // 1MB
   try {
-    for await (const chunk of req) chunks.push(chunk);
-  } catch (_) {
-    return res.status(400).send("Invalid body");
-  }
-  const body = Buffer.concat(chunks);
+    const chunks = [];
+    let size = 0;
 
-  // Reenviar a Sentry
-  try {
-    const sentryResp = await fetch(parsed.envelopeUrl, {
+    for await (const chunk of req) {
+      size += chunk.length;
+      if (size > MAX_BYTES) {
+        return res.status(413).end("payload_too_large");
+      }
+      chunks.push(chunk);
+    }
+
+    const body = Buffer.concat(chunks);
+
+    // Forward as-is. Keep Content-Type.
+    const upstream = await fetch(SENTRY_INGEST_ENVELOPE_URL, {
       method: "POST",
       headers: {
-        "Content-Type": req.headers["content-type"] || "application/x-sentry-envelope",
-        "X-Sentry-Auth": `Sentry sentry_key=${parsed.publicKey}, sentry_version=7`,
+        "Content-Type": req.headers["content-type"] || "text/plain;charset=UTF-8"
       },
-      body,
+      body
     });
 
-    res.status(sentryResp.status).send(await sentryResp.text());
-  } catch (_) {
-    // fail-open: devolvemos 200 para que el front no se quede reintentando
-    res.status(200).send("");
+    // Sentry is okay with 200 even if upstream fails; we keep app stable.
+    // But we can pass through for debugging:
+    res.status(upstream.ok ? 200 : 502).end("ok");
+  } catch (e) {
+    res.status(200).end("ok");
   }
 }
