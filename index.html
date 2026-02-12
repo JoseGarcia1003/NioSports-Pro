@@ -1897,7 +1897,7 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
             
             // Renderizar vista inicial
             if (typeof render === 'function') {
-                render();
+                requestRender();
             }
             
             // Show mobile bottom nav
@@ -2199,7 +2199,7 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
         if (view === 'props') loadPlayers();
         if (view === 'totals') {
             // Re-render the app if navigating to totals
-            if (typeof render === 'function') render();
+            if (typeof render === 'function') requestRender();
         }
     }
 
@@ -2331,9 +2331,7 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
         if (!grid) return;
         grid.innerHTML = Object.entries(NBA_LEADERS).map(([key, cat]) => {
             return `
-            <div style="background:var(--glass-bg);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--r-lg);overflow:hidden;transition:all 0.4s var(--ease-out);"
-                 onmouseover="this.style.borderColor='${cat.color}33';this.style.boxShadow='0 12px 40px ${cat.color}15'"
-                 onmouseout="this.style.borderColor='var(--glass-border)';this.style.boxShadow='none'">
+            <div class="leader-card" data-accent="${cat.color}" style="background:var(--glass-bg);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--r-lg);overflow:hidden;transition:all 0.4s var(--ease-out);">
                 <!-- Header -->
                 <div style="padding:20px 24px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.04);">
                     <div style="display:flex;align-items:center;gap:10px;">
@@ -2359,7 +2357,31 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
                 </div>
             </div>`;
         }).join('');
+        bindLeadersHover();
     }
+
+// Hover delegation para Leaders (evita handlers inline por card)
+function bindLeadersHover() {
+    const grid = document.getElementById('leadersGrid');
+    if (!grid || grid.__hoverBound) return;
+    grid.__hoverBound = true;
+
+    grid.addEventListener('mouseover', (e) => {
+        const card = e.target.closest('.leader-card');
+        if (!card) return;
+        const c = card.dataset.accent || '';
+        card.style.borderColor = `${c}33`;
+        card.style.boxShadow = `0 12px 40px ${c}15`;
+    });
+
+    grid.addEventListener('mouseout', (e) => {
+        const card = e.target.closest('.leader-card');
+        if (!card) return;
+        card.style.borderColor = 'var(--glass-border)';
+        card.style.boxShadow = 'none';
+    });
+}
+
 
     // Search system
     function propsSearch(query) {
@@ -3084,13 +3106,13 @@ database.ref(`users/${userId}/picks`).on('value', (snapshot) => {
         }
         __stopTimer(__picksLoadTimer);
       hideLoading();
-        render();
+        requestRender();
         checkForValuePicks();
     }, (error) => {
         console.error('Error cargando picks:', error);
         __stopTimer(__picksLoadTimer);
         hideLoading();
-        render();
+        requestRender();
     });
 }
 
@@ -3197,7 +3219,7 @@ function addPick(pickData) {
     };
     savePicksToFirebase();
     showNotification('📝 Pick registrado correctamente', 'success');
-    render();
+    requestRender();
 }
 
 // Registrar resultado real del partido (para backtesting)
@@ -3237,7 +3259,7 @@ function registerActualResult(pickId) {
     const status = PICKS_DATABASE[pickId].status;
     const emoji = status === 'win' ? '✅' : status === 'push' ? '↔️' : '❌';
     showNotification(`${emoji} Resultado registrado: ${actual} pts (${status.toUpperCase()})`, status === 'win' ? 'success' : 'info');
-    render();
+    requestRender();
 }
 
 function updatePickResult(pickId, result) {
@@ -3246,7 +3268,7 @@ function updatePickResult(pickId, result) {
         PICKS_DATABASE[pickId].resolvedAt = new Date().toISOString();
         savePicksToFirebase();
         showNotification(result === 'win' ? '✅ ¡Pick ganado!' : result === 'push' ? '↔️ Push' : '❌ Pick perdido', result === 'win' ? 'success' : 'warning');
-        render();
+        requestRender();
     }
 }
 
@@ -3255,7 +3277,7 @@ function deletePick(pickId) {
         delete PICKS_DATABASE[pickId];
         savePicksToFirebase();
         showNotification('🗑️ Pick eliminado', 'info');
-        render();
+        requestRender();
     }
 }
 
@@ -3421,7 +3443,7 @@ function addClosingLine(pickId, originalLine) {
 
         const clvText = parseFloat(clv) >= 0 ? `+${clv}` : clv;
         showNotification(`🎯 CLV registrado: ${clvText} puntos`, parseFloat(clv) >= 0 ? 'success' : 'info');
-        render();
+        requestRender();
     }
 }
 
@@ -3729,7 +3751,7 @@ function addValuePick(pick) {
 function removeValuePick(pickId) {
     VALUE_PICKS = VALUE_PICKS.filter(p => p.id !== pickId);
     saveValuePicksToStorage();
-    render();
+    requestRender();
     showNotification('🗑️ Pick descartado', 'info');
 }
 
@@ -3798,7 +3820,7 @@ function clearAllValuePicks() {
     if (confirm('¿Eliminar todos los picks de valor detectados?')) {
         VALUE_PICKS = [];
         saveValuePicksToStorage();
-        render();
+        requestRender();
         showNotification('🗑️ Todos los picks eliminados', 'info');
     }
 }
@@ -4889,6 +4911,19 @@ function checkOT() {
     return { needOT1: need1, needOT2: need2, needOT3: need3 };
 }
 
+// ─────────────────────────────────────────────────────────────
+// Render Scheduler (evita re-render múltiple en la misma “frame”)
+// ─────────────────────────────────────────────────────────────
+let __renderScheduled = false;
+function requestRender() {
+    if (__renderScheduled) return;
+    __renderScheduled = true;
+    requestAnimationFrame(() => {
+        __renderScheduled = false;
+        render();
+    });
+}
+
 // ═══════════════════════════════════════════════════════════════
 // RENDER PRINCIPAL
 // ═══════════════════════════════════════════════════════════════
@@ -5174,7 +5209,7 @@ function resolveBacktestPick(pickId) {
             status, actualResult: result, resolvedAt: new Date().toISOString()
         }).then(() => {
             showNotification('success', 'Actualizado', status.toUpperCase());
-            render();
+            requestRender();
         });
     });
 }
@@ -7339,7 +7374,7 @@ function navigateTo(v) {
         ingestTeam1 = ingestTeam2 = ingestLocalTeam = ingestDate = '';
         ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
     }
-    render();
+    requestRender();
     
     // Sync mobile bottom nav
     if (typeof updateMobileNav === 'function') {
@@ -7366,7 +7401,7 @@ function updateScore(field, value) {
     const ot2E = document.getElementById('localOT2');
     if ((ot.needOT1 && !ot1E) || (!ot.needOT1 && ot1E) || (ot.needOT2 && !ot2E) || (!ot.needOT2 && ot2E && ot.needOT1)) {
         const scrollY = window.scrollY;
-        render();
+        requestRender();
         window.scrollTo(0, scrollY);
         return;
     }
@@ -7454,7 +7489,7 @@ function saveGame() {
     ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
     ingestDate = '';
     ingestLocalTeam = '';
-    render();
+    requestRender();
 }
 
 function deleteGame(t1, t2, i) {
@@ -7470,7 +7505,7 @@ function attachEvents() {
         if (localTeam && visitingTeam) {
             await autoDetectContextualFactors(localTeam, visitingTeam);
         }
-        render();
+        requestRender();
         setTimeout(checkForValuePicks, 100);
     });
     document.getElementById('visitingSelect')?.addEventListener('change', async e => {
@@ -7479,20 +7514,20 @@ function attachEvents() {
         if (localTeam && visitingTeam) {
             await autoDetectContextualFactors(localTeam, visitingTeam);
         }
-        render();
+        requestRender();
         setTimeout(checkForValuePicks, 100);
     });
-    document.getElementById('ingestTeam1')?.addEventListener('change', e => { ingestTeam1 = e.target.value; ingestLocalTeam = ''; render(); });
-    document.getElementById('ingestTeam2')?.addEventListener('change', e => { ingestTeam2 = e.target.value; ingestLocalTeam = ''; render(); });
+    document.getElementById('ingestTeam1')?.addEventListener('change', e => { ingestTeam1 = e.target.value; ingestLocalTeam = ''; requestRender(); });
+    document.getElementById('ingestTeam2')?.addEventListener('change', e => { ingestTeam2 = e.target.value; ingestLocalTeam = ''; requestRender(); });
     document.getElementById('ingestDate')?.addEventListener('change', e => { ingestDate = e.target.value; });
-    document.getElementById('ingestLocal')?.addEventListener('change', e => { ingestLocalTeam = e.target.value; render(); });
+    document.getElementById('ingestLocal')?.addEventListener('change', e => { ingestLocalTeam = e.target.value; requestRender(); });
 }
 
 function setType(p, v) {
     if (p === 'Q1') typeQ1 = v;
     if (p === 'Half') typeHalf = v;
     if (p === 'Full') typeFull = v;
-    render();
+    requestRender();
     setTimeout(checkForValuePicks, 100);
 }
 
@@ -7500,7 +7535,7 @@ function updateLine(p, v) {
     if (p === 'Q1') lineQ1 = v;
     if (p === 'Half') lineHalf = v;
     if (p === 'Full') lineFull = v;
-    render();
+    requestRender();
     setTimeout(checkForValuePicks, 100);
 }
 
@@ -7508,7 +7543,7 @@ function updateOdds(p, v) {
     if (p === 'Q1') oddsQ1 = v;
     if (p === 'Half') oddsHalf = v;
     if (p === 'Full') oddsFull = v;
-    render();
+    requestRender();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -7534,7 +7569,7 @@ function loadBankrollFromFirebase() {
         if (!BANKROLL_DATA.settings) {
             BANKROLL_DATA.settings = { alertThreshold: 20, initialBank: 0 };
         }
-        if (currentView === 'bankroll') render();
+        if (currentView === 'bankroll') requestRender();
     });
 }
 
@@ -7567,7 +7602,7 @@ function setDailyBank(amount) {
         BANKROLL_DATA.settings.initialBank = parseFloat(amount);
     }
     saveBankrollToFirebase();
-    render();
+    requestRender();
     return true;
 }
 
@@ -7603,7 +7638,7 @@ function addPickToBankroll(pickData) {
 
     BANKROLL_DATA.picks.unshift(pick);
     saveBankrollToFirebase();
-    render();
+    requestRender();
 }
 
 function updateBankrollPickStatus(pickId, status) {
@@ -7625,13 +7660,13 @@ function updateBankrollPickStatus(pickId, status) {
         status === 'won' ? '✅ Pick GANADO' : '❌ Pick PERDIDO',
         `Stake: $${pick.stake.toFixed(2)} | ${status === 'won' ? 'Ganancia: $' + pick.profit.toFixed(2) : 'Pérdida: -$' + pick.stake.toFixed(2)}`
     );
-    render();
+    requestRender();
 }
 
 function deletePickFromBankroll(pickId) {
     BANKROLL_DATA.picks = BANKROLL_DATA.picks.filter(p => p.id !== pickId);
     saveBankrollToFirebase();
-    render();
+    requestRender();
 }
 
 function getFilteredPicks() {
@@ -8339,7 +8374,7 @@ function buscarYMostrar(nombre) {
 
 function toggleFavoritoYRefresh(nombre) {
     toggleFavorito(nombre);
-    render();
+    requestRender();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -8434,7 +8469,7 @@ function generateAIPicks() {
     }));
     
     showNotification('success', '¡Listo!', `${AI_PICKS_TODAY.length} AI Picks generados`);
-    if (typeof render === 'function') render();
+    if (typeof render === 'function') requestRender();
 }
 
 function loadAIPicks() {
@@ -8540,7 +8575,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }).then(() => {
                 showNotification('success', 'Bankroll Actualizado', `Nuevo saldo: $${newAmount.toFixed(2)}`);
                 closeUpdateBankrollModal();
-                render();
+                requestRender();
             }).catch(err => {
                 console.error('Error:', err);
                 showNotification('error', 'Error', 'No se pudo actualizar');
@@ -8623,7 +8658,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }).then(() => {
                     const emoji = status === 'win' ? '✅' : status === 'push' ? '↔️' : '❌';
                     showNotification('success', `${emoji} ${status.toUpperCase()}`, '');
-                    render();
+                    requestRender();
                 }).catch(err => {
                     console.error('Error:', err);
                     showNotification('error', 'Error', 'No se pudo actualizar');
