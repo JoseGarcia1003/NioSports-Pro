@@ -18,6 +18,35 @@
   src="https://js.sentry-cdn.com/99b12c1dacf18f5416aecbf452d4ac6a.min.js"
   crossorigin="anonymous"
 ></script>
+    <script>
+  // Sentry — init with tunnel to keep CSP tight (connect-src 'self')
+  window.addEventListener("load", function () {
+    try {
+      if (!window.Sentry) return;
+
+      var integrations = [];
+      if (Sentry.BrowserTracing) {
+        integrations.push(new Sentry.BrowserTracing({
+          tracePropagationTargets: [
+            location.origin,
+            /^\/api\//,
+          ],
+        }));
+      }
+
+      Sentry.init({
+        dsn: "https://99b12c1dacf18f5416aecbf452d4ac6a@o4510870707765248.ingest.us.sentry.io/4510870715760640",
+        tunnel: "/api/telemetry",
+        integrations: integrations,
+        tracesSampleRate: 0.10, // 10% (sube/baja)
+        environment: (location.hostname === "localhost") ? "development" : "production",
+        release: "niosports-pro@3.0.0"
+      });
+    } catch (e) {
+      // never block the app
+    }
+  });
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
