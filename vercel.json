@@ -18,14 +18,10 @@
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" },
-
         { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://accounts.google.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https://www.gstatic.com https://*.googleusercontent.com https://lh3.googleusercontent.com; connect-src 'self' https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://www.googleapis.com https://api.balldontlie.io https://www.gstatic.com https://fonts.gstatic.com https://cdn.jsdelivr.net; frame-src https://accounts.google.com https://*.firebaseapp.com https://*.web.app; upgrade-insecure-requests"
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://accounts.google.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https://www.gstatic.com https://*.googleusercontent.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://api.balldontlie.io; frame-src https://accounts.google.com https://*.firebaseapp.com; upgrade-insecure-requests"
         }
       ]
     },
