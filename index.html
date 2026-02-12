@@ -9217,5 +9217,14 @@ function __stopTimer(t) { try { if (t) clearTimeout(t); } catch(_) {} }
             });
         }
     </script>
+    <script>
+  Sentry.init({
+    dsn: "PON_AQUI_TU_SENTRY_DSN_COMPLETO",
+    tunnel: "/api/telemetry",
+    tracesSampleRate: 0.05
+  });
+</script>
+  });
+</script>
 </body>
 </html>
