@@ -2784,9 +2784,49 @@ let filterPeriod = 'all';
 let filterType = 'all';
 let currentView = 'home';
 
-// BALLDONTLIE API
-const BAPI_KEY = '1a68766c-33e1-4f7c-8613-9a2dcfb55b33';
-const BAPI_URL = 'https://api.balldontlie.io/v1';
+// BALLDONTLIE (SIEMPRE vía /api/proxy) — sin exponer API keys
+const BAPI_PROXY = `${location.origin}/api/proxy`;
+
+async function nsGetToken() {
+  const k = "ns_token";
+  const cached = sessionStorage.getItem(k);
+  if (cached) return cached;
+
+  const r = await fetch(`${BAPI_PROXY}?init=1`, { method: "GET" });
+  const j = await r.json();
+  if (!r.ok || !j?.token) throw new Error(j?.error || "No se pudo inicializar token");
+
+  sessionStorage.setItem(k, j.token);
+  return j.token;
+}
+
+async function bapi(endpoint) {
+  const token = await nsGetToken();
+  const url = `${BAPI_PROXY}?endpoint=${encodeURIComponent(endpoint)}`;
+
+  const r = await fetch(url, {
+    headers: { "X-NS-Token": token }
+  });
+
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data?.error || `Proxy error HTTP ${r.status}`);
+  return data;
+}
+
+async function buscarJugador(nombre) {
+  const data = await bapi(`/players?search=${encodeURIComponent(nombre)}`);
+  logger.log("Resultado:", data);
+
+  if (data?.data?.length > 0) return data.data[0];
+  logger.log("No encontrado");
+  return null;
+}
+
+async function verStats(jugadorId) {
+  const data = await bapi(`/season_averages?season=2024&player_ids[]=${encodeURIComponent(jugadorId)}`);
+  if (data?.data?.length > 0) return data.data[0];
+  return null;
+}
 
 async function buscarJugador(nombre) {
     const url = BAPI_URL + '/players?search=' + nombre;
