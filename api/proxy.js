@@ -12,11 +12,7 @@
 
 const ALLOWED_ORIGINS = new Set([
   'https://nio-sports-pro.vercel.app',
-  // Your project's "git-main" preview domain (keep if you still use it):
-  'https://nio-sports-pro-git-main-niosports-pros-projects.vercel.app',
-  // Preview deployment domain:
-  'https://nio-sports-fuiqpd7p6-niosports-pros-projects.vercel.app',
-  // GitHub Pages (if you still serve there):
+  'https://nio-sports-7zj5zly3b-niosports-pros-projects.vercel.app',
   'https://josegarcia1003.github.io'
 ]);
 
