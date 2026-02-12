@@ -14,12 +14,7 @@
     <meta property="og:type" content="website">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1086,7 +1081,6 @@
         }
         .btn-secondary:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); }
 
-
         /* Screen reader only utility */
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
         .sr-only:focus, .focus\:not-sr-only:focus { position: static; width: auto; height: auto; padding: revert; margin: revert; overflow: visible; clip: auto; white-space: normal; }
@@ -1621,7 +1615,6 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const auth = firebase.auth();
 
-
 // ═══════════════════════════════════════════════════════════════
 // AUTH HARDENING + ANTI "SESIONES FANTASMAS" (added)
 // ═════════════════════════════════════════════════════════════==
@@ -1725,7 +1718,7 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
 
     // Service Worker
     try {
-        if ('serviceWorker' in navigator) {
+        if ('serviceWorker' in navigator && !location.search.includes('nosw=1')) {
             const regs = await navigator.serviceWorker.getRegistrations();
             await Promise.all(regs.map(r => r.unregister()));
         }
@@ -1737,7 +1730,6 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
         alert(message);
     }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 
@@ -1975,7 +1967,6 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
                 });
             }
         }
-
 
         /* ══════════════════════════════════════════════════════════════════════
            NIOSPORTS PRO v4.0 - SISTEMA DE PREDICCIONES NBA
@@ -2642,9 +2633,17 @@ let apiConnected = false;
 
 // Cargar estadísticas desde la API
 async function loadTeamStatsFromAPI() {
+
+// On some hardened CSP setups (like strict Vercel headers), external Worker endpoints
+// may be blocked. Fail fast to prevent the UI from hanging.
+if (location.hostname.endsWith("vercel.app") && !NBA_STATS_API.startsWith(location.origin)) {
+  console.warn("[TeamStats] External stats endpoint skipped on Vercel to avoid CSP hang:", NBA_STATS_API);
+  return null;
+}
+
     try {
         showLoading('Cargando estadísticas NBA...');
-        const response = await fetch(NBA_STATS_API);
+        const response = await fetchWithTimeout(NBA_STATS_API, {}, 9000);
         const data = await response.json();
 
         if (data.teams && Object.keys(data.teams).length > 0) {
@@ -2684,11 +2683,6 @@ async function loadTeamStatsFromAPI() {
 
             // Mostrar versión del modelo
             // Modelo v2.5 activo
-
-
-
-
-
 
             showNotification('📊 Modelo v2.0 cargado correctamente', 'success');
         } else {
@@ -3012,7 +3006,8 @@ database.ref('.info/connected').on('value', (snap) => {
 function loadH2HFromFirebase() {
     if (!userId) { logger.warn('⚠️ loadH2H: sin userId'); return; }
     showLoading('Cargando datos H2H...');
-    database.ref(`users/${userId}/h2h_games`).on('value', (snapshot) => {
+    __h2hLoadTimer = __startLoadingGuard('carga de H2H', 12000);
+database.ref(`users/${userId}/h2h_games`).on('value', (snapshot) => {
         if (snapshot.exists()) {
             H2H_DATABASE = snapshot.val();
         } else {
@@ -3022,7 +3017,8 @@ function loadH2HFromFirebase() {
     }, (error) => {
         console.error('Error cargando datos:', error);
         updateFirebaseStatus('disconnected');
-        hideLoading();
+        __stopTimer(__h2hLoadTimer);
+      hideLoading();
     });
 }
 
@@ -3030,17 +3026,20 @@ function loadH2HFromFirebase() {
 function loadPicksFromFirebase() {
     if (!userId) { logger.warn('⚠️ loadPicks: sin userId'); return; }
     showLoading('Cargando historial de picks...');
-    database.ref(`users/${userId}/picks`).on('value', (snapshot) => {
+    __picksLoadTimer = __startLoadingGuard('carga del historial', 12000);
+database.ref(`users/${userId}/picks`).on('value', (snapshot) => {
         if (snapshot.exists()) {
             PICKS_DATABASE = snapshot.val();
         } else {
             PICKS_DATABASE = {};
         }
-        hideLoading();
+        __stopTimer(__picksLoadTimer);
+      hideLoading();
         render();
         checkForValuePicks();
     }, (error) => {
         console.error('Error cargando picks:', error);
+        __stopTimer(__picksLoadTimer);
         hideLoading();
         render();
     });
@@ -4190,8 +4189,6 @@ function calculateRestDays(games, teamName) {
     const diffTime = today - lastGameDate;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-
-
     return Math.max(1, diffDays);
 }
 
@@ -4231,8 +4228,6 @@ function calculateScheduleDensity(games, teamName) {
 // Función principal de auto-detección
 async function autoDetectContextualFactors(homeTeam, awayTeam) {
     if (!autoDetectEnabled || !homeTeam || !awayTeam) return;
-
-
 
     try {
         // 1. AUTO-DETECTAR DÍA DE LA SEMANA
@@ -4760,7 +4755,6 @@ const ML_MODEL = {
             }
         });
 
-
     },
 
     // Predecir ajuste de probabilidad
@@ -4872,7 +4866,6 @@ function render() {
         setTimeout(() => initDashboardCharts(), 100);
     }
 }
-
 
 // ═══════════════════════════════════════════════════════════════════
 // 🎨 RENDERS DE NUEVAS VISTAS
@@ -5004,7 +4997,6 @@ function addAIPickToTracking(pickId) {
 // ═══════════════════════════════════════════════════════════════════
 // MÓDULO: BANKROLL
 // ═══════════════════════════════════════════════════════════════════
-
 
 function renderBacktesting() {
     const picks = Object.values(USER_PICKS_BACKTESTING);
@@ -5141,7 +5133,6 @@ function resolveBacktestPick(pickId) {
 // ═══════════════════════════════════════════════════════════════════
 // MÓDULO: PROFILE
 // ═══════════════════════════════════════════════════════════════════
-
 
 function renderHome() {
     const totalPicks = Object.keys({...USER_PICKS_TOTALES, ...USER_PICKS_PROPS, ...USER_PICKS_AI}).length;
@@ -5285,7 +5276,6 @@ function renderHome() {
 
 let selectedLocalTeam = '';
 let selectedAwayTeam = '';
-
 
 function renderTendencia() {
     const teams = getTeams();
@@ -7290,8 +7280,6 @@ function renderMisPicks() {
     `;
 }
 
-
-
 function navigateTo(v) {
     currentView = v;
     if (v === 'home') {
@@ -9144,7 +9132,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-
     </script>
 
     
@@ -9158,8 +9145,6 @@ document.addEventListener('click', function(e) {
             </div>
         </div>
     </div>
-
-
 
     <!-- MOBILE BOTTOM NAV -->
     <nav class="mobile-bottom-nav" id="mobileBottomNav" style="display:none" aria-label="Navegación móvil">
@@ -9192,6 +9177,38 @@ document.addEventListener('click', function(e) {
 
     <!-- Service Worker Registration -->
     <script>
+// === GLOBAL SAFETY GUARDS (enterprise hardening) ===
+function fetchWithTimeout(resource, options = {}, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(resource, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
+// Avoid ReferenceErrors if other modules expect these.
+window._pendingNotifications = window._pendingNotifications || [];
+window.__niosports = window.__niosports || {};
+let __picksLoadTimer = null;
+let __h2hLoadTimer = null;
+
+function __startLoadingGuard(kind = "carga", ms = 12000) {
+  // If a realtime listener or fetch never resolves (blocked by CSP/network),
+  // we auto-unblock the UI with a friendly warning.
+  return setTimeout(() => {
+    try {
+      const overlay = document.getElementById("loadingOverlay");
+      if (overlay && !overlay.classList.contains("hidden")) {
+        hideLoading();
+        showNotification(
+          `La ${kind} está tardando demasiado. Revisa tu conexión o recarga la página.`,
+          "warning"
+        );
+      }
+    } catch (_) {}
+  }, ms);
+}
+
+function __stopTimer(t) { try { if (t) clearTimeout(t); } catch(_) {} }
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
