@@ -12,7 +12,6 @@
 
 const ALLOWED_ORIGINS = new Set([
   'https://nio-sports-pro.vercel.app',
-  'https://nio-sports-7zj5zly3b-niosports-pros-projects.vercel.app',
   'https://josegarcia1003.github.io'
 ]);
 
