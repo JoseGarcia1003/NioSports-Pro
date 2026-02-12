@@ -12,8 +12,10 @@
 
 const ALLOWED_ORIGINS = new Set([
   'https://nio-sports-pro.vercel.app',
-  // Your project’s "git-main" preview domain (keep if you still use it):
+  // Your project's "git-main" preview domain (keep if you still use it):
   'https://nio-sports-pro-git-main-niosports-pros-projects.vercel.app',
+  // Preview deployment domain:
+  'https://nio-sports-fuiqpd7p6-niosports-pros-projects.vercel.app',
   // GitHub Pages (if you still serve there):
   'https://josegarcia1003.github.io'
 ]);
@@ -25,6 +27,9 @@ const WINDOW_MS = 60_000;      // 1 minute
 const LIMIT_OK_ORIGIN = 60;    // per minute per IP when origin is trusted
 const LIMIT_NO_ORIGIN = 10;    // per minute per IP when origin is missing/unknown
 
+/**
+ * Extrae la IP real del cliente desde headers de Vercel
+ */
 function getClientIp(req) {
   const xff = req.headers['x-forwarded-for'];
   if (typeof xff === 'string' && xff.length > 0) return xff.split(',')[0].trim();
@@ -33,6 +38,9 @@ function getClientIp(req) {
   return 'unknown';
 }
 
+/**
+ * Valida que el endpoint solicitado esté en la whitelist y no contenga ataques
+ */
 function isAllowedEndpoint(endpoint) {
   if (typeof endpoint !== 'string') return false;
   if (!endpoint.startsWith('/')) return false;
@@ -42,6 +50,9 @@ function isAllowedEndpoint(endpoint) {
   return ALLOWED_PREFIXES.some(p => endpoint.startsWith(p));
 }
 
+/**
+ * Verifica si el origen de la petición está permitido (CORS)
+ */
 function pickAllowedOrigin(req) {
   const origin = req.headers.origin;
   if (typeof origin === 'string' && ALLOWED_ORIGINS.has(origin)) return origin;
@@ -58,6 +69,10 @@ function pickAllowedOrigin(req) {
   return null;
 }
 
+/**
+ * Rate limiter en memoria (se resetea en cold starts)
+ * Lanza error si se excede el límite
+ */
 function rateLimitOrThrow(req, res, key, limit) {
   if (!globalThis.__NS_RL__) globalThis.__NS_RL__ = new Map();
   const now = Date.now();
@@ -72,8 +87,11 @@ function rateLimitOrThrow(req, res, key, limit) {
   globalThis.__NS_RL__.set(key, fresh);
 }
 
+/**
+ * Handler principal del proxy
+ */
 export default async function handler(req, res) {
-  // Preflight
+  // Preflight CORS
   if (req.method === 'OPTIONS') {
     const allowedOrigin = pickAllowedOrigin(req);
     if (allowedOrigin) {
@@ -90,6 +108,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Configurar CORS headers
   const allowedOrigin = pickAllowedOrigin(req);
   if (allowedOrigin) {
     res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
@@ -122,7 +141,7 @@ export default async function handler(req, res) {
     return res.status(status).json({ error: 'Rate limit exceeded. Try again soon.' });
   }
 
-  // Upstream call
+  // Upstream call a BallDontLie API
   const apiKey = process.env.BALLDONTLIE_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'Server misconfigured: missing API key' });
 
