@@ -1,10 +1,10 @@
-// NIOSPORTS PRO — Service Worker (stable + safe cloning)
-// Static + data caching with robust Response cloning to avoid "body already used"
+// NIOSPORTS PRO — Service Worker (Vercel-safe + robust)
+// Static + data caching, but ONLY for same-origin requests to avoid breaking Firebase/Google/CDN.
 
 const CACHE_NAME = "niosports-static-v3";
 const DATA_CACHE = "niosports-data-v3";
 
-// Ajustado a Vercel (root "/")
+// Ajustado a Vercel (root "/") — SOLO assets locales
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -16,29 +16,20 @@ const STATIC_ASSETS = [
   "/icons/icon-152.png",
   "/icons/icon-192.png",
   "/icons/icon-384.png",
-  "/icons/icon-512.png",
-
-  // CDNs (si tu CSP los permite)
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js",
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js",
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js",
-  "https://cdn.jsdelivr.net/npm/chart.js"
+  "/icons/icon-512.png"
 ];
+
+// Helpers
+const isSameOrigin = (url) => url.origin === self.location.origin;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      // addAll puede fallar si algún CDN bloquea CORS/CSP. Por eso lo hacemos “best effort”.
-      await Promise.all(
-        STATIC_ASSETS.map(async (asset) => {
-          try {
-            await cache.add(asset);
-          } catch (_) {
-            // Ignorar fallos de algunos assets externos para no romper la instalación
-          }
-        })
-      );
+
+      // Precaching estable: SOLO local
+      await cache.addAll(STATIC_ASSETS);
+
       await self.skipWaiting();
     })()
   );
@@ -60,23 +51,39 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  const url = new URL(req.url);
-
   if (req.method !== "GET") return;
 
-  // Evitar websocket de RTDB
-  if (url.hostname.includes("firebaseio.com") && url.pathname.includes(".ws")) return;
+  const url = new URL(req.url);
 
-  // (Opcional) si usas tailwindcdn, no lo caches aquí:
-  if (url.hostname === "cdn.tailwindcss.com") return;
+  // ✅ CLAVE: No interceptar requests a otros dominios (Firebase, Google, CDN, etc.)
+  // Esto evita romper Google Sign-In y evita conflictos con CSP.
+  if (!isSameOrigin(url)) return;
 
-  // Data/API => network first
-  const isData =
-    url.hostname.includes("balldontlie") ||
-    url.hostname.includes("espn") ||
-    (url.hostname.includes("firebaseio.com") && !url.pathname.includes(".ws"));
+  // Navegación SPA: siempre servir index.html como fallback
+  if (req.mode === "navigate") {
+    event.respondWith(
+      (async () => {
+        try {
+          // Intentar red primero
+          return await fetch(req);
+        } catch (_) {
+          // Si offline, devolver index cacheado
+          const cachedIndex = await caches.match("/index.html");
+          return cachedIndex || new Response("Offline", { status: 503 });
+        }
+      })()
+    );
+    return;
+  }
 
-  if (isData) {
+  // Decide si es “data” (API interna local) o “static”
+  const isApi =
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/data/") ||
+    url.pathname.includes("nba") ||
+    url.pathname.includes("stats");
+
+  if (isApi) {
     event.respondWith(networkFirst(req, DATA_CACHE));
     return;
   }
@@ -89,16 +96,17 @@ async function networkFirst(request, cacheName) {
   try {
     const resp = await fetch(request);
 
-    // CLONE INMEDIATO (antes de cualquier await)
+    // Si no es una respuesta usable, devuélvela sin cachear
+    if (!resp || !resp.ok) return resp;
+
+    // CLONE inmediato para evitar "body already used"
     const respClone = resp.clone();
 
-    if (resp.ok) {
-      const cache = await caches.open(cacheName);
-      await cache.put(request, respClone);
-    }
+    const cache = await caches.open(cacheName);
+    await cache.put(request, respClone);
 
     return resp;
-  } catch (e) {
+  } catch (_) {
     const cached = await caches.match(request);
     return (
       cached ||
@@ -117,17 +125,17 @@ async function cacheFirst(request, cacheName) {
   try {
     const resp = await fetch(request);
 
-    // CLONE INMEDIATO (antes de cualquier await)
+    if (!resp || !resp.ok) return resp;
+
+    // CLONE inmediato para evitar "body already used"
     const respClone = resp.clone();
 
-    if (resp.ok) {
-      const cache = await caches.open(cacheName);
-      await cache.put(request, respClone);
-    }
+    const cache = await caches.open(cacheName);
+    await cache.put(request, respClone);
 
     return resp;
-  } catch (e) {
-    // Fallback para navegación SPA
+  } catch (_) {
+    // Fallback para HTML
     const accept = request.headers.get("accept") || "";
     if (accept.includes("text/html")) {
       const cachedIndex = await caches.match("/index.html");
@@ -140,7 +148,7 @@ async function cacheFirst(request, cacheName) {
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
 
-  // Cache manual de payloads (si lo usas)
+  // Cache manual de payloads (solo local keys)
   if (event.data?.type === "CACHE_DATA") {
     event.waitUntil(
       (async () => {
