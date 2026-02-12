@@ -6,8 +6,8 @@ function parseDsn(dsn) {
   // DSN típico: https://PUBLIC_KEY@o123456.ingest.sentry.io/7890123
   try {
     const u = new URL(dsn);
-    const publicKey = u.username;
-    const host = u.host; // o123456.ingest.sentry.io
+    const publicKey = u.username; // antes del '@'
+    const host = u.host;          // o123456.ingest.sentry.io
     const projectId = u.pathname.replace("/", "");
     if (!publicKey || !host || !projectId) return null;
 
@@ -28,12 +28,19 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Sentry-Auth");
 
-  if (req.method === "OPTIONS") return res.status(204).end();
-  if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).send("Method Not Allowed");
+  }
 
   const dsn = process.env.SENTRY_DSN || process.env.SENTRY_DSN_PUBLIC;
   const parsed = dsn ? parseDsn(dsn) : null;
-  if (!parsed) return res.status(500).send("Sentry DSN not configured");
+  if (!parsed) {
+    return res.status(500).send("Sentry DSN not configured");
+  }
 
   // Leer body raw
   const chunks = [];
@@ -55,7 +62,6 @@ export default async function handler(req, res) {
       body,
     });
 
-    // Devolvemos el status real (o 200/204 normalmente)
     res.status(sentryResp.status).send(await sentryResp.text());
   } catch (_) {
     // fail-open: devolvemos 200 para que el front no se quede reintentando
