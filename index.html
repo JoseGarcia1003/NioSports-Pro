@@ -1,59 +1,35 @@
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NioSports Pro v3.0 REVOLUTION | El Sistema NBA #1</title>
-    <meta name="description" content="El sistema predictivo NBA más avanzado del mercado. Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
-    <meta name="theme-color" content="#050b18">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="NioSports">
-    <meta property="og:title" content="NioSports Pro - Sistema Predictivo NBA #1">
-    <meta property="og:description" content="Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
-    <meta property="og:type" content="website">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <script
-  src="https://js.sentry-cdn.com/99b12c1dacf18f5416aecbf452d4ac6a.min.js"
-  crossorigin="anonymous"
-></script>
-    <script>
-  // Sentry — init with tunnel to keep CSP tight (connect-src 'self')
-  window.addEventListener("load", function () {
-    try {
-      if (!window.Sentry) return;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NioSports Pro v3.0 REVOLUTION | El Sistema NBA #1</title>
+  <meta name="description" content="El sistema predictivo NBA más avanzado del mercado. Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
+  <meta name="theme-color" content="#050b18">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NioSports">
+  <meta property="og:title" content="NioSports Pro - Sistema Predictivo NBA #1">
+  <meta property="og:description" content="Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
+  <meta property="og:type" content="website">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-      var integrations = [];
-      if (Sentry.BrowserTracing) {
-        integrations.push(new Sentry.BrowserTracing({
-          tracePropagationTargets: [
-            location.origin,
-            /^\/api\//,
-          ],
-        }));
-      }
+  <!-- Sentry CDN -->
+  <script src="https://js.sentry-cdn.com/99b12c1dacf18f5416aecbf452d4ac6a.min.js" crossorigin="anonymous"></script>
+  <!-- Sentry init via /api/public-config + /api/telemetry -->
+  <script src="/scripts/telemetry.js"></script>
 
-      Sentry.init({
-        dsn: "https://99b12c1dacf18f5416aecbf452d4ac6a@o4510870707765248.ingest.us.sentry.io/4510870715760640",
-        tunnel: "/api/telemetry",
-        integrations: integrations,
-        tracesSampleRate: 0.10, // 10% (sube/baja)
-        environment: (location.hostname === "localhost") ? "development" : "production",
-        release: "niosports-pro@3.0.0"
-      });
-    } catch (e) {
-      // never block the app
-    }
-  });
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
-    <style>
+  <!-- Chart + Tailwind -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
         /* ══════════════════════════════════════════════════════════
            NIOSPORTS PRO v3.0 REVOLUTION — PREMIUM DESIGN SYSTEM
            ══════════════════════════════════════════════════════════ */
