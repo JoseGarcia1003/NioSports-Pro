@@ -1608,22 +1608,49 @@
 <script>
 
 // ═══════════════════════════════════════════════════════════════
-// FIREBASE CONFIGURATION
+// FIREBASE CONFIGURATION (Segura - desde endpoint)
 // ═══════════════════════════════════════════════════════════════
-const firebaseConfig = {
-    apiKey: "AIzaSyCpddyEiWIE6VBe5u8JRPYBHlnYRMgljCs",
-    authDomain: "niosports-pro.firebaseapp.com",
-    databaseURL: "https://niosports-pro-default-rtdb.firebaseio.com",
-    projectId: "niosports-pro",
-    storageBucket: "niosports-pro.firebasestorage.app",
-    messagingSenderId: "669355459084",
-    appId: "1:669355459084:web:6c11965f3940bae9c8a429"
-};
 
-// Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const auth = firebase.auth();
+let firebaseConfig = null;
+let database = null;
+let auth = null;
+
+async function initFirebase() {
+    try {
+        // Obtener config desde endpoint seguro
+        const response = await fetch('/api/firebase-config');
+        if (!response.ok) throw new Error('No se pudo obtener Firebase config');
+        
+        firebaseConfig = await response.json();
+        
+        // Validar que tenemos config
+        if (!firebaseConfig.apiKey) {
+            throw new Error('Firebase config incompleta');
+        }
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        auth = firebase.auth();
+        
+        console.log('✅ Firebase inicializado correctamente');
+        
+        // Configurar persistencia
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((e) => {
+            console.warn('Auth persistence error:', e);
+        });
+        
+        // Iniciar listeners de auth
+        initAuthListeners();
+        
+    } catch (error) {
+        console.error('❌ Error inicializando Firebase:', error);
+        showNotification('Error de configuración. Por favor recarga la página.', 'error');
+    }
+}
+
+// Llamar a init cuando cargue la página
+initFirebase();
 
 // ═══════════════════════════════════════════════════════════════
 // AUTH HARDENING + ANTI "SESIONES FANTASMAS" (added)
