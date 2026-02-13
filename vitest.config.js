@@ -1,8 +1,13 @@
-import { defineConfig } from 'vitest/config';
-
-export default defineConfig({
-    test: {
-        environment: 'jsdom',
-        globals: true,
+export default {
+  build: {
+    sourcemap: true, // ← Añadir esto
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'firebase': ['firebase/app', 'firebase/auth', 'firebase/database'],
+          'vendor': ['chart.js']
+        }
+      }
     }
-});
+  }
+}
