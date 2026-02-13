@@ -1,25 +1,36 @@
 {
-  "name": "niosports-scraper",
-  "version": "1.0.0",
-  "description": "NBA Stats Scraper from TeamRankings",
-  "main": "scrape.js",
+  "name": "niosports-pro",
+  "version": "3.0.0",
+  "description": "Sistema predictivo NBA profesional con 47 factores contextuales",
+  "main": "index.html",
   "scripts": {
-    "scrape": "node scrape.js"
+    "scrape": "node scrape.js",
+    "build:css": "tailwindcss -i ./src/styles/input.css -o ./dist/output.css --minify",
+    "watch:css": "tailwindcss -i ./src/styles/input.css -o ./dist/output.css --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "build": "npm run build:css",
+    "dev": "npm run watch:css"
   },
   "dependencies": {
     "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12"
-  }
-}
-{
-  "scripts": {
-    "build:css": "tailwindcss -i ./src/styles/input.css -o ./dist/output.css --minify",
-    "watch:css": "tailwindcss -i ./src/styles/input.css -o ./dist/output.css --watch",
-    "test": "vitest"
-  }
-}
-{
-  "scripts": {
-    "build": "vite build && sentry-cli sourcemaps upload ./dist"
-  }
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0",
+    "vitest": "^1.2.0",
+    "jsdom": "^24.0.0",
+    "@vitest/coverage-v8": "^1.2.0"
+  },
+  "keywords": [
+    "nba",
+    "sports",
+    "betting",
+    "analytics",
+    "predictions"
+  ],
+  "author": "Jose Garcia",
+  "license": "MIT"
 }
