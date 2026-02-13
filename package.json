@@ -18,3 +18,8 @@
     "test": "vitest"
   }
 }
+{
+  "scripts": {
+    "build": "vite build && sentry-cli sourcemaps upload ./dist"
+  }
+}
