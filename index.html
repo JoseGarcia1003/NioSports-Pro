@@ -1709,12 +1709,24 @@ async function initFirebase() {
             throw new Error('Firebase config incompleta');
         }
         
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
+        // Inicializar Firebase (solo si no está inicializado)
+        if (!firebase.apps || firebase.apps.length === 0) {
+            firebase.initializeApp(firebaseConfig);
+            Logger.log('✅ Firebase inicializado correctamente');
+        } else {
+            Logger.log('⚠️ Firebase ya estaba inicializado, usando instancia existente');
+        }
+        
+        // SIEMPRE crear referencias (aunque Firebase ya esté inicializado)
         database = firebase.database();
         auth = firebase.auth();
         
+        // Verificar que se crearon correctamente
+        if (!database || !auth) {
+            throw new Error('No se pudieron crear referencias de database/auth');
+        }
         
+        Logger.log('✅ Database y Auth creados correctamente');
         
         // Configurar persistencia
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((e) => {
@@ -1727,6 +1739,18 @@ async function initFirebase() {
     } catch (error) {
         Logger.error('❌ Error inicializando Firebase:', error);
         showNotification('Error de configuración. Por favor recarga la página.', 'error');
+        
+        // Intentar recuperarse si Firebase ya existe
+        try {
+            if (firebase.apps && firebase.apps.length > 0) {
+                database = firebase.database();
+                auth = firebase.auth();
+                Logger.log('✅ Recuperado usando Firebase existente');
+                initAuthListeners();
+            }
+        } catch (recoveryError) {
+            Logger.error('❌ No se pudo recuperar:', recoveryError);
+        }
     }
 }
 
