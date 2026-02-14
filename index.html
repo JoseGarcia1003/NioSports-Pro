@@ -26,9 +26,11 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
-  <!-- Chart + Tailwind -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tailwind CSS (Build local optimizado) -->
+  <link rel="stylesheet" href="/dist/output.css">
 
   <style>
         /* ══════════════════════════════════════════════════════════
@@ -1546,7 +1548,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     <!-- VIEW: TOTALS — SISTEMA COMPLETO v2.5                      -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div id="view-totals" class="view-panel" style="padding-top:80px;">
-        <div id="app" role="main" aria-label="Contenido principal" role="main" aria-label="Contenido principal"></div>
+        <div id="app" role="main" aria-label="Contenido principal"></div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════ -->
@@ -1629,6 +1631,64 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 <script>
 
 // ═══════════════════════════════════════════════════════════════
+// LOGGER CONDICIONAL (Solo en desarrollo)
+// ═══════════════════════════════════════════════════════════════
+
+const IS_PRODUCTION = window.location.hostname !== 'localhost' && 
+                      window.location.hostname !== '127.0.0.1' &&
+                      window.location.hostname !== '';
+
+const Logger = {
+    log(...args) {
+        if (!IS_PRODUCTION) {
+            console.log('[LOG]', ...args);
+        }
+    },
+    warn(...args) {
+        if (!IS_PRODUCTION) {
+            console.warn('[WARN]', ...args);
+        }
+    },
+    error(...args) {
+        // Errores siempre se registran (y van a Sentry)
+        console.error('[ERROR]', ...args);
+        if (window.Sentry) {
+            window.Sentry.captureMessage(args.join(' '), 'error');
+        }
+    },
+    info(...args) {
+        if (!IS_PRODUCTION) {
+            console.info('[INFO]', ...args);
+        }
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SISTEMA DE NOTIFICACIONES - Early Bootstrap
+// ═══════════════════════════════════════════════════════════════
+// (Versión temporal hasta que cargue el sistema completo)
+
+let _pendingNotifications = [];
+let currentUser = null;
+let userId = null;
+
+function showNotification(type, title, message) {
+    // Si solo recibe 2 parámetros, ajustar
+    if (arguments.length === 2) {
+        message = title;
+        title = type;
+        type = 'info';
+    }
+    // Queue notifications hasta que el sistema principal cargue
+    _pendingNotifications.push({type, title, message});
+    
+    // Si el sistema completo ya está cargado, procesarlas
+    if (typeof processNotificationQueue === 'function') {
+        processNotificationQueue();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // FIREBASE CONFIGURATION (Segura - desde endpoint)
 // ═══════════════════════════════════════════════════════════════
 
@@ -1658,14 +1718,14 @@ async function initFirebase() {
         
         // Configurar persistencia
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((e) => {
-            // DEBUG: console.warn('Auth persistence error:', e);
+            Logger.warn('Auth persistence error:', e);
         });
         
         // Iniciar listeners de auth
         initAuthListeners();
         
     } catch (error) {
-        // DEBUG: console.error('❌ Error inicializando Firebase:', error);
+        Logger.error('❌ Error inicializando Firebase:', error);
         showNotification('Error de configuración. Por favor recarga la página.', 'error');
     }
 }
@@ -1676,11 +1736,6 @@ initFirebase();
 // ═══════════════════════════════════════════════════════════════
 // AUTH HARDENING + ANTI "SESIONES FANTASMAS" (added)
 // ═════════════════════════════════════════════════════════════==
-
-// 1) Persistencia estable (reduce estados raros tras deploys)
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((e) => {
-    // DEBUG: console.warn('Auth persistence error:', e);
-});
 
 // 2) Validación de sesión (token refresh). Si falla, forzamos logout "duro".
 async function validateCurrentSession(user) {
@@ -1793,238 +1848,197 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
 
 // Auth code moved here
 
-        // ═══════════════════════════════════════════════════════════════
-        // NIOSPORTS PRO v4.0 - ULTRA DEBUG MODE
-        // Sistema de Auth 100% funcional con debugging completo
-        // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// AUTH LISTENERS - Inicializado después de Firebase
+// ═══════════════════════════════════════════════════════════════
 
-        // [debug] console.log('%c🚀 NIOSPORTS PRO v4.0 INICIANDO...', 'color: #FFD700; font-size: 20px; font-weight: bold;');
-        
-        // SISTEMA DE NOTIFICACIONES — Early bootstrap version
-        // (Will be overridden by full version in main script)
-        let _pendingNotifications = [];
-        function showNotification(type, title, message) {
-            // Queue notifications until main script loads
-            _pendingNotifications.push({type, title, message});
-        }
-        
-        // Variables globales
-        let currentUser = null;
-        let userId = null;
-        
-        // Verificar Firebase
-        // [debug] 
-        // [debug] 
-        // [debug] 
-        
-        if (typeof auth === 'undefined' || typeof database === 'undefined') {
-            // DEBUG: console.error('❌ FIREBASE NO INICIALIZADO CORRECTAMENTE');
-            alert('ERROR CRÍTICO: Firebase no está configurado. Verifica tu firebaseConfig.');
-        } else {
-            // [debug] 
-        }
-        
-        // Observer de autenticación
-        auth.onAuthStateChanged(async (user) => {
-            // [debug] 
-            if (user) {
-                // 1) Token válido (evita sesiones corruptas)
-                const okToken = await validateCurrentSession(user);
-                if (!okToken) {
-                    await safeHardLogout('Tu sesión estaba corrupta. Inicia sesión otra vez.');
-                    return;
-                }
-
-                // 2) Anti "sesiones fantasmas" (cache/SW/deploys)
-                const okSession = await enforceSessionBinding(user);
-                if (!okSession) return;
-
-                // [debug] 
-                currentUser = user;
-                userId = user.uid;
-
-                // Heartbeat (no bloqueante)
-                try {
-                    database.ref(`users/${user.uid}/session`).update({
-                        lastSeenAt: firebase.database.ServerValue.TIMESTAMP
-                    });
-                } catch {}
-
-                onUserLoggedIn(user);
-            } else {
-                // [debug] 
-                currentUser = null;
-                userId = null;
-                showLogin();
-            }
-        });
-// Funciones de navegación entre pantallas
-        function showLogin() {
-            // [debug] 
-            const loginScreen = document.getElementById('loginScreen');
-            const registerScreen = document.getElementById('registerScreen');
-            const forgotScreen = document.getElementById('forgotPasswordScreen');
-            const mainApp = document.getElementById('mainApp');
-            
-            if (loginScreen) loginScreen.style.display = 'flex';
-            if (registerScreen) registerScreen.style.display = 'none';
-            if (forgotScreen) forgotScreen.style.display = 'none';
-            if (mainApp) mainApp.style.display = 'none';
-        }
-        
-        function showRegister() {
-            // [debug] 
-            const loginScreen = document.getElementById('loginScreen');
-            const registerScreen = document.getElementById('registerScreen');
-            const forgotScreen = document.getElementById('forgotPasswordScreen');
-            const mainApp = document.getElementById('mainApp');
-            
-            if (loginScreen) loginScreen.style.display = 'none';
-            if (registerScreen) registerScreen.style.display = 'flex';
-            if (forgotScreen) forgotScreen.style.display = 'none';
-            if (mainApp) mainApp.style.display = 'none';
-        }
-        
-        function showForgotPassword() {
-            // [debug] 
-            const loginScreen = document.getElementById('loginScreen');
-            const registerScreen = document.getElementById('registerScreen');
-            const forgotScreen = document.getElementById('forgotPasswordScreen');
-            const mainApp = document.getElementById('mainApp');
-            
-            if (loginScreen) loginScreen.style.display = 'none';
-            if (registerScreen) registerScreen.style.display = 'none';
-            if (forgotScreen) forgotScreen.style.display = 'flex';
-            if (mainApp) mainApp.style.display = 'none';
-        }
-        
-        // Cuando el usuario se loguea exitosamente
-        function onUserLoggedIn(user) {
-            // [debug] 
-            // [debug] 
-            // [debug] 
-            
-            // Cargar perfil del usuario
-            database.ref(`users/${user.uid}/profile`).once('value').then((snapshot) => {
-                const profile = snapshot.val();
-                // [debug] 
-                
-                if (profile) {
-                    const username = profile.username || profile.displayName || 'Usuario';
-                    // [debug] 
-                    
-                    const navName = document.getElementById('userName');
-                    const navInitials = document.getElementById('userInitials');
-                    
-                    if (navName) navName.textContent = username;
-                    if (navInitials) navInitials.textContent = username.substring(0, 1).toUpperCase();
-                }
-            }).catch(err => {
-                // DEBUG: console.error('❌ Error cargando perfil:', err);
-            });
-            
-            // Ocultar pantallas de auth y mostrar app
-            const loginScreen = document.getElementById('loginScreen');
-            const registerScreen = document.getElementById('registerScreen');
-            const forgotScreen = document.getElementById('forgotPasswordScreen');
-            const mainApp = document.getElementById('mainApp');
-            
-            if (loginScreen) loginScreen.style.display = 'none';
-            if (registerScreen) registerScreen.style.display = 'none';
-            if (forgotScreen) forgotScreen.style.display = 'none';
-            if (mainApp) mainApp.style.display = 'block';
-            
-            // [debug] 
-            
-            // Cargar datos del usuario
-            loadUserData();
-            
-            // Cargar datos de Firebase que requieren autenticación
-            if (typeof loadH2HFromFirebase === 'function') loadH2HFromFirebase();
-            if (typeof loadBankrollFromFirebase === 'function') loadBankrollFromFirebase();
-            if (typeof loadPicksFromFirebase === 'function') loadPicksFromFirebase();
-            
-            // Renderizar vista inicial
-            if (typeof render === 'function') {
-                render();
-            }
-            
-            // Show mobile bottom nav
-            const mobileNav = document.getElementById('mobileBottomNav');
-            if (mobileNav) mobileNav.style.display = '';
-            const refreshBtn = document.getElementById('refreshBtn');
-            if (refreshBtn) refreshBtn.style.display = '';
-        }
-        
-        // Cargar datos del usuario
-        let USER_PICKS_TOTALES = {};
-        let USER_PICKS_PROPS = {};
-        let USER_PICKS_AI = {};
-        let USER_PICKS_BACKTESTING = {};
-        let USER_BANKROLL = { current: 0, initial: 0, history: [] };
-        
-        function loadUserData() {
-            if (!userId) {
-                // [debug] 
+function initAuthListeners() {
+    if (!auth || !database) {
+        Logger.error('❌ FIREBASE NO INICIALIZADO CORRECTAMENTE');
+        return;
+    }
+    
+    // Observer de autenticación
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            // 1) Token válido (evita sesiones corruptas)
+            const okToken = await validateCurrentSession(user);
+            if (!okToken) {
+                await safeHardLogout('Tu sesión estaba corrupta. Inicia sesión otra vez.');
                 return;
             }
-            
-            // [debug] 
-            
-            database.ref(`users/${userId}/picks_totales`).on('value', (s) => { 
-                USER_PICKS_TOTALES = s.val() || {}; 
-                // [debug] 
-            });
-            
-            database.ref(`users/${userId}/picks_props`).on('value', (s) => { 
-                USER_PICKS_PROPS = s.val() || {}; 
-                // [debug] 
-            });
-            
-            database.ref(`users/${userId}/picks_ai`).on('value', (s) => { 
-                USER_PICKS_AI = s.val() || {}; 
-                // [debug] 
-            });
-            
-            database.ref(`users/${userId}/picks_backtesting`).on('value', (s) => { 
-                USER_PICKS_BACKTESTING = s.val() || {}; 
-                // [debug] 
-            });
-            
-            database.ref(`users/${userId}/bankroll`).on('value', (s) => { 
-                USER_BANKROLL = s.val() || { current: 0, initial: 0, history: [] }; 
-                // [debug] 
-            });
-        }
-        
-        // Logout
-        function logout() {
-            if (confirm('¿Seguro que quieres cerrar sesión?')) {
-                // Clean up Firebase listeners to prevent memory leaks
-                if (userId) {
-                    try {
-                        database.ref(`users/${userId}/picks_totales`).off();
-                        database.ref(`users/${userId}/picks_props`).off();
-                        database.ref(`users/${userId}/picks_ai`).off();
-                        database.ref(`users/${userId}/picks_backtesting`).off();
-                        database.ref(`users/${userId}/bankroll`).off();
-                        database.ref(`users/${userId}/h2h_games`).off();
-                        database.ref(`users/${userId}/picks`).off();
-                        database.ref(`users/${userId}/bankroll_data`).off();
-                    } catch(e) { /* silent */ }
-                }
-                auth.signOut().then(() => {
-                    showNotification('info', 'Sesión cerrada', 'Hasta pronto');
-                    // Hide mobile nav
-                    const mobileNav = document.getElementById('mobileBottomNav');
-                    if (mobileNav) mobileNav.style.display = 'none';
-                    const refreshBtn = document.getElementById('refreshBtn');
-                    if (refreshBtn) refreshBtn.style.display = 'none';
-                }).catch(err => {
-                    // DEBUG: console.error('Error al cerrar sesión:', err);
+
+            // 2) Anti "sesiones fantasmas" (cache/SW/deploys)
+            const okSession = await enforceSessionBinding(user);
+            if (!okSession) return;
+
+            currentUser = user;
+            userId = user.uid;
+
+            // Heartbeat (no bloqueante)
+            try {
+                database.ref(`users/${user.uid}/session`).update({
+                    lastSeenAt: firebase.database.ServerValue.TIMESTAMP
                 });
-            }
+            } catch {}
+
+            onUserLoggedIn(user);
+        } else {
+            currentUser = null;
+            userId = null;
+            showLogin();
         }
+    });
+}
+
+// Funciones de navegación entre pantallas
+function showLogin() {
+    const loginScreen = document.getElementById('loginScreen');
+    const registerScreen = document.getElementById('registerScreen');
+    const forgotScreen = document.getElementById('forgotPasswordScreen');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (loginScreen) loginScreen.style.display = 'flex';
+    if (registerScreen) registerScreen.style.display = 'none';
+    if (forgotScreen) forgotScreen.style.display = 'none';
+    if (mainApp) mainApp.style.display = 'none';
+}
+
+function showRegister() {
+    const loginScreen = document.getElementById('loginScreen');
+    const registerScreen = document.getElementById('registerScreen');
+    const forgotScreen = document.getElementById('forgotPasswordScreen');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (registerScreen) registerScreen.style.display = 'flex';
+    if (forgotScreen) forgotScreen.style.display = 'none';
+    if (mainApp) mainApp.style.display = 'none';
+}
+
+function showForgotPassword() {
+    const loginScreen = document.getElementById('loginScreen');
+    const registerScreen = document.getElementById('registerScreen');
+    const forgotScreen = document.getElementById('forgotPasswordScreen');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (registerScreen) registerScreen.style.display = 'none';
+    if (forgotScreen) forgotScreen.style.display = 'flex';
+    if (mainApp) mainApp.style.display = 'none';
+}
+
+// Cuando el usuario se loguea exitosamente
+function onUserLoggedIn(user) {
+    // Cargar perfil del usuario
+    database.ref(`users/${user.uid}/profile`).once('value').then((snapshot) => {
+        const profile = snapshot.val();
+        
+        if (profile) {
+            const username = profile.username || profile.displayName || 'Usuario';
+            
+            const navName = document.getElementById('userName');
+            const navInitials = document.getElementById('userInitials');
+            
+            if (navName) navName.textContent = username;
+            if (navInitials) navInitials.textContent = username.substring(0, 1).toUpperCase();
+        }
+    }).catch(err => {
+        Logger.error('❌ Error cargando perfil:', err);
+    });
+    
+    // Ocultar pantallas de auth y mostrar app
+    const loginScreen = document.getElementById('loginScreen');
+    const registerScreen = document.getElementById('registerScreen');
+    const forgotScreen = document.getElementById('forgotPasswordScreen');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (registerScreen) registerScreen.style.display = 'none';
+    if (forgotScreen) forgotScreen.style.display = 'none';
+    if (mainApp) mainApp.style.display = 'block';
+    
+    // Cargar datos del usuario
+    loadUserData();
+    
+    // Cargar datos de Firebase que requieren autenticación
+    if (typeof loadH2HFromFirebase === 'function') loadH2HFromFirebase();
+    if (typeof loadBankrollFromFirebase === 'function') loadBankrollFromFirebase();
+    if (typeof loadPicksFromFirebase === 'function') loadPicksFromFirebase();
+    
+    // Renderizar vista inicial
+    if (typeof render === 'function') {
+        render();
+    }
+    
+    // Show mobile bottom nav
+    const mobileNav = document.getElementById('mobileBottomNav');
+    if (mobileNav) mobileNav.style.display = '';
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) refreshBtn.style.display = '';
+}
+
+// Cargar datos del usuario
+let USER_PICKS_TOTALES = {};
+let USER_PICKS_PROPS = {};
+let USER_PICKS_AI = {};
+let USER_PICKS_BACKTESTING = {};
+let USER_BANKROLL = { current: 0, initial: 0, history: [] };
+
+function loadUserData() {
+    if (!userId) {
+        return;
+    }
+    
+    database.ref(`users/${userId}/picks_totales`).on('value', (s) => { 
+        USER_PICKS_TOTALES = s.val() || {}; 
+    });
+    
+    database.ref(`users/${userId}/picks_props`).on('value', (s) => { 
+        USER_PICKS_PROPS = s.val() || {}; 
+    });
+    
+    database.ref(`users/${userId}/picks_ai`).on('value', (s) => { 
+        USER_PICKS_AI = s.val() || {}; 
+    });
+    
+    database.ref(`users/${userId}/picks_backtesting`).on('value', (s) => { 
+        USER_PICKS_BACKTESTING = s.val() || {}; 
+    });
+    
+    database.ref(`users/${userId}/bankroll`).on('value', (s) => { 
+        USER_BANKROLL = s.val() || { current: 0, initial: 0, history: [] }; 
+    });
+}
+
+// Logout
+function logout() {
+    if (confirm('¿Seguro que quieres cerrar sesión?')) {
+        // Clean up Firebase listeners to prevent memory leaks
+        if (userId) {
+            try {
+                database.ref(`users/${userId}/picks_totales`).off();
+                database.ref(`users/${userId}/picks_props`).off();
+                database.ref(`users/${userId}/picks_ai`).off();
+                database.ref(`users/${userId}/picks_backtesting`).off();
+                database.ref(`users/${userId}/bankroll`).off();
+                database.ref(`users/${userId}/h2h_games`).off();
+                database.ref(`users/${userId}/picks`).off();
+                database.ref(`users/${userId}/bankroll_data`).off();
+            } catch(e) { /* silent */ }
+        }
+        auth.signOut().then(() => {
+            showNotification('info', 'Sesión cerrada', 'Hasta pronto');
+            // Hide mobile nav
+            const mobileNav = document.getElementById('mobileBottomNav');
+            if (mobileNav) mobileNav.style.display = 'none';
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) refreshBtn.style.display = 'none';
+        }).catch(err => {
+            Logger.error('Error al cerrar sesión:', err);
+        });
+    }
+}
 
         /* ══════════════════════════════════════════════════════════════════════
            NIOSPORTS PRO v4.0 - SISTEMA DE PREDICCIONES NBA
@@ -2227,6 +2241,12 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
 
     // View switching system
     function switchView(view) {
+        // Track user action
+        if (window.trackAction) {
+            window.trackAction('switch_view', { view });
+        }
+        window.currentView = view;
+        
         // Hide all views
         document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
         // Show target view
@@ -2610,8 +2630,8 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
         const logger = {
             log: (...args) => { if (DEBUG_MODE) logger.log(...args); },
             warn: (...args) => { if (DEBUG_MODE) logger.warn(...args); },
-            error: (...args) => // DEBUG: console.error(...args),
-            info: (...args) => { if (DEBUG_MODE) console.info(...args); }
+            error: (...args) => Logger.error(...args),
+            info: (...args) => { if (DEBUG_MODE) Logger.info(...args); }
         };
 
         // Basic HTML sanitizer for user-generated content
@@ -2747,7 +2767,7 @@ if (location.hostname.endsWith("vercel.app") && !NBA_STATS_API.startsWith(locati
             throw new Error('No se recibieron datos de equipos');
         }
     } catch (error) {
-        // DEBUG: console.error('Error cargando stats:', error);
+        Logger.error('Error cargando stats:', error);
         apiConnected = false;
         showNotification('⚠️ Error cargando stats: usando datos de respaldo', 'warning');
 
@@ -3113,7 +3133,7 @@ database.ref(`users/${userId}/h2h_games`).on('value', (snapshot) => {
         }
         loadPicksFromFirebase();
     }, (error) => {
-        // DEBUG: console.error('Error cargando datos:', error);
+        Logger.error('Error cargando datos:', error);
         updateFirebaseStatus('disconnected');
         __stopTimer(__h2hLoadTimer);
       hideLoading();
@@ -3136,7 +3156,7 @@ database.ref(`users/${userId}/picks`).on('value', (snapshot) => {
         render();
         checkForValuePicks();
     }, (error) => {
-        // DEBUG: console.error('Error cargando picks:', error);
+        Logger.error('Error cargando picks:', error);
         __stopTimer(__picksLoadTimer);
         hideLoading();
         render();
@@ -3154,7 +3174,7 @@ function saveH2HToFirebase() {
             showNotification('✅ Partido guardado correctamente', 'success');
         })
         .catch((error) => {
-            // DEBUG: console.error('Error guardando:', error);
+            Logger.error('Error guardando:', error);
             hideLoading();
             showNotification('❌ Error guardando: ' + error.message, 'warning');
         });
@@ -3165,7 +3185,7 @@ function savePicksToFirebase() {
     if (!userId) return;
     database.ref(`users/${userId}/picks`).set(PICKS_DATABASE)
 
-        .catch((error) => // DEBUG: console.error('Error guardando picks:', error));
+        .catch((error) => Logger.error('Error guardando picks:', error));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -4374,7 +4394,7 @@ async function autoDetectContextualFactors(homeTeam, awayTeam) {
         showNotification('✅ Factores contextuales detectados automáticamente', 'success');
 
     } catch (error) {
-        // DEBUG: console.error('Error en auto-detección:', error);
+        Logger.error('Error en auto-detección:', error);
         showNotification('⚠️ Auto-detección parcial - algunos datos manuales requeridos', 'warning');
     }
 }
@@ -6977,7 +6997,7 @@ function renderDashboard() {
         </div>
     `;
     } catch (error) {
-        // DEBUG: console.error('Error en renderDashboard:', error);
+        Logger.error('Error en renderDashboard:', error);
         return `
             <div class="p-4 max-w-4xl mx-auto">
                 <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
@@ -8147,7 +8167,7 @@ async function cargarDatosJugadores() {
         logger.log(`✅ ${Object.keys(NBA_PLAYERS_DATA).length} jugadores cargados`);
         return true;
     } catch (error) {
-        // DEBUG: console.error('❌ Error:', error);
+        Logger.error('❌ Error:', error);
         return false;
     }
 }
@@ -8591,7 +8611,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 closeUpdateBankrollModal();
                 render();
             }).catch(err => {
-                // DEBUG: console.error('Error:', err);
+                Logger.error('Error:', err);
                 showNotification('error', 'Error', 'No se pudo actualizar');
             });
         }
@@ -8628,7 +8648,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 showNotification('success', 'Exportado', 'CSV descargado exitosamente');
             } catch (error) {
-                // DEBUG: console.error('Error:', error);
+                Logger.error('Error:', error);
                 showNotification('error', 'Error', 'No se pudo exportar');
             }
         }
@@ -8674,7 +8694,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     showNotification('success', `${emoji} ${status.toUpperCase()}`, '');
                     render();
                 }).catch(err => {
-                    // DEBUG: console.error('Error:', err);
+                    Logger.error('Error:', err);
                     showNotification('error', 'Error', 'No se pudo actualizar');
                 });
             });
@@ -8728,7 +8748,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     document.execCommand('copy');
                     showNotification('success', 'Copiado', 'Texto copiado al portapapeles');
                 } catch (err) {
-                    // DEBUG: console.error('Error al copiar:', err);
+                    Logger.error('Error al copiar:', err);
                     showNotification('error', 'Error', 'No se pudo copiar');
                 }
                 document.body.removeChild(textArea);
@@ -8738,7 +8758,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             navigator.clipboard.writeText(text).then(() => {
                 showNotification('success', 'Copiado', 'Texto copiado al portapapeles');
             }).catch(err => {
-                // DEBUG: console.error('Error al copiar:', err);
+                Logger.error('Error al copiar:', err);
                 showNotification('error', 'Error', 'No se pudo copiar');
             });
         }
@@ -8797,7 +8817,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     logger.log('  - Password:', password ? '****** (' + password.length + ' caracteres)' : 'VACÍO');
                     
                     if (!emailOrUsername || !password) {
-                        // DEBUG: console.error('❌ Campos vacíos');
+                        Logger.error('❌ Campos vacíos');
                         showNotification('error', 'Error', 'Por favor completa todos los campos');
                         alert('Por favor completa todos los campos');
                         return;
@@ -8833,7 +8853,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     throw new Error('Usuario no encontrado en la base de datos');
                                 }
                             } else {
-                                // DEBUG: console.error('❌ Username no encontrado en DB');
+                                Logger.error('❌ Username no encontrado en DB');
                                 throw new Error('Usuario no encontrado');
                             }
                         }
@@ -8852,13 +8872,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         alert('✅ ¡LOGIN EXITOSO!');
                         
                     } catch (error) {
-                        // DEBUG: console.error('═══════════════════════════════════════════');
-                        // DEBUG: console.error('❌ ERROR EN LOGIN');
-                        // DEBUG: console.error('═══════════════════════════════════════════');
-                        // DEBUG: console.error('Código:', error.code);
-                        // DEBUG: console.error('Mensaje:', error.message);
-                        // DEBUG: console.error('Stack:', error.stack);
-                        // DEBUG: console.error('═══════════════════════════════════════════');
+                        Logger.error('═══════════════════════════════════════════');
+                        Logger.error('❌ ERROR EN LOGIN');
+                        Logger.error('═══════════════════════════════════════════');
+                        Logger.error('Código:', error.code);
+                        Logger.error('Mensaje:', error.message);
+                        Logger.error('Stack:', error.stack);
+                        Logger.error('═══════════════════════════════════════════');
                         
                         let errorMsg = 'Error al iniciar sesión';
                         
@@ -8879,7 +8899,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 });
             } else {
-                // DEBUG: console.error('❌ Formulario de login NO encontrado');
+                Logger.error('❌ Formulario de login NO encontrado');
             }
             
             // ══════════ REGISTER FORM ══════════
@@ -8907,28 +8927,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     // Validaciones
                     if (!username || !email || !password || !passwordConfirm) {
-                        // DEBUG: console.error('❌ Campos vacíos');
+                        Logger.error('❌ Campos vacíos');
                         showNotification('error', 'Error', 'Por favor completa todos los campos');
                         alert('Por favor completa todos los campos');
                         return;
                     }
                     
                     if (password !== passwordConfirm) {
-                        // DEBUG: console.error('❌ Contraseñas no coinciden');
+                        Logger.error('❌ Contraseñas no coinciden');
                         showNotification('error', 'Error', 'Las contraseñas no coinciden');
                         alert('❌ Las contraseñas no coinciden');
                         return;
                     }
                     
                     if (password.length < 6) {
-                        // DEBUG: console.error('❌ Contraseña muy corta');
+                        Logger.error('❌ Contraseña muy corta');
                         showNotification('error', 'Error', 'La contraseña debe tener mínimo 6 caracteres');
                         alert('❌ La contraseña debe tener mínimo 6 caracteres');
                         return;
                     }
                     
                     if (username.length < 3) {
-                        // DEBUG: console.error('❌ Username muy corto');
+                        Logger.error('❌ Username muy corto');
                         showNotification('error', 'Error', 'El username debe tener mínimo 3 caracteres');
                         alert('❌ El username debe tener mínimo 3 caracteres');
                         return;
@@ -8945,7 +8965,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const usernameExists = Object.values(usernames).includes(username);
                         
                         if (usernameExists) {
-                            // DEBUG: console.error('❌ Username ya existe:', username);
+                            Logger.error('❌ Username ya existe:', username);
                             showNotification('error', 'Username ocupado', 'Este username ya está en uso. Elige otro.');
                             alert('❌ Username ya existe. Elige otro.');
                             return;
@@ -9003,13 +9023,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         // El onAuthStateChanged se encargará de mostrar la app
                         
                     } catch (error) {
-                        // DEBUG: console.error('═══════════════════════════════════════════');
-                        // DEBUG: console.error('❌ ERROR EN REGISTRO');
-                        // DEBUG: console.error('═══════════════════════════════════════════');
-                        // DEBUG: console.error('Código:', error.code);
-                        // DEBUG: console.error('Mensaje:', error.message);
-                        // DEBUG: console.error('Stack:', error.stack);
-                        // DEBUG: console.error('═══════════════════════════════════════════');
+                        Logger.error('═══════════════════════════════════════════');
+                        Logger.error('❌ ERROR EN REGISTRO');
+                        Logger.error('═══════════════════════════════════════════');
+                        Logger.error('Código:', error.code);
+                        Logger.error('Mensaje:', error.message);
+                        Logger.error('Stack:', error.stack);
+                        Logger.error('═══════════════════════════════════════════');
                         
                         let errorMsg = 'Error al crear la cuenta';
                         
@@ -9028,7 +9048,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 });
             } else {
-                // DEBUG: console.error('❌ Formulario de registro NO encontrado');
+                Logger.error('❌ Formulario de registro NO encontrado');
             }
             
             // ══════════ FORGOT PASSWORD FORM ══════════
@@ -9057,13 +9077,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         alert('✅ Email de recuperación enviado. Revisa tu correo.');
                         setTimeout(() => showLogin(), 2000);
                     } catch (error) {
-                        // DEBUG: console.error('❌ Error:', error);
+                        Logger.error('❌ Error:', error);
                         showNotification('error', 'Error', 'No se pudo enviar el email');
                         alert('❌ Error: ' + error.message);
                     }
                 });
             } else {
-                // DEBUG: console.error('❌ Formulario de recuperación NO encontrado');
+                Logger.error('❌ Formulario de recuperación NO encontrado');
             }
             
             logger.log('✅ Event listeners configurados correctamente');
@@ -9133,7 +9153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showNotification('success', '¡Bienvenido!', 'Sesión iniciada con Google');
                 
             } catch (error) {
-                // DEBUG: console.error('Error Google Sign-In:', error);
+                Logger.error('Error Google Sign-In:', error);
                 let msg = 'Error al iniciar sesión con Google';
                 if (error.code === 'auth/popup-blocked') msg = 'Popup bloqueado. Permite popups para este sitio.';
                 if (error.code === 'auth/popup-closed-by-user') msg = 'Popup cerrado';
