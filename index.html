@@ -9364,6 +9364,30 @@ function __stopTimer(t) { try { if (t) clearTimeout(t); } catch(_) {} }
                     .catch(err => logger.log('SW failed:', err));
             });
         }
+      // AUTO-EJECUTAR AL CARGAR
+(function() {
+    let attempts = 0;
+    const maxAttempts = 100;
+    
+    function tryInit() {
+        attempts++;
+        
+        if (typeof firebase !== 'undefined' && typeof initFirebase === 'function') {
+            console.log('🚀 Ejecutando initFirebase automáticamente...');
+            initFirebase();
+        } else if (attempts < maxAttempts) {
+            setTimeout(tryInit, 50);
+        } else {
+            console.error('❌ No se pudo auto-ejecutar initFirebase después de 5 segundos');
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryInit);
+    } else {
+        tryInit();
+    }
+})();
     </script>
 </body>
 </html>
