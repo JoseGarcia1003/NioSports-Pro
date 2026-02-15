@@ -1755,7 +1755,19 @@ async function initFirebase() {
 }
 
 // Llamar a init cuando cargue la página
-initFirebase();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFirebase);
+} else {
+    initFirebase();
+}
+
+// Backup: si initFirebase no se ejecutó en 2 segundos, forzar
+setTimeout(function() {
+    if (!window.database || !window.auth) {
+        console.warn('⚠️ initFirebase no se ejecutó, intentando forzar...');
+        initFirebase();
+    }
+}, 2000);
 
 // ═══════════════════════════════════════════════════════════════
 // AUTH HARDENING + ANTI "SESIONES FANTASMAS" (added)
