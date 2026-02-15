@@ -1754,9 +1754,13 @@ async function initFirebase() {
     }
 }
 
-// Ejecutar inmediatamente usando IIFE
-(function() {
-    initFirebase();
+// Esperar a que Firebase SDK esté disponible y ejecutar
+(function waitForFirebase() {
+    if (typeof firebase !== 'undefined') {
+        initFirebase();
+    } else {
+        setTimeout(waitForFirebase, 50);
+    }
 })();
 
 // ═══════════════════════════════════════════════════════════════
