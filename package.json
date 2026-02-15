@@ -1,6 +1,7 @@
 {
   "name": "niosports-pro",
   "version": "3.0.0",
+  "type": "module",
   "description": "Sistema predictivo NBA profesional con 47 factores contextuales",
   "main": "index.html",
   "scripts": {
