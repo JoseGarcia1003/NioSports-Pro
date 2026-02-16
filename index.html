@@ -1727,7 +1727,7 @@ let firebaseConfig = null;
 let database = null;
 let auth = null;
 
-async function initFirebase() {
+async function initFirebaseInline() {
     try {
         // Obtener config desde endpoint seguro
         const response = await fetch('/api/firebase-config');
@@ -1788,9 +1788,42 @@ async function initFirebase() {
 // Esperar a que Firebase SDK esté disponible y ejecutar
 (function waitForFirebase() {
     if (typeof firebase !== 'undefined') {
-        initFirebase();
+        initFirebaseInline();
     } else {
         setTimeout(waitForFirebase, 50);
+    }
+})();
+
+// Bridge: si scripts/firebase-init.js ya inicializó Firebase, sincronizamos referencias y listeners aquí.
+(function bootstrapFirebaseBridge(){
+    const once = () => {
+        try {
+            if (window.__FIREBASE_READY__ && window.database && window.auth) {
+                // Sincronizar referencias locales usadas por el resto del monolito
+                database = window.database;
+                auth = window.auth;
+                // Evitar doble init de listeners
+                if (!window.__NS_AUTH_LISTENERS_READY__) {
+                    initAuthListeners();
+                }
+                if (typeof attachFirebaseConnectionListener === 'function') {
+                    attachFirebaseConnectionListener();
+                }
+                return true;
+            }
+        } catch {}
+        return false;
+    };
+
+    if (once()) return;
+
+    // Esperar a que firebase-init.js termine
+    if (typeof window.waitForFirebaseReady === 'function') {
+        window.waitForFirebaseReady().then(() => { once(); });
+    } else {
+        // fallback
+        const iv = setInterval(() => { if (once()) clearInterval(iv); }, 150);
+        setTimeout(() => clearInterval(iv), 12000);
     }
 })();
 
@@ -1801,13 +1834,31 @@ async function initFirebase() {
 // 2) Validación de sesión (token refresh). Si falla, forzamos logout "duro".
 async function validateCurrentSession(user) {
     try {
-        await user.getIdToken(true); // refresh
+        // Forzamos refresh del token
+        await user.getIdToken(true);
         return true;
     } catch (e) {
-        
-        return false;
+        // Si es un fallo de red / offline, NO cerramos sesión (evita logout al refrescar).
+        const code = (e && (e.code || e.name)) ? String(e.code || e.name) : '';
+        const msg = (e && e.message) ? String(e.message) : '';
+        const offline = (typeof navigator !== 'undefined' && navigator && navigator.onLine === false);
+
+        const isNetwork = offline || /network-request-failed|timeout|Failed to fetch|NetworkError/i.test(code + ' ' + msg);
+        if (isNetwork) {
+            Logger.warn('⚠️ Token refresh falló por red/offline. Manteniendo sesión.');
+            return true;
+        }
+
+        // Errores que sí ameritan re-login
+        const mustLogout = /auth\/user-token-expired|auth\/id-token-expired|auth\/invalid-user-token|auth\/user-disabled|auth\/invalid-credential/i.test(code);
+        if (mustLogout) return false;
+
+        // Por defecto: fail-open para evitar expulsar al usuario por errores intermitentes
+        Logger.warn('⚠️ Token refresh falló (no crítico). Manteniendo sesión.', code);
+        return true;
     }
 }
+
 
 // 3) Session binding (anti ghost sessions)
 function getOrCreateDeviceId() {
@@ -1914,6 +1965,8 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
 // ═══════════════════════════════════════════════════════════════
 
 function initAuthListeners() {
+    if (window.__NS_AUTH_LISTENERS_READY__) return;
+    window.__NS_AUTH_LISTENERS_READY__ = true;
     if (!auth || !database) {
         Logger.error('❌ FIREBASE NO INICIALIZADO CORRECTAMENTE');
         return;
@@ -3176,17 +3229,34 @@ function updateFirebaseStatus(status) {
     }
 }
 
-// Listener de conexión
-database.ref('.info/connected').on('value', (snap) => {
-    updateFirebaseStatus(snap.val() ? 'connected' : 'disconnected');
-});
+// Listener de conexión (defer hasta que Firebase esté listo)
+function attachFirebaseConnectionListener() {
+    try {
+        const db = database || window.database;
+        if (!db || typeof db.ref !== 'function') return;
+        db.ref('.info/connected').on('value', (snap) => {
+            updateFirebaseStatus(snap.val() ? 'connected' : 'disconnected');
+        });
+    } catch (e) {
+        Logger.warn('⚠️ No se pudo adjuntar listener de conexión Firebase:', e?.message || e);
+    }
+}
+
 
 // Cargar datos de Firebase al iniciar
 function loadH2HFromFirebase() {
     if (!userId) { logger.warn('⚠️ loadH2H: sin userId'); return; }
     showLoading('Cargando datos H2H...');
     __h2hLoadTimer = __startLoadingGuard('carga de H2H', 12000);
-database.ref(`users/${userId}/h2h_games`).on('value', (snapshot) => {
+    const db = database || window.database;
+    if (!db || typeof db.ref !== 'function') {
+        Logger.warn('⚠️ Firebase DB no lista todavía. Reintentando H2H...');
+        if (typeof window.waitForFirebaseReady === 'function') {
+            window.waitForFirebaseReady().then(() => loadH2HFromFirebase());
+        }
+        return;
+    }
+    db.ref(`users/${userId}/h2h_games`).on('value', (snapshot) => {
         if (snapshot.exists()) {
             H2H_DATABASE = snapshot.val();
         } else {
