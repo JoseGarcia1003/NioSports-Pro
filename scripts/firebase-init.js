@@ -74,6 +74,7 @@ async function initFirebase() {
       console.log('ℹ️ Firebase ya fue inicializado');
       window.database = firebase.database();
       window.auth = firebase.auth();
+      try { window.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch {}
       setupAuthListener();
       setupConnectionListener();
       return true;
@@ -93,6 +94,13 @@ async function initFirebase() {
     window.database = firebase.database();
     window.auth = firebase.auth();
     console.log('✅ Database y Auth referencias obtenidas');
+
+    // Persistencia LOCAL (evita que se cierre sesión al refrescar)
+    try {
+      window.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    } catch (e) {
+      console.warn('⚠️ No se pudo fijar persistencia LOCAL:', e?.message || e);
+    }
     
     // Paso 6: Configurar listeners
     setupAuthListener();
@@ -100,6 +108,7 @@ async function initFirebase() {
     
     // Paso 7: Actualizar estado global
     window.__FIREBASE_READY__ = true;
+    try { window.dispatchEvent(new CustomEvent('ns:firebase-ready')); } catch {}
     console.log('✅ Firebase completamente inicializado');
     
     return true;
