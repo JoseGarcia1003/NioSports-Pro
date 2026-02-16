@@ -1,88 +1,154 @@
-// api/telemetry.js — Sentry tunnel (keeps CSP tight: connect-src 'self')
-// Forwards Sentry envelopes to Sentry ingest endpoint.
+// scripts/telemetry.js — Sentry Telemetry (Non-blocking initialization)
+// ═══════════════════════════════════════════════════════════════════
 
-const SENTRY_INGEST_ENVELOPE_URL =
-  "https://o4510870707765248.ingest.us.sentry.io/api/4510870715760640/envelope/";
-
-// Tiny in-memory rate limit to avoid abuse of the tunnel (best-effort in serverless).
-const RL_WINDOW_MS = 60_000;
-const RL_MAX_PER_IP = 120;
-
-function getIp(req) {
-  const xf = req.headers["x-forwarded-for"];
-  if (!xf) return "unknown";
-  return String(xf).split(",")[0].trim() || "unknown";
-}
-
-function rateLimitOk(ip) {
-  if (!globalThis.__telemetryRL) globalThis.__telemetryRL = new Map();
-  const now = Date.now();
-
-  const entry = globalThis.__telemetryRL.get(ip) || { ts: now, n: 0 };
-  if (now - entry.ts > RL_WINDOW_MS) {
-    entry.ts = now;
-    entry.n = 0;
-  }
-  entry.n += 1;
-  globalThis.__telemetryRL.set(ip, entry);
-
-  return entry.n <= RL_MAX_PER_IP;
-}
-
-export default async function handler(req, res) {
-  // CORS: same-origin only (tunnel should be used by your site)
-  const origin = req.headers.origin || "";
-  const allow = [
-    "https://nio-sports-pro.vercel.app",
-    "https://nio-sports-pro-git-main-niosports-pros-projects.vercel.app",
-    "https://josegarcia1003.github.io"
-  ];
-  if (allow.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "content-type");
-  res.setHeader("Access-Control-Max-Age", "600");
-
-  if (req.method === "OPTIONS") return res.status(204).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  const ip = getIp(req);
-  if (!rateLimitOk(ip)) {
-    // Don't leak details; Sentry SDK will drop this.
-    return res.status(429).end("rate_limited");
-  }
-
-  // Limit payload size (Sentry envelopes can be big; keep reasonable)
-  const MAX_BYTES = 1_000_000; // 1MB
-  try {
-    const chunks = [];
-    let size = 0;
-
-    for await (const chunk of req) {
-      size += chunk.length;
-      if (size > MAX_BYTES) {
-        return res.status(413).end("payload_too_large");
+// 🔵 Inicializar Telemetry sin bloquear otras ejecuciones
+function initTelemetry() {
+  // No esperar, ejecutar en background
+  (async function() {
+    try {
+      // Validar que Sentry esté disponible
+      if (!window.Sentry) {
+        console.warn('⚠️ Sentry SDK no disponible');
+        return;
       }
-      chunks.push(chunk);
+
+      // Evitar inicialización duplicada
+      if (window.__NIOSPORTS_SENTRY_INIT__) {
+        console.log('ℹ️ Sentry ya fue inicializado');
+        return;
+      }
+
+      console.log('📊 Iniciando Sentry Telemetry...');
+      window.__NIOSPORTS_SENTRY_INIT__ = true;
+
+      // Obtener configuración (con timeout de 3 segundos)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      try {
+        const resp = await fetch("/api/public-config?ts=" + Date.now(), {
+          cache: "no-store",
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!resp.ok) {
+          console.warn('⚠️ No se pudo obtener config de Sentry (HTTP ' + resp.status + ')');
+          return;
+        }
+
+        const cfg = await resp.json();
+        if (!cfg || !cfg.sentryDsn) {
+          console.warn('⚠️ No hay sentryDsn en config');
+          return;
+        }
+
+        // Inicializar Sentry
+        window.Sentry.init({
+          dsn: cfg.sentryDsn,
+          tunnel: "/api/telemetry",
+          environment: cfg.environment || "production",
+          release: cfg.release || "niosports@unknown",
+
+          integrations: [
+            new window.Sentry.BrowserTracing({
+              tracePropagationTargets: [/^\//, "https://api.balldontlie.io"],
+            }),
+          ],
+
+          tracesSampleRate: Number.isFinite(cfg.tracesSampleRate) ? cfg.tracesSampleRate : 0.15,
+          sendDefaultPii: false,
+          denyUrls: [/extensions\//i, /^chrome:\/\//i, /^moz-extension:\/\//i],
+          
+          // Contexto custom antes de enviar eventos
+          beforeSend(event, hint) {
+            // Añadir info del usuario si está logueado
+            if (window.currentUser) {
+              window.Sentry.setUser({
+                id: window.currentUser.uid,
+                email: window.currentUser.email,
+              });
+              
+              window.Sentry.setContext("user_profile", {
+                plan: window.userPlan || 'free',
+                bankroll: window.userBankroll?.current || 0,
+                totalPicks: window.userStats?.totalPicks || 0,
+              });
+            }
+            
+            // Contexto de estado de la app
+            window.Sentry.setContext("app_state", {
+              current_view: window.currentView || 'unknown',
+              last_action: window.lastUserAction || 'unknown',
+            });
+            
+            return event;
+          }
+        });
+
+        window.Sentry.setTag("app", "NioSports-Pro");
+        console.log('✅ Sentry Telemetry inicializado correctamente');
+        
+      } catch (timeoutError) {
+        console.warn('⚠️ Timeout obteniendo config de Sentry:', timeoutError.message);
+      }
+      
+    } catch (error) {
+      // La observabilidad NUNCA debe tumbar la aplicación
+      console.error('❌ Error en telemetry:', error.message);
     }
-
-    const body = Buffer.concat(chunks);
-
-    // Forward as-is. Keep Content-Type.
-    const upstream = await fetch(SENTRY_INGEST_ENVELOPE_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": req.headers["content-type"] || "text/plain;charset=UTF-8"
-      },
-      body
-    });
-
-    // Sentry is okay with 200 even if upstream fails; we keep app stable.
-    // But we can pass through for debugging:
-    res.status(upstream.ok ? 200 : 502).end("ok");
-  } catch (e) {
-    res.status(200).end("ok");
-  }
+  })(); // ← Se ejecuta en background sin bloquear
 }
+
+// 🟢 Llamar initTelemetry inmediatamente (no-blocking)
+// Esto permite que Firebase se inicialice en paralelo
+if (document.readyState === 'loading') {
+  // Si el DOM aún está cargando, ejecutar cuando esté listo
+  document.addEventListener('DOMContentLoaded', initTelemetry);
+} else {
+  // Si el DOM ya está listo, ejecutar inmediatamente
+  initTelemetry();
+}
+
+console.log('📊 scripts/telemetry.js cargado');
+
+// ═══════════════════════════════════════════════════════════════════
+// 🆕 HELPER: Trackear acciones del usuario
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Track user actions en Sentry (breadcrumbs)
+ * @param {string} action - Nombre de la acción
+ * @param {object} data - Datos adicionales
+ */
+window.trackAction = function(action, data = {}) {
+  window.lastUserAction = action;
+  
+  if (window.Sentry && window.__NIOSPORTS_SENTRY_INIT__) {
+    window.Sentry.addBreadcrumb({
+      category: 'user-action',
+      message: action,
+      level: 'info',
+      data,
+      timestamp: Date.now()
+    });
+  }
+};
+
+/**
+ * Trackear errores con contexto
+ * @param {Error} error - El error
+ * @param {object} context - Contexto adicional
+ */
+window.trackError = function(error, context = {}) {
+  console.error('🔴 Error trackeado:', error);
+  
+  if (window.Sentry && window.__NIOSPORTS_SENTRY_INIT__) {
+    window.Sentry.captureException(error, {
+      tags: {
+        ...context
+      }
+    });
+  }
+};
