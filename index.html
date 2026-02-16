@@ -5,16 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NioSports Pro v3.0 REVOLUTION | El Sistema NBA #1</title>
   <meta name="description" content="El sistema predictivo NBA más avanzado del mercado. Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
-  <meta name="theme-color" content="#050b18">
+  <meta name="theme-color" content="#fbbf24">
   <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="NioSports">
+  
+  <!-- MS Tile -->
+  <meta name="msapplication-TileColor" content="#fbbf24">
+  <meta name="msapplication-TileImage" content="/icons/icon-144.png">
+  
   <meta property="og:title" content="NioSports Pro - Sistema Predictivo NBA #1">
   <meta property="og:description" content="Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
   <meta property="og:type" content="website">
   <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- OBSERVABILIDAD & TELEMETRY -->
@@ -47,6 +52,16 @@
   
   <!-- Tailwind CSS (Build local optimizado) -->
   <link rel="stylesheet" href="/dist/output.css">
+  
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- FASE 3: PWA & PERFORMANCE -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  
+  <!-- Skeleton Screens CSS (UX Premium) -->
+  <link rel="stylesheet" href="/styles/skeletons.css">
+  
+  <!-- Toast Notification System (carga temprano) -->
+  <script src="/scripts/toast.js"></script>
 
   <style>
         /* ══════════════════════════════════════════════════════════
@@ -9405,5 +9420,12 @@ function __stopTimer(t) { try { if (t) clearTimeout(t); } catch(_) {} }
     }
 })();
     </script>
+    
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- FASE 3: LAZY LOADING SYSTEM -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    
+    <!-- Lazy Loader (Performance Optimization) -->
+    <script src="/scripts/lazy-loader.js"></script>
 </body>
 </html>
