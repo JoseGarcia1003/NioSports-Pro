@@ -38,19 +38,20 @@ function waitForFirebase(maxAttempts = 50) {
 }
 
 // ═════════════════════════════════════════════════════════════════
-// CONFIGURACIÓN FIREBASE — CREDENCIALES REALES
+// OBTENER CONFIGURACIÓN FIREBASE DESDE API SEGURO
 // ═════════════════════════════════════════════════════════════════
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCpddyEiWIE6VBe5u8JRPYBHlnYRMgljCs",
-  authDomain: "niosports-pro.firebaseapp.com",
-  databaseURL: "https://niosports-pro-default-rtdb.firebaseio.com",
-  projectId: "niosports-pro",
-  storageBucket: "niosports-pro.firebasestorage.app",
-  messagingSenderId: "669355459084",
-  appId: "1:669355459084:web:6c11965f3940bae9c8a429",
-  measurementId: "G-0MYGSVVRFT"
-};
+/**
+ * Obtener credenciales Firebase desde endpoint seguro
+ * @returns {Promise<Object>} Firebase config
+ */
+async function getFirebaseConfig() {
+  const response = await fetch('/api/firebase-config');
+  if (!response.ok) {
+    throw new Error('No se pudo obtener Firebase config (HTTP ' + response.status + ')');
+  }
+  return await response.json();
+}
 
 // ═════════════════════════════════════════════════════════════════
 // INICIALIZAR FIREBASE
@@ -71,28 +72,33 @@ async function initFirebase() {
     // Paso 2: Evitar inicialización duplicada
     if (firebase.apps && firebase.apps.length > 0) {
       console.log('ℹ️ Firebase ya fue inicializado');
-      window.db = firebase.database();
+      window.database = firebase.database();
       window.auth = firebase.auth();
       setupAuthListener();
       setupConnectionListener();
       return true;
     }
     
-    // Paso 3: Inicializar la aplicación Firebase
+    // Paso 3: Obtener configuración desde API
+    console.log('🔐 Obteniendo configuración Firebase...');
+    const firebaseConfig = await getFirebaseConfig();
+    console.log('✅ Configuración obtenida');
+    
+    // Paso 4: Inicializar la aplicación Firebase
     console.log('🔧 Inicializando Firebase App...');
     firebase.initializeApp(firebaseConfig);
     console.log('✅ Firebase App inicializado');
     
-    // Paso 4: Obtener referencias globales
-    window.db = firebase.database();
+    // Paso 5: Obtener referencias globales
+    window.database = firebase.database();
     window.auth = firebase.auth();
     console.log('✅ Database y Auth referencias obtenidas');
     
-    // Paso 5: Configurar listeners
+    // Paso 6: Configurar listeners
     setupAuthListener();
     setupConnectionListener();
     
-    // Paso 6: Actualizar estado global
+    // Paso 7: Actualizar estado global
     window.__FIREBASE_READY__ = true;
     console.log('✅ Firebase completamente inicializado');
     
@@ -164,7 +170,7 @@ function setupAuthListener() {
  * Monitorear conexión a Firebase Realtime Database
  */
 function setupConnectionListener() {
-  if (!window.db) {
+  if (!window.database) {
     console.warn('⚠️ Database no disponible');
     return;
   }
@@ -265,7 +271,7 @@ window.firebaseRead = async function(path) {
   }
   
   try {
-    const snapshot = await window.db.ref(path).once('value');
+    const snapshot = await window.database.ref(path).once('value');
     return snapshot.val();
   } catch (error) {
     console.error('❌ Error leyendo ' + path + ':', error.message);
@@ -288,7 +294,7 @@ window.firebaseWrite = async function(path, data) {
   }
   
   try {
-    await window.db.ref(path).set(data);
+    await window.database.ref(path).set(data);
     console.log('✅ Datos escritos en ' + path);
     return true;
   } catch (error) {
