@@ -1,4 +1,46 @@
-// Initialize Firebase
+// scripts/firebase-init.js — Firebase Initialization Module
+// ═════════════════════════════════════════════════════════════════
+
+console.log('🔥 firebase-init.js cargando...');
+
+// ═════════════════════════════════════════════════════════════════
+// ESPERAR A QUE FIREBASE SDK ESTÉ DISPONIBLE
+// ═════════════════════════════════════════════════════════════════
+
+/**
+ * Esperar a que Firebase SDK se cargue
+ * @param {number} maxAttempts - Intentos máximos (50 = ~5 segundos)
+ * @returns {Promise}
+ */
+function waitForFirebase(maxAttempts = 50) {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+    
+    const checkInterval = setInterval(() => {
+      attempts++;
+      
+      // Verificar que firebase, firebase.app, initializeApp existan
+      if (typeof firebase !== 'undefined' && 
+          firebase.app && 
+          typeof firebase.initializeApp === 'function') {
+        
+        clearInterval(checkInterval);
+        console.log('✅ Firebase SDK detectado (intento ' + attempts + ')');
+        resolve();
+      } else if (attempts >= maxAttempts) {
+        clearInterval(checkInterval);
+        const err = new Error('Firebase SDK timeout después de ' + (attempts * 100) + 'ms');
+        console.error('❌ ' + err.message);
+        reject(err);
+      }
+    }, 100); // Revisar cada 100ms
+  });
+}
+
+// ═════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN FIREBASE — CREDENCIALES REALES
+// ═════════════════════════════════════════════════════════════════
+
 const firebaseConfig = {
   apiKey: "AIzaSyCpddyEiWIE6VBe5u8JRPYBHlnYRMgljCs",
   authDomain: "niosports-pro.firebaseapp.com",
@@ -10,7 +52,250 @@ const firebaseConfig = {
   measurementId: "G-0MYGSVVRFT"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-// Initialize services
-const database = getDatabase(app);
+// ═════════════════════════════════════════════════════════════════
+// INICIALIZAR FIREBASE
+// ═════════════════════════════════════════════════════════════════
+
+/**
+ * Inicializar Firebase y configurar listeners
+ * @returns {Promise<boolean>} true si éxito, false si error
+ */
+async function initFirebase() {
+  console.log('🚀 Iniciando Firebase...');
+  
+  try {
+    // Paso 1: Esperar a que Firebase SDK esté disponible
+    console.log('⏳ Esperando Firebase SDK...');
+    await waitForFirebase();
+    
+    // Paso 2: Evitar inicialización duplicada
+    if (firebase.apps && firebase.apps.length > 0) {
+      console.log('ℹ️ Firebase ya fue inicializado');
+      window.db = firebase.database();
+      window.auth = firebase.auth();
+      setupAuthListener();
+      setupConnectionListener();
+      return true;
+    }
+    
+    // Paso 3: Inicializar la aplicación Firebase
+    console.log('🔧 Inicializando Firebase App...');
+    firebase.initializeApp(firebaseConfig);
+    console.log('✅ Firebase App inicializado');
+    
+    // Paso 4: Obtener referencias globales
+    window.db = firebase.database();
+    window.auth = firebase.auth();
+    console.log('✅ Database y Auth referencias obtenidas');
+    
+    // Paso 5: Configurar listeners
+    setupAuthListener();
+    setupConnectionListener();
+    
+    // Paso 6: Actualizar estado global
+    window.__FIREBASE_READY__ = true;
+    console.log('✅ Firebase completamente inicializado');
+    
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Error inicializando Firebase:', error.message);
+    window.__FIREBASE_ERROR__ = error;
+    
+    // Notificar al usuario si está disponible showNotification
+    if (typeof showNotification === 'function') {
+      showNotification('Error', 'No se pudo conectar a Firebase: ' + error.message, 'error');
+    }
+    
+    // Trackear el error con Sentry si está disponible
+    if (window.trackError) {
+      window.trackError(error, { module: 'firebase-init' });
+    }
+    
+    return false;
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════
+// LISTENER DE AUTENTICACIÓN
+// ═════════════════════════════════════════════════════════════════
+
+/**
+ * Monitorear cambios de autenticación
+ */
+function setupAuthListener() {
+  if (!window.auth) {
+    console.warn('⚠️ Auth no disponible');
+    return;
+  }
+  
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      console.log('👤 Usuario autenticado:', user.email);
+      window.currentUser = user;
+      window.isAuthenticated = true;
+      
+      // Actualizar estado visual
+      document.body.classList.add('authenticated');
+      document.body.classList.remove('unauthenticated');
+      
+      // Trackear login
+      if (window.trackAction) {
+        window.trackAction('user_login', { email: user.email });
+      }
+      
+    } else {
+      console.log('🔓 Sin usuario autenticado');
+      window.currentUser = null;
+      window.isAuthenticated = false;
+      
+      // Actualizar estado visual
+      document.body.classList.remove('authenticated');
+      document.body.classList.add('unauthenticated');
+    }
+  });
+}
+
+// ═════════════════════════════════════════════════════════════════
+// LISTENER DE CONEXIÓN A DATABASE
+// ═════════════════════════════════════════════════════════════════
+
+/**
+ * Monitorear conexión a Firebase Realtime Database
+ */
+function setupConnectionListener() {
+  if (!window.db) {
+    console.warn('⚠️ Database no disponible');
+    return;
+  }
+  
+  firebase.database().ref('.info/connected').on('value', (snapshot) => {
+    const connected = snapshot.val();
+    const statusEl = document.querySelector('.firebase-status');
+    
+    if (connected) {
+      console.log('✅ Conectado a Firebase Realtime Database');
+      window.isFirebaseConnected = true;
+      
+      if (statusEl) {
+        statusEl.textContent = '● Conectado a Firebase';
+        statusEl.className = 'firebase-status firebase-connected';
+        statusEl.title = 'Conexión activa con Firebase Realtime Database';
+      }
+      
+      // Trackear reconexión
+      if (window.trackAction && window.__FIREBASE_WAS_DISCONNECTED__) {
+        window.trackAction('firebase_reconnected');
+        window.__FIREBASE_WAS_DISCONNECTED__ = false;
+      }
+      
+    } else {
+      console.warn('⚠️ Desconectado de Firebase Realtime Database');
+      window.isFirebaseConnected = false;
+      window.__FIREBASE_WAS_DISCONNECTED__ = true;
+      
+      if (statusEl) {
+        statusEl.textContent = '● Desconectado';
+        statusEl.className = 'firebase-status firebase-disconnected';
+        statusEl.title = 'Sin conexión a Firebase';
+      }
+    }
+  }, (error) => {
+    console.error('❌ Error monitoreando conexión Firebase:', error.message);
+  });
+}
+
+// ═════════════════════════════════════════════════════════════════
+// EJECUTAR CUANDO EL DOM ESTÉ LISTO
+// ═════════════════════════════════════════════════════════════════
+
+if (document.readyState === 'loading') {
+  // El DOM aún se está cargando
+  console.log('⏳ Esperando DOMContentLoaded...');
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('✅ DOMContentLoaded disparado');
+    initFirebase();
+  });
+} else {
+  // El DOM ya está listo
+  console.log('✅ DOM ya está listo, inicializando Firebase inmediatamente');
+  initFirebase();
+}
+
+console.log('🔥 scripts/firebase-init.js cargado');
+
+// ═════════════════════════════════════════════════════════════════
+// HELPERS GLOBALES
+// ═════════════════════════════════════════════════════════════════
+
+/**
+ * Esperar a que Firebase esté listo
+ * @returns {Promise}
+ */
+window.waitForFirebaseReady = function() {
+  return new Promise((resolve) => {
+    if (window.__FIREBASE_READY__) {
+      resolve();
+    } else {
+      const checkInterval = setInterval(() => {
+        if (window.__FIREBASE_READY__) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+      
+      // Timeout de 10 segundos
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.warn('⚠️ Timeout esperando Firebase (10s)');
+        resolve();
+      }, 10000);
+    }
+  });
+};
+
+/**
+ * Leer datos desde Firebase Realtime Database
+ * @param {string} path - Ruta en la database (ej: 'users/uid123')
+ * @returns {Promise}
+ */
+window.firebaseRead = async function(path) {
+  if (!window.__FIREBASE_READY__) {
+    await window.waitForFirebaseReady();
+  }
+  
+  try {
+    const snapshot = await window.db.ref(path).once('value');
+    return snapshot.val();
+  } catch (error) {
+    console.error('❌ Error leyendo ' + path + ':', error.message);
+    if (window.trackError) {
+      window.trackError(error, { module: 'firebaseRead', path });
+    }
+    throw error;
+  }
+};
+
+/**
+ * Escribir datos en Firebase Realtime Database
+ * @param {string} path - Ruta en la database
+ * @param {*} data - Datos a escribir
+ * @returns {Promise}
+ */
+window.firebaseWrite = async function(path, data) {
+  if (!window.__FIREBASE_READY__) {
+    await window.waitForFirebaseReady();
+  }
+  
+  try {
+    await window.db.ref(path).set(data);
+    console.log('✅ Datos escritos en ' + path);
+    return true;
+  } catch (error) {
+    console.error('❌ Error escribiendo en ' + path + ':', error.message);
+    if (window.trackError) {
+      window.trackError(error, { module: 'firebaseWrite', path });
+    }
+    throw error;
+  }
+};
