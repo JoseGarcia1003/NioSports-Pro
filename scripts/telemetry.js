@@ -1,75 +1,119 @@
-// scripts/telemetry.js
+// scripts/telemetry.js — Non-blocking Sentry initialization
+console.log('📊 Sentry Telemetry cargando...');
+
+// No esperar, ejecutar en background
 (async function initTelemetry() {
   try {
-    if (!window.Sentry) return;
-    if (window.__NIOSPORTS_SENTRY_INIT__) return;
+    if (!window.Sentry) {
+      console.warn('⚠️ Sentry SDK no disponible');
+      return;
+    }
+
+    if (window.__NIOSPORTS_SENTRY_INIT__) {
+      console.log('ℹ️ Sentry ya fue inicializado');
+      return;
+    }
+
     window.__NIOSPORTS_SENTRY_INIT__ = true;
 
-    const resp = await fetch("/api/public-config?ts=" + Date.now(), { cache: "no-store" });
-    if (!resp.ok) return;
+    // Timeout de 3 segundos para no bloquear
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-    const cfg = await resp.json();
-    if (!cfg || !cfg.sentryDsn) return;
+    try {
+      const resp = await fetch("/api/public-config?ts=" + Date.now(), { 
+        cache: "no-store",
+        signal: controller.signal 
+      });
 
-    window.Sentry.init({
-      dsn: cfg.sentryDsn,
-      tunnel: "/api/telemetry",
-      environment: cfg.environment || "production",
-      release: cfg.release || "niosports@unknown",
+      clearTimeout(timeoutId);
 
-      integrations: [
-        new window.Sentry.BrowserTracing({
-          tracePropagationTargets: [/^\//, "https://api.balldontlie.io"],
-        }),
-      ],
+      if (!resp.ok) {
+        console.warn('⚠️ No se pudo obtener config de Sentry (HTTP ' + resp.status + ')');
+        return;
+      }
 
-      tracesSampleRate: Number.isFinite(cfg.tracesSampleRate) ? cfg.tracesSampleRate : 0.15,
-      sendDefaultPii: false,
-      denyUrls: [/extensions\//i, /^chrome:\/\//i, /^moz-extension:\/\//i],
-      
-      // 🆕 Antes de enviar evento, añadir contexto custom
-      beforeSend(event, hint) {
-        // Añadir info del usuario si está logueado
-        if (window.currentUser) {
-          window.Sentry.setUser({
-            id: window.currentUser.uid,
-            email: window.currentUser.email,
+      const cfg = await resp.json();
+      if (!cfg || !cfg.sentryDsn) {
+        console.warn('⚠️ No hay sentryDsn en config');
+        return;
+      }
+
+      window.Sentry.init({
+        dsn: cfg.sentryDsn,
+        tunnel: "/api/telemetry",
+        environment: cfg.environment || "production",
+        release: cfg.release || "niosports@unknown",
+
+        integrations: [
+          new window.Sentry.BrowserTracing({
+            tracePropagationTargets: [/^\//, "https://api.balldontlie.io"],
+          }),
+        ],
+
+        tracesSampleRate: Number.isFinite(cfg.tracesSampleRate) ? cfg.tracesSampleRate : 0.15,
+        sendDefaultPii: false,
+        denyUrls: [/extensions\//i, /^chrome:\/\//i, /^moz-extension:\/\//i],
+        
+        beforeSend(event, hint) {
+          if (window.currentUser) {
+            window.Sentry.setUser({
+              id: window.currentUser.uid,
+              email: window.currentUser.email,
+            });
+            
+            window.Sentry.setContext("user_profile", {
+              plan: window.userPlan || 'free',
+              bankroll: window.userBankroll?.current || 0,
+              totalPicks: window.userStats?.totalPicks || 0,
+            });
+          }
+          
+          window.Sentry.setContext("app_state", {
+            current_view: window.currentView || 'unknown',
+            last_action: window.lastUserAction || 'unknown',
           });
           
-          window.Sentry.setContext("user_profile", {
-            plan: window.userPlan || 'free',
-            bankroll: window.userBankroll?.current || 0,
-            totalPicks: window.userStats?.totalPicks || 0,
-          });
+          return event;
         }
-        
-        // Añadir info de la vista actual
-        window.Sentry.setContext("app_state", {
-          current_view: window.currentView || 'unknown',
-          last_action: window.lastUserAction || 'unknown',
-        });
-        
-        return event;
-      }
-    });
+      });
 
-    window.Sentry.setTag("app", "NioSports-Pro");
+      window.Sentry.setTag("app", "NioSports-Pro");
+      console.log('✅ Sentry inicializado correctamente');
+      
+    } catch (timeoutError) {
+      console.warn('⚠️ Timeout o error obteniendo config de Sentry:', timeoutError.message);
+    }
     
-  } catch (_) {
-    // observabilidad nunca debe tumbar tu app
+  } catch (error) {
+    console.error('❌ Error en telemetry:', error.message);
   }
 })();
 
-// 🆕 Helper para trackear acciones del usuario
+// Helper para trackear acciones
 window.trackAction = function(action, data = {}) {
   window.lastUserAction = action;
   
-  if (window.Sentry) {
+  if (window.Sentry && window.__NIOSPORTS_SENTRY_INIT__) {
     window.Sentry.addBreadcrumb({
       category: 'user-action',
       message: action,
       level: 'info',
-      data
+      data,
+      timestamp: Date.now()
     });
   }
 };
+
+// Helper para trackear errores
+window.trackError = function(error, context = {}) {
+  console.error('🔴 Error trackeado:', error);
+  
+  if (window.Sentry && window.__NIOSPORTS_SENTRY_INIT__) {
+    window.Sentry.captureException(error, {
+      tags: context
+    });
+  }
+};
+
+console.log('📊 Sentry Telemetry cargado');
