@@ -44,6 +44,25 @@
   <script src="/scripts/firebase-init.js"></script>
 
   <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- FASE 4A: ENGINES FUNCIONALES -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+
+  <!-- API Client (BallDontLie integration) -->
+  <script src="/scripts/api-client.js"></script>
+
+  <!-- Picks Engine (IA con 47 factores) -->
+  <script src="/scripts/picks-engine.js"></script>
+
+  <!-- H2H Engine (comparaciones) -->
+  <script src="/scripts/h2h-engine.js"></script>
+
+  <!-- Database Updater (actualización automática) -->
+  <script src="/scripts/database-updater.js"></script>
+
+  <!-- UI Integration (conecta engines con UI) -->
+  <script src="/scripts/ui-integration.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- OTROS SCRIPTS -->
   <!-- ═══════════════════════════════════════════════════════════ -->
 
@@ -62,6 +81,7 @@
   
   <!-- Toast Notification System (carga temprano) -->
   <link rel="stylesheet" href="/styles/toast.css">
+  <link rel="stylesheet" href="/styles/integration-phase4a.css">
   <script src="/scripts/toast.js" defer></script>
 
   <style>
@@ -1467,6 +1487,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
                 <a class="nav-link" data-view="totals" onclick="switchView('totals')">Totales</a>
                 <a class="nav-link" data-view="props" onclick="switchView('props')">Props</a>
                 <a class="nav-link" data-view="picks" onclick="switchView('picks')">Picks IA</a>
+                <a class="nav-link" data-view="h2h" onclick="switchView('h2h')">H2H</a>
                 <a class="nav-link" data-view="tracking" onclick="switchView('tracking')">Tracking</a>
                 <button class="nav-cta" onclick="showAuth()">Mi Cuenta</button>
             </div>
@@ -1610,14 +1631,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
             <div style="max-width:700px;margin:0 auto 48px;position:relative;">
                 <div style="position:relative;">
                     <span style="position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:20px;opacity:0.5;">🔍</span>
-                    <input type="text" id="propsSearchInput" placeholder="Buscar jugador por nombre..." 
+                    <input type="text" id="database-search" placeholder="Buscar jugador por nombre..." 
                         style="width:100%;padding:18px 20px 18px 52px;border-radius:var(--r-lg);border:2px solid var(--glass-border);background:var(--glass-bg);backdrop-filter:blur(16px);color:white;font-size:16px;font-family:var(--font-body);outline:none;transition:all 0.3s;"
                         onfocus="this.style.borderColor='rgba(255,215,0,0.4)';this.style.boxShadow='0 0 24px rgba(255,215,0,0.1)'"
                         onblur="this.style.borderColor='var(--glass-border)';this.style.boxShadow='none'"
                         oninput="propsSearch(this.value)"
                     />
                 </div>
-                <div id="propsSearchResults" style="position:absolute;top:100%;left:0;right:0;z-index:100;margin-top:8px;display:none;"></div>
+                <div id="database-results" style="position:absolute;top:100%;left:0;right:0;z-index:100;margin-top:8px;display:none;"></div>
             </div>
 
             <!-- PLAYER DETAIL (hidden by default) -->
@@ -1643,9 +1664,24 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     <div id="view-picks" class="view-panel" style="padding-top:80px;">
         <div style="max-width:1000px;margin:0 auto;padding:40px 32px;text-align:center;">
             <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:40px;">🤖 Picks IA</h1>
-            <div class="placeholder-card">
-                <div class="placeholder-icon">🔮</div>
-                <h3 style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--gold);margin-bottom:16px;">Sistema Listo</h3>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+            <div style="text-align:left;">
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">PICKS IA — EN VIVO</div>
+              <p style="color:rgba(255,255,255,0.55);margin:0;line-height:1.5;">Generados automáticamente por el motor IA (47 factores). Actualiza cuando quieras.</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <button class="btn-gold" id="btn-refresh-picks" style="font-size:14px;min-width:190px;" onclick="window.loadPicksIA && window.loadPicksIA()">Actualizar Picks</button>
+            </div>
+          </div>
+
+          <div id="picks-ia-container" class="picks-container">
+            <div class="placeholder-card" style="text-align:center;">
+              <div class="placeholder-icon">🤖</div>
+              <h3 style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--gold);margin-bottom:10px;">Listo para generar</h3>
+              <p style="color:rgba(255,255,255,0.55);line-height:1.8;margin:0;">Pulsa <b>“Actualizar Picks”</b> para cargar picks reales.</p>
+            </div>
+          </div>
+<h3 style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--gold);margin-bottom:16px;">Sistema Listo</h3>
                 <p style="color:rgba(255,255,255,0.6);line-height:1.8;margin-bottom:24px;">Motor IA analiza 47 factores para generar picks automáticamente</p>
                 <button class="btn-gold" onclick="switchView('totals')" style="font-size:14px;">Ir al Sistema →</button>
             </div>
@@ -1655,6 +1691,37 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- VIEW: TRACKING                                              -->
     <!-- ═══════════════════════════════════════════════════════════ -->
+    
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- VIEW: H2H (HEAD-TO-HEAD)                                    -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div id="view-h2h" class="view-panel" style="padding-top:80px;">
+      <div style="max-width:1200px;margin:0 auto;padding:40px 32px;">
+        <div style="text-align:center;margin-bottom:28px;">
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">HEAD TO HEAD</div>
+          <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:8px;">⚔️ H2H Comparador</h1>
+          <p style="color:rgba(255,255,255,0.55);font-size:15px;line-height:1.7;margin:0;">Compara 2 jugadores con métricas clave y contexto. Escribe para buscar.</p>
+        </div>
+
+        <div class="h2h-grid">
+          <div class="h2h-search-container">
+            <label>Jugador 1</label>
+            <input type="text" id="h2h-search-1" placeholder="Buscar jugador..." autocomplete="off">
+            <div id="h2h-results-1" class="search-results"></div>
+          </div>
+
+          <div class="h2h-search-container">
+            <label>Jugador 2</label>
+            <input type="text" id="h2h-search-2" placeholder="Buscar jugador..." autocomplete="off">
+            <div id="h2h-results-2" class="search-results"></div>
+          </div>
+        </div>
+
+        <div id="h2h-comparison" class="h2h-comparison"></div>
+      </div>
+    </div>
+
+
     <div id="view-tracking" class="view-panel" style="padding-top:80px;">
         <div style="max-width:1000px;margin:0 auto;padding:40px 32px;text-align:center;">
             <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:40px;">📈 Tracking</h1>
@@ -2416,7 +2483,16 @@ function logout() {
             // Re-render the app if navigating to totals
             if (typeof render === 'function') render();
         }
-    }
+            if (view === 'picks') {
+            if (typeof window.loadPicksIA === 'function') window.loadPicksIA();
+        }
+        if (view === 'h2h') {
+            if (typeof window.initH2H === 'function') window.initH2H();
+        }
+        if (view === 'props') {
+            if (typeof window.initDatabaseUI === 'function') window.initDatabaseUI();
+        }
+}
 
     function showAuth() {
         if (typeof currentUser !== 'undefined' && currentUser) {
@@ -2577,7 +2653,7 @@ function logout() {
 
     // Search system
     function propsSearch(query) {
-        const container = document.getElementById('propsSearchResults');
+        const container = document.getElementById('database-results');
         if (!query || query.length < 2) {
             container.style.display = 'none';
             return;
@@ -2622,8 +2698,8 @@ function logout() {
     }
 
     function searchAndShowPlayer(name) {
-        document.getElementById('propsSearchResults').style.display = 'none';
-        const input = document.getElementById('propsSearchInput');
+        document.getElementById('database-results').style.display = 'none';
+        const input = document.getElementById('database-search');
         if (input) input.value = name;
 
         const detail = document.getElementById('propsPlayerDetail');
@@ -2736,7 +2812,7 @@ function logout() {
     function closePlayerDetail() {
         document.getElementById('propsPlayerDetail').style.display = 'none';
         document.getElementById('propsLeaders').style.display = 'block';
-        document.getElementById('propsSearchInput').value = '';
+        document.getElementById('database-search').value = '';
     }
 
     async function loadPlayers() {
@@ -2758,7 +2834,7 @@ function logout() {
     // Close search results when clicking outside
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#propsSearchInput') && !e.target.closest('#propsSearchResults')) {
-            const sr = document.getElementById('propsSearchResults');
+            const sr = document.getElementById('database-results');
             if (sr) sr.style.display = 'none';
         }
     });
