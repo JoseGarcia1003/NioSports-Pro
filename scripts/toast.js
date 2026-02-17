@@ -1,327 +1,183 @@
-// scripts/toast.js - Toast Notification System
-// ═══════════════════════════════════════════════════════════════
-// NOTIFICACIONES PROFESIONALES (NO MÁS ALERTS FEOS)
-// ═══════════════════════════════════════════════════════════════
+// scripts/toast.js — NioSports Pro Toast System (sin alerts feos)
+// ───────────────────────────────────────────────────────────────
+// ✔ UI profesional (no bloquea, no requiere "Aceptar")
+// ✔ Seguro: sin onclick inline, sin inyección de <style> (CSP-friendly)
+// ✔ Accesible: aria-live + role
+// ───────────────────────────────────────────────────────────────
 
-console.log('🍞 Toast System cargando...');
+(() => {
+  'use strict';
 
-// ═══════════════════════════════════════════════════════════════
-// CREAR CONTENEDOR DE TOASTS
-// ═══════════════════════════════════════════════════════════════
+  const CONTAINER_ID = 'toast-container';
 
-function createToastContainer() {
-  if (document.getElementById('toast-container')) return;
-  
-  const container = document.createElement('div');
-  container.id = 'toast-container';
-  container.className = 'toast-container';
-  document.body.appendChild(container);
-}
+  function ensureContainer() {
+    let el = document.getElementById(CONTAINER_ID);
+    if (el) return el;
 
-// ═══════════════════════════════════════════════════════════════
-// MOSTRAR TOAST
-// ═══════════════════════════════════════════════════════════════
+    el = document.createElement('div');
+    el.id = CONTAINER_ID;
+    el.className = 'toast-container';
+    el.setAttribute('aria-live', 'polite');
+    el.setAttribute('aria-relevant', 'additions text');
+    document.body.appendChild(el);
+    return el;
+  }
 
-/**
- * Mostrar toast notification
- * @param {string} message - Mensaje a mostrar
- * @param {string} type - Tipo: success, error, warning, info
- * @param {number} duration - Duración en ms (default: 3000)
- * @param {object} options - Opciones adicionales
- */
-window.showToast = function(message, type = 'info', duration = 3000, options = {}) {
-  createToastContainer();
-  
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type} toast-enter`;
-  
-  // Icono según tipo
-  const icons = {
+  function normalizeType(type) {
+    const t = String(type || 'info').toLowerCase();
+    if (t === 'success' || t === 'error' || t === 'warning' || t === 'info') return t;
+    return 'info';
+  }
+
+  const DEFAULT_ICONS = {
     success: '✅',
     error: '❌',
     warning: '⚠️',
     info: 'ℹ️'
   };
-  
-  const icon = options.icon || icons[type] || 'ℹ️';
-  
-  // HTML del toast
-  toast.innerHTML = `
-    <div class="toast-icon">${icon}</div>
-    <div class="toast-content">
-      ${options.title ? `<div class="toast-title">${options.title}</div>` : ''}
-      <div class="toast-message">${message}</div>
-    </div>
-    ${options.action ? `<button class="toast-action" onclick="${options.action.onClick}">${options.action.label}</button>` : ''}
-    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
-  `;
-  
-  // Añadir al contenedor
-  const container = document.getElementById('toast-container');
-  container.appendChild(toast);
-  
-  // Animación de entrada
-  setTimeout(() => toast.classList.remove('toast-enter'), 10);
-  
-  // Auto-remove después de duration (si no es persistente)
-  if (!options.persistent) {
-    setTimeout(() => {
-      toast.classList.add('toast-exit');
-      setTimeout(() => toast.remove(), 300);
-    }, duration);
+
+  function removeToast(toast) {
+    if (!toast || toast.dataset.removing === '1') return;
+    toast.dataset.removing = '1';
+    toast.classList.add('toast-exit');
+    const ms = Number(toast.dataset.exitMs || '260');
+    window.setTimeout(() => toast.remove(), ms);
   }
-  
-  // Trackear toast
-  if (window.trackAction) {
-    window.trackAction('toast_shown', { type, message: message.substring(0, 50) });
+
+  /**
+   * showToast(message, type, duration, options)
+   * @param {string} message
+   * @param {'success'|'error'|'warning'|'info'} type
+   * @param {number} duration ms (0 = persistente)
+   * @param {{ title?: string, icon?: string, persistent?: boolean, action?: { label: string, onClick: Function } }} options
+   */
+  function showToast(message, type = 'info', duration = 3200, options = {}) {
+    const t = normalizeType(type);
+    const container = ensureContainer();
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${t} toast-enter`;
+    toast.setAttribute('role', t === 'error' ? 'alert' : 'status');
+
+    // Icon
+    const icon = document.createElement('div');
+    icon.className = 'toast-icon';
+    icon.textContent = options.icon || DEFAULT_ICONS[t] || DEFAULT_ICONS.info;
+
+    // Content
+    const content = document.createElement('div');
+    content.className = 'toast-content';
+
+    if (options.title) {
+      const title = document.createElement('div');
+      title.className = 'toast-title';
+      title.textContent = String(options.title);
+      content.appendChild(title);
+    }
+
+    const msg = document.createElement('div');
+    msg.className = 'toast-message';
+    msg.textContent = String(message);
+    content.appendChild(msg);
+
+    // Actions
+    let actionBtn = null;
+    if (options.action && typeof options.action.onClick === 'function') {
+      actionBtn = document.createElement('button');
+      actionBtn.type = 'button';
+      actionBtn.className = 'toast-action';
+      actionBtn.textContent = String(options.action.label || 'Acción');
+      actionBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        try { options.action.onClick(); } finally { removeToast(toast); }
+      });
+    }
+
+    // Close
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'toast-close';
+    close.setAttribute('aria-label', 'Cerrar notificación');
+    close.textContent = '×';
+    close.addEventListener('click', () => removeToast(toast));
+
+    toast.appendChild(icon);
+    toast.appendChild(content);
+    if (actionBtn) toast.appendChild(actionBtn);
+    toast.appendChild(close);
+
+    // Mount
+    container.appendChild(toast);
+
+    // Start enter animation
+    requestAnimationFrame(() => toast.classList.remove('toast-enter'));
+
+    // Auto-dismiss
+    const persistent = Boolean(options.persistent) || duration === 0;
+    if (!persistent) {
+      window.setTimeout(() => removeToast(toast), Math.max(800, Number(duration) || 3200));
+    }
+
+    // Telemetry hook (si existe)
+    try {
+      if (window.trackAction) {
+        window.trackAction('toast_shown', { type: t, message: String(message).slice(0, 80) });
+      }
+    } catch (_) {}
+
+    return {
+      element: toast,
+      update(newMessage) {
+        msg.textContent = String(newMessage);
+      },
+      success(successMessage) {
+        toast.classList.remove('toast-info', 'toast-warning', 'toast-error');
+        toast.classList.add('toast-success');
+        icon.textContent = DEFAULT_ICONS.success;
+        msg.textContent = String(successMessage || '¡Listo!');
+        window.setTimeout(() => removeToast(toast), 1800);
+      },
+      error(errorMessage) {
+        toast.classList.remove('toast-info', 'toast-warning', 'toast-success');
+        toast.classList.add('toast-error');
+        icon.textContent = DEFAULT_ICONS.error;
+        msg.textContent = String(errorMessage || 'Ocurrió un error');
+        window.setTimeout(() => removeToast(toast), 2600);
+      },
+      remove() {
+        removeToast(toast);
+      }
+    };
   }
-  
-  return toast;
-};
 
-// ═══════════════════════════════════════════════════════════════
-// SHORTCUTS CONVENIENTES
-// ═══════════════════════════════════════════════════════════════
+  // Expose API
+  window.showToast = showToast;
+  window.toastSuccess = (m, opts) => showToast(m, 'success', 3200, opts || {});
+  window.toastError = (m, opts) => showToast(m, 'error', 4200, opts || {});
+  window.toastWarning = (m, opts) => showToast(m, 'warning', 3800, opts || {});
+  window.toastInfo = (m, opts) => showToast(m, 'info', 3200, opts || {});
 
-window.toastSuccess = (message, options) => showToast(message, 'success', 3000, options);
-window.toastError = (message, options) => showToast(message, 'error', 4000, options);
-window.toastWarning = (message, options) => showToast(message, 'warning', 3500, options);
-window.toastInfo = (message, options) => showToast(message, 'info', 3000, options);
+  window.toastLoading = (message, opts = {}) => {
+    return showToast(message || 'Procesando...', 'info', 0, { ...opts, icon: '⏳', persistent: true });
+  };
 
-// ═══════════════════════════════════════════════════════════════
-// TOAST DE CARGA (para operaciones async)
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Toast de loading que se puede actualizar
- * @param {string} message - Mensaje inicial
- * @returns {object} - Objeto con métodos update() y success()
- */
-window.toastLoading = function(message) {
-  const toast = showToast(message, 'info', 0, {
-    icon: '⏳',
-    persistent: true
-  });
-  
-  return {
-    update: (newMessage) => {
-      const messageEl = toast.querySelector('.toast-message');
-      if (messageEl) messageEl.textContent = newMessage;
-    },
-    success: (successMessage) => {
-      toast.classList.remove('toast-info');
-      toast.classList.add('toast-success');
-      const iconEl = toast.querySelector('.toast-icon');
-      const messageEl = toast.querySelector('.toast-message');
-      if (iconEl) iconEl.textContent = '✅';
-      if (messageEl) messageEl.textContent = successMessage;
-      setTimeout(() => {
-        toast.classList.add('toast-exit');
-        setTimeout(() => toast.remove(), 300);
-      }, 2000);
-    },
-    error: (errorMessage) => {
-      toast.classList.remove('toast-info');
-      toast.classList.add('toast-error');
-      const iconEl = toast.querySelector('.toast-icon');
-      const messageEl = toast.querySelector('.toast-message');
-      if (iconEl) iconEl.textContent = '❌';
-      if (messageEl) messageEl.textContent = errorMessage;
-      setTimeout(() => {
-        toast.classList.add('toast-exit');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    },
-    remove: () => {
-      toast.classList.add('toast-exit');
-      setTimeout(() => toast.remove(), 300);
+  window.toastPromise = async (promise, messages = {}) => {
+    const t = window.toastLoading(messages.loading || 'Procesando...');
+    try {
+      const res = await promise;
+      t.success(messages.success || '¡Completado!');
+      return res;
+    } catch (err) {
+      t.error(messages.error || (err?.message ? `Error: ${err.message}` : 'Error'));
+      throw err;
     }
   };
-};
 
-// ═══════════════════════════════════════════════════════════════
-// TOAST PROMISE (para async/await)
-// ═══════════════════════════════════════════════════════════════
+  window.clearToasts = () => {
+    const c = document.getElementById(CONTAINER_ID);
+    if (!c) return;
+    [...c.querySelectorAll('.toast')].forEach((t) => removeToast(t));
+  };
 
-/**
- * Toast que se actualiza basado en una Promise
- * @param {Promise} promise - Promise a ejecutar
- * @param {object} messages - { loading, success, error }
- */
-window.toastPromise = async function(promise, messages) {
-  const loading = toastLoading(messages.loading || 'Procesando...');
-  
-  try {
-    const result = await promise;
-    loading.success(messages.success || '¡Completado!');
-    return result;
-  } catch (error) {
-    loading.error(messages.error || 'Error: ' + error.message);
-    throw error;
-  }
-};
-
-// ═══════════════════════════════════════════════════════════════
-// LIMPIAR TODOS LOS TOASTS
-// ═══════════════════════════════════════════════════════════════
-
-window.clearToasts = function() {
-  const container = document.getElementById('toast-container');
-  if (container) {
-    const toasts = container.querySelectorAll('.toast');
-    toasts.forEach(toast => {
-      toast.classList.add('toast-exit');
-      setTimeout(() => toast.remove(), 300);
-    });
-  }
-};
-
-// ═══════════════════════════════════════════════════════════════
-// ESTILOS INLINE (se inyectan automáticamente)
-// ═══════════════════════════════════════════════════════════════
-
-const toastStyles = `
-  <style id="toast-styles">
-    .toast-container {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 10000;
-      max-width: 400px;
-      pointer-events: none;
-    }
-    
-    .toast {
-      background: rgba(26, 35, 50, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      pointer-events: all;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      min-width: 300px;
-    }
-    
-    .toast-enter {
-      opacity: 0;
-      transform: translateX(100px);
-    }
-    
-    .toast-exit {
-      opacity: 0;
-      transform: translateX(100px);
-    }
-    
-    .toast-icon {
-      font-size: 24px;
-      flex-shrink: 0;
-    }
-    
-    .toast-content {
-      flex: 1;
-      min-width: 0;
-    }
-    
-    .toast-title {
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 4px;
-      color: #fff;
-    }
-    
-    .toast-message {
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.9);
-      line-height: 1.4;
-    }
-    
-    .toast-action {
-      background: rgba(251, 191, 36, 0.2);
-      border: 1px solid #fbbf24;
-      color: #fbbf24;
-      padding: 6px 16px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      white-space: nowrap;
-    }
-    
-    .toast-action:hover {
-      background: rgba(251, 191, 36, 0.3);
-      transform: translateY(-1px);
-    }
-    
-    .toast-close {
-      background: transparent;
-      border: none;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 24px;
-      line-height: 1;
-      cursor: pointer;
-      padding: 0;
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
-    }
-    
-    .toast-close:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-    }
-    
-    /* Tipos de toast */
-    .toast-success {
-      border-left: 4px solid #10b981;
-    }
-    
-    .toast-error {
-      border-left: 4px solid #ef4444;
-    }
-    
-    .toast-warning {
-      border-left: 4px solid #f59e0b;
-    }
-    
-    .toast-info {
-      border-left: 4px solid #3b82f6;
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-      .toast-container {
-        top: auto;
-        bottom: 20px;
-        right: 16px;
-        left: 16px;
-        max-width: none;
-      }
-      
-      .toast {
-        min-width: 0;
-      }
-      
-      .toast-enter, .toast-exit {
-        transform: translateY(100px);
-      }
-    }
-  </style>
-`;
-
-// Inyectar estilos si no existen
-if (!document.getElementById('toast-styles')) {
-  document.head.insertAdjacentHTML('beforeend', toastStyles);
-}
-
-console.log('✅ Toast System listo');
+  console.log('✅ Toast System listo');
+})();
