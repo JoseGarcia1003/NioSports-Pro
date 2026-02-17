@@ -60,6 +60,21 @@
   <script src="/scripts/database-updater.js"></script>
 
   <!-- UI Integration (conecta engines con UI) -->
+  <script>
+    // Fallback: asegura que exista window.DatabaseUpdater aunque /scripts/database-updater.js no cargue (404/CSP/cache)
+    (function () {
+      if (!window.DatabaseUpdater) {
+        window.DatabaseUpdater = {
+          async updateDatabase() {
+            throw new Error("DatabaseUpdater not ready");
+          }
+        };
+        window.__ns_dbUpdaterFallback = true;
+      }
+    })();
+  </script>
+
+
   <script src="/scripts/ui-integration.js"></script>
 
   <!-- ═══════════════════════════════════════════════════════════ -->
@@ -3066,6 +3081,71 @@ async function nsGetToken() {
   return j.token;
 }
 
+<script>
+  // --- Auto DB Updater (players cache) ---
+  // Objetivo: que NO dependa de un botón y que NO rompa si falta scripts externos.
+  (function () {
+    const LS_PLAYERS = "ns_players_cache_v1";
+    const LS_UPDATED_AT = "ns_players_updated_at";
+    const REFRESH_EVERY_MS = 6 * 60 * 60 * 1000; // 6 horas
+
+    function now() { return Date.now(); }
+
+    async function fetchPlayersAllPages(maxPages = 25) {
+      const all = [];
+      for (let page = 1; page <= maxPages; page++) {
+        const endpoint = `/players?per_page=100&page=${page}`;
+        const url = `/api/proxy?endpoint=${encodeURIComponent(endpoint)}`;
+        const res = await fetch(url, { headers: { "Accept": "application/json" }});
+        if (!res.ok) {
+          const t = await res.text().catch(() => "");
+          throw new Error(`Proxy ${res.status}: ${t.slice(0, 200)}`);
+        }
+        const json = await res.json();
+        const data = Array.isArray(json?.data) ? json.data : [];
+        if (!data.length) break;
+        all.push(...data);
+        // si viene meta.next_cursor y es null/undefined, igual cortamos si ya no hay más
+        if (json?.meta && (json.meta.next_cursor === null || json.meta.next_cursor === undefined) && data.length < 100) break;
+      }
+      return all;
+    }
+
+    async function updateDatabase({ force = false } = {}) {
+      const last = Number(localStorage.getItem(LS_UPDATED_AT) || "0");
+      if (!force && last && (now() - last) < REFRESH_EVERY_MS) {
+        return { ok: true, skipped: true, ageMin: Math.round((now() - last) / 60000) };
+      }
+      const players = await fetchPlayersAllPages();
+      localStorage.setItem(LS_PLAYERS, JSON.stringify(players));
+      localStorage.setItem(LS_UPDATED_AT, String(now()));
+      return { ok: true, players: players.length };
+    }
+
+    // Exponer global para integraciones (y para evitar "DatabaseUpdater is undefined")
+    window.DatabaseUpdater = window.DatabaseUpdater || {};
+    window.DatabaseUpdater.updateDatabase = updateDatabase;
+
+    // Auto-run en background (sin botón)
+    window.__nsPlayersLoaded = (async () => {
+      try {
+        const r = await updateDatabase({ force: false });
+        if (r.skipped) {
+          console.log(`[DB] Players cache OK (skip). age=${r.ageMin}m`);
+        } else {
+          console.log(`[DB] Players cache actualizado: ${r.players} jugadores`);
+        }
+        return r;
+      } catch (e) {
+        console.warn("[DB] Error actualizando players cache:", e?.message || e);
+        // Si existe toast, mostramos uno no-bloqueante
+        try { window.toast?.error?.("Error cargando base de datos. Reintentando..."); } catch (_) {}
+        return { ok: false, error: String(e?.message || e) };
+      }
+    })();
+  })();
+</script>
+
 async function bapi(endpoint) {
   const token = await nsGetToken();
   const url = `${BAPI_PROXY}?endpoint=${encodeURIComponent(endpoint)}`;
@@ -3094,7 +3174,9 @@ async function verStats(jugadorId) {
   return null;
 }
 
-async function buscarJugador(nombre) {
+async /*
+  ====== LEGACY BLOQUEADO (usa BAPI_URL/BAPI_KEY y contiene await fuera de async) ======
+function buscarJugador(nombre) {
     const url = BAPI_URL + '/players?search=' + nombre;
     const resp = await fetch(url, {
         headers: { 'Authorization': BAPI_KEY }
@@ -3138,6 +3220,9 @@ async function pruebaAPI() {
     }
 }
 
+
+  ====== FIN LEGACY BLOQUEADO ======
+*/
 let localTeam = '', visitingTeam = '';
 let lineQ1 = '', lineHalf = '', lineFull = '';
 let typeQ1 = 'OVER', typeHalf = 'OVER', typeFull = 'OVER';
