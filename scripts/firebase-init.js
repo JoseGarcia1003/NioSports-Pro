@@ -2,6 +2,13 @@
 // ═════════════════════════════════════════════════════════════════
 
 console.log('🔥 firebase-init.js cargando...');
+// Singleton guard: evita doble ejecución si el script se carga 2+ veces
+if (window.__NS_FIREBASE_INIT_PROMISE__) {
+  console.log('ℹ️ Firebase init ya en progreso/terminado (singleton)');
+} else {
+  window.__NS_FIREBASE_INIT_PROMISE__ = null; // se asigna más abajo
+}
+
 
 // ═════════════════════════════════════════════════════════════════
 // ESPERAR A QUE FIREBASE SDK ESTÉ DISPONIBLE
@@ -77,6 +84,11 @@ async function initFirebase() {
       try { window.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch {}
       setupAuthListener();
       setupConnectionListener();
+
+      // Marcar listo también en este camino (evita timeouts y dobles bridges)
+      window.__FIREBASE_READY__ = true;
+      try { window.dispatchEvent(new CustomEvent('ns:firebase-ready')); } catch {}
+      console.log('✅ Firebase listo (re-uso de instancia existente)');
       return true;
     }
     
@@ -139,6 +151,8 @@ async function initFirebase() {
  * Monitorear cambios de autenticación
  */
 function setupAuthListener() {
+  if (window.__NS_FIREBASE_AUTH_LISTENER__) return;
+  window.__NS_FIREBASE_AUTH_LISTENER__ = true;
   if (!window.auth) {
     console.warn('⚠️ Auth no disponible');
     return;
@@ -179,6 +193,8 @@ function setupAuthListener() {
  * Monitorear conexión a Firebase Realtime Database
  */
 function setupConnectionListener() {
+  if (window.__NS_FIREBASE_CONN_LISTENER__) return;
+  window.__NS_FIREBASE_CONN_LISTENER__ = true;
   if (!window.database) {
     console.warn('⚠️ Database no disponible');
     return;
@@ -221,23 +237,32 @@ function setupConnectionListener() {
 }
 
 // ═════════════════════════════════════════════════════════════════
-// EJECUTAR CUANDO EL DOM ESTÉ LISTO
+// EJECUTAR CUANDO EL DOM ESTÉ LISTO (SINGLETON)
 // ═════════════════════════════════════════════════════════════════
 
+// Creamos una única promesa global para que el resto del sistema pueda esperar.
+function __nsStartFirebaseInitOnce() {
+  if (window.__NS_FIREBASE_INIT_PROMISE__) return window.__NS_FIREBASE_INIT_PROMISE__;
+  window.__NS_FIREBASE_INIT_PROMISE__ = (async () => {
+    const ok = await initFirebase();
+    return ok;
+  })();
+  return window.__NS_FIREBASE_INIT_PROMISE__;
+}
+
 if (document.readyState === 'loading') {
-  // El DOM aún se está cargando
   console.log('⏳ Esperando DOMContentLoaded...');
   document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ DOMContentLoaded disparado');
-    initFirebase();
-  });
+    __nsStartFirebaseInitOnce();
+  }, { once: true });
 } else {
-  // El DOM ya está listo
   console.log('✅ DOM ya está listo, inicializando Firebase inmediatamente');
-  initFirebase();
+  __nsStartFirebaseInitOnce();
 }
 
 console.log('🔥 scripts/firebase-init.js cargado');
+
 
 // ═════════════════════════════════════════════════════════════════
 // HELPERS GLOBALES
@@ -248,24 +273,28 @@ console.log('🔥 scripts/firebase-init.js cargado');
  * @returns {Promise}
  */
 window.waitForFirebaseReady = function() {
+  // Si ya está listo, resolvemos inmediatamente
+  if (window.__FIREBASE_READY__) return Promise.resolve(true);
+
+  // Si existe la promesa global de init, esperamos por ella
+  if (window.__NS_FIREBASE_INIT_PROMISE__ && typeof window.__NS_FIREBASE_INIT_PROMISE__.then === 'function') {
+    return window.__NS_FIREBASE_INIT_PROMISE__.then(() => true).catch(() => false);
+  }
+
+  // Fallback: polling corto (sin warnings ruidosos)
   return new Promise((resolve) => {
-    if (window.__FIREBASE_READY__) {
-      resolve();
-    } else {
-      const checkInterval = setInterval(() => {
-        if (window.__FIREBASE_READY__) {
-          clearInterval(checkInterval);
-          resolve();
-        }
-      }, 100);
-      
-      // Timeout de 10 segundos
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        console.warn('⚠️ Timeout esperando Firebase (10s)');
-        resolve();
-      }, 10000);
-    }
+    const iv = setInterval(() => {
+      if (window.__FIREBASE_READY__) {
+        clearInterval(iv);
+        resolve(true);
+      }
+    }, 100);
+
+    // Timeout "silencioso" de 12s: resolvemos false pero sin spamear consola
+    setTimeout(() => {
+      clearInterval(iv);
+      resolve(false);
+    }, 12000);
   });
 };
 
