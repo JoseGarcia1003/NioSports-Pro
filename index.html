@@ -2140,7 +2140,26 @@ function loadUserData() {
 
 // Logout
 function logout() {
-    if (confirm('¿Seguro que quieres cerrar sesión?')) {
+    // Modal pro (sin confirm del navegador)
+    if (window.NioModal && typeof window.NioModal.confirm === 'function') {
+        const email = (window.currentUser && window.currentUser.email) ? window.currentUser.email : '—';
+        window.NioModal.confirm({
+            title: 'Cerrar sesión',
+            message: `Sesión activa: ${email}
+
+¿Deseas cerrar sesión?`,
+            okText: 'Cerrar sesión',
+            cancelText: 'Cancelar'
+        }).then((ok) => {
+            if (!ok) return;
+            doLogout();
+        });
+        return;
+    }
+    // Fallback (si por algo no cargó el modal)
+    doLogout();
+
+    function doLogout() {
         // Clean up Firebase listeners to prevent memory leaks
         if (userId) {
             try {
@@ -2402,9 +2421,8 @@ function logout() {
     function showAuth() {
         if (typeof currentUser !== 'undefined' && currentUser) {
             // User is logged in — show account options
-            const action = confirm(`Sesión activa: ${currentUser.email}\n\n¿Deseas cerrar sesión?`);
-            if (action && typeof logout === 'function') {
-                logout();
+            if (typeof logout === 'function') {
+                logout(); // logout() ya muestra modal pro
             }
         } else {
             // User is not logged in — show login screen
@@ -4008,14 +4026,30 @@ function analyzeFromValuePick(pickId) {
 }
 
 function clearAllValuePicks() {
-    if (confirm('¿Eliminar todos los picks de valor detectados?')) {
+    const run = () => {
+
         VALUE_PICKS = [];
         saveValuePicksToStorage();
         render();
         showNotification('🗑️ Todos los picks eliminados', 'info');
-    }
-}
+    };
 
+    if (window.NioModal && typeof window.NioModal.confirm === 'function') {
+        window.NioModal.confirm({
+            title: 'Confirmar',
+            message: '¿Eliminar todos los picks de valor detectados?',
+            okText: 'Aceptar',
+            cancelText: 'Cancelar'
+        }).then((ok) => {
+            if (!ok) return;
+            run();
+        });
+        return;
+    }
+
+    // Fallback si el modal no está disponible
+    if (confirm('¿Eliminar todos los picks de valor detectados?')) run();
+}
 // Guardar VALUE_PICKS en localStorage
 function saveValuePicksToStorage() {
     try {
@@ -7671,11 +7705,27 @@ function saveGame() {
 }
 
 function deleteGame(t1, t2, i) {
-    if (confirm('¿Eliminar este partido de Firebase?')) {
-        deleteH2HGame(t1, t2, i);
-    }
-}
+    const run = () => {
 
+        deleteH2HGame(t1, t2, i);
+    };
+
+    if (window.NioModal && typeof window.NioModal.confirm === 'function') {
+        window.NioModal.confirm({
+            title: 'Confirmar',
+            message: '¿Eliminar este partido de Firebase?',
+            okText: 'Aceptar',
+            cancelText: 'Cancelar'
+        }).then((ok) => {
+            if (!ok) return;
+            run();
+        });
+        return;
+    }
+
+    // Fallback si el modal no está disponible
+    if (confirm('¿Eliminar este partido de Firebase?')) run();
+}
 function attachEvents() {
     document.getElementById('localSelect')?.addEventListener('change', async e => {
         localTeam = e.target.value;
@@ -8281,7 +8331,7 @@ function renderBankrollView() {
                                             ❌
                                         </button>
                                     ` : ''}
-                                    <button aria-label="Eliminar pick" onclick="if(confirm('¿Eliminar?'))deletePickFromBankroll(${pick.id})" class="px-3 py-2 rounded-lg text-white font-bold hover:scale-110 transition-all text-sm" style="background: rgba(107, 114, 128, 0.8);">
+                                    <button aria-label="Eliminar pick" onclick="(window.NioModal?window.NioModal.confirm({title:'Confirmar',message:'¿Eliminar?',okText:'Eliminar',cancelText:'Cancelar'}):Promise.resolve(confirm('¿Eliminar?'))).then(ok=>{if(ok)deletePickFromBankroll(${pick.id}));})" class="px-3 py-2 rounded-lg text-white font-bold hover:scale-110 transition-all text-sm" style="background: rgba(107, 114, 128, 0.8);">
                                         🗑️
                                     </button>
                                 </div>
@@ -9522,5 +9572,6 @@ function __stopTimer(t) { try { if (t) clearTimeout(t); } catch(_) {} }
     
     <!-- Lazy Loader (Performance Optimization) -->
     <script src="/scripts/lazy-loader.js"></script>
+<script src="/scripts/modal.js"></script>
 </body>
 </html>
