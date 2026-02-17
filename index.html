@@ -1475,7 +1475,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     </div>
 
     <!-- LOADING OVERLAY -->
-    <div id="loadingOverlay" class="loading-overlay">
+    <div id="loadingOverlay" class="loading-overlay hidden">
         <div class="spinner"></div>
         <div class="loading-text">Cargando NioSports Pro...</div>
     </div>
@@ -1788,6 +1788,11 @@ const Logger = {
         }
     }
 };
+
+// Aliases globales para evitar ReferenceError (logger vs Logger)
+window.Logger = Logger;
+window.logger = Logger;
+const logger = Logger;
 
 // ═══════════════════════════════════════════════════════════════
 // SISTEMA DE NOTIFICACIONES - Early Bootstrap
@@ -2111,6 +2116,8 @@ function showLogin() {
     if (registerScreen) registerScreen.style.display = 'none';
     if (forgotScreen) forgotScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = 'none';
+
+    try { hideLoading(); } catch(_) {}
 }
 
 function showRegister() {
@@ -2167,7 +2174,12 @@ function onUserLoggedIn(user) {
     if (forgotScreen) forgotScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = 'block';
     
-    // Cargar datos del usuario
+    
+    // No bloqueamos la UI por listeners/fetches que puedan tardar
+    try { hideLoading(); } catch(_) {}
+    // Guard extra: si por alguna razón vuelve a mostrarse, lo desbloqueamos
+    setTimeout(() => { try { const ov=document.getElementById('loadingOverlay'); if (ov && !ov.classList.contains('hidden')) hideLoading(); } catch(_) {} }, 10000);
+// Cargar datos del usuario
     loadUserData();
     
     // Cargar datos de Firebase que requieren autenticación
