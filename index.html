@@ -1475,7 +1475,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     </div>
 
     <!-- LOADING OVERLAY -->
-    <div id="loadingOverlay" class="loading-overlay hidden">
+    <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
         <div class="loading-text">Cargando NioSports Pro...</div>
     </div>
@@ -1789,10 +1789,9 @@ const Logger = {
     }
 };
 
-// Aliases globales para evitar ReferenceError (logger vs Logger)
+// Aliases globales para compatibilidad entre scripts clásicos y módulos
 window.Logger = Logger;
 window.logger = Logger;
-const logger = Logger;
 
 // ═══════════════════════════════════════════════════════════════
 // SISTEMA DE NOTIFICACIONES - Early Bootstrap
@@ -2116,8 +2115,6 @@ function showLogin() {
     if (registerScreen) registerScreen.style.display = 'none';
     if (forgotScreen) forgotScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = 'none';
-
-    try { hideLoading(); } catch(_) {}
 }
 
 function showRegister() {
@@ -2174,12 +2171,7 @@ function onUserLoggedIn(user) {
     if (forgotScreen) forgotScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = 'block';
     
-    
-    // No bloqueamos la UI por listeners/fetches que puedan tardar
-    try { hideLoading(); } catch(_) {}
-    // Guard extra: si por alguna razón vuelve a mostrarse, lo desbloqueamos
-    setTimeout(() => { try { const ov=document.getElementById('loadingOverlay'); if (ov && !ov.classList.contains('hidden')) hideLoading(); } catch(_) {} }, 10000);
-// Cargar datos del usuario
+    // Cargar datos del usuario
     loadUserData();
     
     // Cargar datos de Firebase que requieren autenticación
@@ -2875,12 +2867,15 @@ function logout() {
     <script>
         // ═══ DEBUG LOGGER — Set to true for development debugging ═══
         const DEBUG_MODE = false;
+        // Usamos el Logger global seguro (expuesto en window) para evitar ReferenceError en módulos
         const logger = {
-            log: (...args) => { if (DEBUG_MODE) logger.log(...args); },
-            warn: (...args) => { if (DEBUG_MODE) logger.warn(...args); },
-            error: (...args) => Logger.error(...args),
-            info: (...args) => { if (DEBUG_MODE) Logger.info(...args); }
+            log:  (...args) => { if (DEBUG_MODE) window.logger.log(...args); },
+            warn: (...args) => { if (DEBUG_MODE) window.logger.warn(...args); },
+            info: (...args) => { if (DEBUG_MODE) window.logger.info(...args); },
+            error:(...args) => { window.logger.error(...args); }
         };
+        // (Opcional) exponer también este wrapper, por si otro bloque lo espera
+        window.logger = window.logger || Logger;
 
         // Basic HTML sanitizer for user-generated content
         function sanitizeHTML(str) {
