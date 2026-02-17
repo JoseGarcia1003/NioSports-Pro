@@ -1720,64 +1720,115 @@ function showNotification(type, title, message) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FIREBASE CONFIGURATION (SÓLO BRIDGE - sin doble inicialización)
+// FIREBASE CONFIGURATION (Segura - desde endpoint)
 // ═══════════════════════════════════════════════════════════════
-//
-// IMPORTANTE:
-// - La inicialización real de Firebase se hace en /scripts/firebase-init.js
-// - Este bloque solo sincroniza las referencias (auth/database) para el monolito
-//   y evita el bug de doble init que rompía RTDB + Google popup.
 
 let firebaseConfig = null;
 let database = null;
 let auth = null;
 
-// Bridge: cuando scripts/firebase-init.js marque Firebase listo, sincronizamos aquí.
+async function initFirebaseInline() {
+    try {
+        // Obtener config desde endpoint seguro
+        const response = await fetch('/api/firebase-config');
+        if (!response.ok) throw new Error('No se pudo obtener Firebase config');
+        
+        firebaseConfig = await response.json();
+        
+        // Validar que tenemos config
+        if (!firebaseConfig.apiKey) {
+            throw new Error('Firebase config incompleta');
+        }
+        
+        // Inicializar Firebase (solo si no está inicializado)
+        if (!firebase.apps || firebase.apps.length === 0) {
+            firebase.initializeApp(firebaseConfig);
+            Logger.log('✅ Firebase inicializado correctamente');
+        } else {
+            Logger.log('⚠️ Firebase ya estaba inicializado, usando instancia existente');
+        }
+        
+        // SIEMPRE crear referencias (aunque Firebase ya esté inicializado)
+        database = firebase.database();
+        auth = firebase.auth();
+        
+        // Verificar que se crearon correctamente
+        if (!database || !auth) {
+            throw new Error('No se pudieron crear referencias de database/auth');
+        }
+        
+        Logger.log('✅ Database y Auth creados correctamente');
+        
+        // Configurar persistencia
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((e) => {
+            Logger.warn('Auth persistence error:', e);
+        });
+        
+        // Iniciar listeners de auth
+        initAuthListeners();
+        
+    } catch (error) {
+        Logger.error('❌ Error inicializando Firebase:', error);
+        showNotification('Error de configuración. Por favor recarga la página.', 'error');
+        
+        // Intentar recuperarse si Firebase ya existe
+        try {
+            if (firebase.apps && firebase.apps.length > 0) {
+                database = firebase.database();
+                auth = firebase.auth();
+                Logger.log('✅ Recuperado usando Firebase existente');
+                initAuthListeners();
+            }
+        } catch (recoveryError) {
+            Logger.error('❌ No se pudo recuperar:', recoveryError);
+        }
+    }
+}
+
+// Esperar a que Firebase SDK esté disponible y ejecutar
+(function waitForFirebase() {
+    if (typeof firebase !== 'undefined') {
+        initFirebaseInline();
+    } else {
+        setTimeout(waitForFirebase, 50);
+    }
+})();
+
+// Bridge: si scripts/firebase-init.js ya inicializó Firebase, sincronizamos referencias y listeners aquí.
 (function bootstrapFirebaseBridge(){
-    const syncOnce = () => {
+    const once = () => {
         try {
             if (window.__FIREBASE_READY__ && window.database && window.auth) {
+                // Sincronizar referencias locales usadas por el resto del monolito
                 database = window.database;
                 auth = window.auth;
-
-                // Evitar registrar listeners múltiples veces
+                // Evitar doble init de listeners
                 if (!window.__NS_AUTH_LISTENERS_READY__) {
-                    try { initAuthListeners(); } catch (e) { Logger.warn('initAuthListeners error:', e); }
-                    window.__NS_AUTH_LISTENERS_READY__ = true;
+                    initAuthListeners();
                 }
-
-                // Listener de conexión (si existe)
-                if (typeof attachFirebaseConnectionListener === 'function' && !window.__NS_CONN_LISTENER_READY__) {
-                    try { attachFirebaseConnectionListener(); } catch (e) { Logger.warn('attachFirebaseConnectionListener error:', e); }
-                    window.__NS_CONN_LISTENER_READY__ = true;
+                if (typeof attachFirebaseConnectionListener === 'function') {
+                    attachFirebaseConnectionListener();
                 }
-
-                Logger.log('✅ Firebase bridge sincronizado (auth/database listos)');
                 return true;
             }
-        } catch (e) {
-            Logger.warn('Firebase bridge sync error:', e);
-        }
+        } catch {}
         return false;
     };
 
-    if (syncOnce()) return;
+    if (once()) return;
 
-    // Esperar a que firebase-init.js termine. Preferimos la promesa global si existe.
-    if (window.__NS_FIREBASE_INIT_PROMISE__ && typeof window.__NS_FIREBASE_INIT_PROMISE__.then === 'function') {
-        window.__NS_FIREBASE_INIT_PROMISE__.then(() => syncOnce()).catch(() => syncOnce());
-        return;
-    }
-
+    // Esperar a que firebase-init.js termine
     if (typeof window.waitForFirebaseReady === 'function') {
-        window.waitForFirebaseReady().then(() => syncOnce());
-        return;
+        window.waitForFirebaseReady().then(() => { once(); });
+    } else {
+        // fallback
+        const iv = setInterval(() => { if (once()) clearInterval(iv); }, 150);
+        setTimeout(() => clearInterval(iv), 12000);
     }
-
-    // Fallback ultra-seguro
-    const iv = setInterval(() => { if (syncOnce()) clearInterval(iv); }, 150);
-    setTimeout(() => clearInterval(iv), 12000);
 })();
+
+// ═══════════════════════════════════════════════════════════════
+// AUTH HARDENING + ANTI "SESIONES FANTASMAS" (added)
 // ═════════════════════════════════════════════════════════════==
 
 // 2) Validación de sesión (token refresh). Si falla, forzamos logout "duro".
@@ -2829,8 +2880,7 @@ if (location.hostname.endsWith("vercel.app") && !NBA_STATS_API.startsWith(locati
         } else {
             throw new Error('No se recibieron datos de equipos');
         }
-    }
-            catch (error) {
+    } catch (error) {
         Logger.error('Error cargando stats:', error);
         apiConnected = false;
         showNotification('⚠️ Error cargando stats: usando datos de respaldo', 'warning');
@@ -2875,8 +2925,7 @@ if (location.hostname.endsWith("vercel.app") && !NBA_STATS_API.startsWith(locati
         };
         statsSource = '⚠️ DATOS DE RESPALDO (API offline)';
     }
-            finally { __nsGoogleLoginInProgress = false; }
-        }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // VARIABLES DE ESTADO
@@ -8876,6 +8925,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         // EVENT LISTENERS DE AUTENTICACIÓN - ULTRA DEBUG
         // ═══════════════════════════════════════════════════════════
 
+        // Helpers para usernames (evita leer toda la colección /usernames)
+        const normalizeUsername = (u) => (u || '').trim().toLowerCase();
+
+        async function usernameIndexGetUid(username) {
+            const key = normalizeUsername(username);
+            if (!key) return null;
+            try {
+                const snap = await database.ref(`usernamesIndex/${key}`).once('value');
+                return snap.exists() ? snap.val() : null;
+            } catch (e) {
+                Logger.error('❌ Error leyendo usernamesIndex:', e?.message || e);
+                return null;
+            }
+        }
+
+        async function usernameIndexIsTaken(username) {
+            const uid = await usernameIndexGetUid(username);
+            return !!uid;
+        }
+
+        async function usernameIndexReserve(uid, username) {
+            const key = normalizeUsername(username);
+            if (!uid || !key) throw new Error('UID/username inválido');
+            // Escribe dos índices: uid->username y username->uid
+            await database.ref(`usernamesByUid/${uid}`).set(username);
+            await database.ref(`usernamesIndex/${key}`).set(uid);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             logger.log('🎬 DOM Cargado, configurando event listeners...');
             
@@ -8910,24 +8987,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                         
                         // Si no contiene @, es un username, buscar el email
                         if (!emailOrUsername.includes('@')) {
-                            logger.log('🔍 Detectado username, buscando email asociado...');
-                            
-                            const usernamesRef = await database.ref('usernames').once('value');
-                            const usernames = usernamesRef.val() || {};
-                            
-                            logger.log('📊 Usernames en DB:', Object.keys(usernames).length);
-                            logger.log('📋 Lista:', usernames);
-                            
-                            const foundUserId = Object.keys(usernames).find(uid => usernames[uid] === emailOrUsername);
-                            
-                            if (foundUserId) {
-                                logger.log('✅ Username encontrado, UID:', foundUserId);
-                                
-                                const userRef = await database.ref(`users/${foundUserId}/profile`).once('value');
+                            logger.log('🔍 Detectado username, buscando UID en índice...');
+                            const uid = await usernameIndexGetUid(emailOrUsername);
+
+                            if (uid) {
+                                logger.log('✅ Username encontrado, UID:', uid);
+
+                                const userRef = await database.ref(`users/${uid}/profile`).once('value');
                                 const userProfile = userRef.val();
-                                
+
                                 logger.log('👤 Perfil:', userProfile);
-                                
+
                                 if (userProfile && userProfile.email) {
                                     email = userProfile.email;
                                     logger.log('✅ Email encontrado:', email);
@@ -8935,11 +9005,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     throw new Error('Usuario no encontrado en la base de datos');
                                 }
                             } else {
-                                Logger.error('❌ Username no encontrado en DB');
+                                Logger.error('❌ Username no encontrado en índice');
                                 throw new Error('Usuario no encontrado');
                             }
                         }
-                        
+
                         logger.log('🔐 Intentando autenticar con Firebase...');
                         logger.log('  - Email:', email);
                         
@@ -9038,21 +9108,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     try {
                         logger.log('🔍 Verificando si username ya existe...');
-                        
-                        const usernamesRef = await database.ref('usernames').once('value');
-                        const usernames = usernamesRef.val() || {};
-                        
-                        logger.log('📊 Usernames actuales:', Object.keys(usernames).length);
-                        
-                        const usernameExists = Object.values(usernames).includes(username);
-                        
+
+                        const usernameExists = await usernameIndexIsTaken(username);
+
                         if (usernameExists) {
                             Logger.error('❌ Username ya existe:', username);
                             showNotification('error', 'Username ocupado', 'Este username ya está en uso. Elige otro.');
                             alert('❌ Username ya existe. Elige otro.');
                             return;
                         }
-                        
+
                         logger.log('✅ Username disponible');
                         logger.log('🔐 Creando cuenta en Firebase Auth...');
                         
@@ -9076,7 +9141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         
                         logger.log('💾 Registrando username...');
                         
-                        await database.ref(`usernames/${user.uid}`).set(username);
+                        await usernameIndexReserve(user.uid, username);
                         
                         logger.log('✅ Username registrado');
                         
@@ -9177,12 +9242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // GOOGLE SIGN-IN
         // ═══════════════════════════════════════════════════════════
 
-
-        // Guard anti-doble popup (evita auth/cancelled-popup-request)
-        let __nsGoogleLoginInProgress = false;
         async function loginWithGoogle() {
-            if (__nsGoogleLoginInProgress) { logger.warn('⚠️ Google login ya en progreso'); return; }
-            __nsGoogleLoginInProgress = true;
             logger.log('🔐 Iniciando login con Google...');
             
             try {
@@ -9210,16 +9270,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     let username = baseUsername;
                     let counter = 1;
                     
-                    // Verificar que no exista
-                    const usernamesSnap = await database.ref('usernames').once('value');
-                    const usernames = usernamesSnap.val() || {};
-                    
-                    while (Object.values(usernames).includes(username)) {
+                    // Verificar que no exista (índice)
+                    while (await usernameIndexIsTaken(username)) {
                         username = baseUsername + counter;
                         counter++;
                     }
-                    
-                    // Crear perfil
+// Crear perfil
                     await profileRef.set({
                         username: username,
                         email: user.email,
@@ -9229,7 +9285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         provider: 'google'
                     });
                     
-                    await database.ref(`usernames/${user.uid}`).set(username);
+                    await usernameIndexReserve(user.uid, username);
                     await database.ref(`users/${user.uid}/bankroll`).set({
                         current: 0, initial: 0, history: []
                     });
