@@ -368,14 +368,46 @@ export default async function handler(req, res) {
   }
 
   try {
+    const rawKey = String(process.env.BALLDONTLIE_API_KEY || "").trim();
+    if (!rawKey) {
+      return res.status(500).json({
+        error: "Server not configured: BALLDONTLIE_API_KEY missing",
+        hint: "Add BALLDONTLIE_API_KEY in Vercel project env vars (All Environments)."
+      });
+    }
+
+    // balldontlie expects: Authorization: Bearer <key>
+    const authHeader = /^bearer\s+/i.test(rawKey) ? rawKey : `Bearer ${rawKey}`;
+
     const upstream = await fetch(`${API_BASE}${endpointStr}`, {
-      headers: { Authorization: process.env.BALLDONTLIE_API_KEY }
+      headers: {
+        Authorization: authHeader,
+        Accept: "application/json",
+        "User-Agent": "NioSports-Pro-Proxy/1.0"
+      }
     });
 
-    const data = await upstream.json().catch(() => null);
+    // Try JSON first; if it isn't JSON (HTML/text), return a clean error.
+    const text = await upstream.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
 
     res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
-    return res.status(upstream.status).json(data ?? { error: "Upstream returned invalid JSON" });
+
+    if (data === null) {
+      return res.status(upstream.status).json({
+        error: "Upstream returned invalid JSON",
+        upstreamStatus: upstream.status,
+        // keep it short so we don't leak anything sensitive
+        upstreamSnippet: String(text || "").slice(0, 200)
+      });
+    }
+
+    return res.status(upstream.status).json(data);
   } catch {
     return res.status(502).json({ error: "Upstream API error" });
   }
