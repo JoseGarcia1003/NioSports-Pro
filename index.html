@@ -2932,12 +2932,50 @@ let apiConnected = false;
 
 // Cargar estadísticas desde la API
 async function loadTeamStatsFromAPI() {
+  // Carga stats de equipos desde tu Cloudflare Worker (NBA Stats API)
+  // - No depende de que el sitio esté en el mismo dominio
+  // - Tiene timeout + fallback para que la UI nunca “se quede colgada”
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 8000);
 
-// On some hardened CSP setups (like strict Vercel headers), external Worker endpoints
-// may be blocked. Fail fast to prevent the UI from hanging.
-if (location.hostname.endsWith("vercel.app") && !NBA_STATS_API.startsWith(location.origin)) {
-  
-  return null;
+    const url = new URL(NBA_STATS_API);
+    // si necesitas forzar refresh desde el cliente, puedes usar ?refresh=true
+    // (por defecto el worker ya cachea 30min)
+    const res = await fetch(url.toString(), {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      signal: controller.signal
+    });
+
+    clearTimeout(t);
+
+    if (!res.ok) {
+      throw new Error('NBA_STATS_API HTTP ' + res.status);
+    }
+
+    const data = await res.json();
+    if (!data || !data.teams || Object.keys(data.teams).length < 25) {
+      throw new Error('NBA_STATS_API data inválida');
+    }
+
+    TEAM_STATS = data.teams;
+    logger.ok('✅ TEAM_STATS cargado: ' + Object.keys(TEAM_STATS).length + ' equipos');
+    return TEAM_STATS;
+
+  } catch (err) {
+    logger.warn('⚠️ No se pudo cargar TEAM_STATS desde Worker: ' + (err && err.message ? err.message : err));
+
+    // Fallback mínimo para que el dropdown muestre equipos (aunque sin métricas)
+    // Nota: si cae aquí, el cálculo usará 0/NA donde requiera TEAM_STATS.
+    const fallback = [
+      "Hawks","Celtics","Nets","Hornets","Bulls","Cavaliers","Mavericks","Nuggets","Pistons","Warriors",
+      "Rockets","Pacers","Clippers","Lakers","Grizzlies","Heat","Bucks","Timberwolves","Pelicans","Knicks",
+      "Thunder","Magic","76ers","Suns","Trail Blazers","Kings","Spurs","Raptors","Jazz","Wizards"
+    ];
+    TEAM_STATS = TEAM_STATS && Object.keys(TEAM_STATS).length ? TEAM_STATS : Object.fromEntries(fallback.map(n => [n, {}]));
+    return TEAM_STATS;
+  }
 }
 
     try {
