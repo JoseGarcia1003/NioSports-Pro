@@ -409,3 +409,82 @@
     text-align: left;
   }
 }
+
+
+/* ============================================================
+   H2H Comparador (fallback styles)
+   Si tu vista H2H usa inputs simples ("Jugador 1/2", "Buscar jugador..."),
+   estos estilos la vuelven consistente con el look premium.
+   ============================================================ */
+.h2h-view, [data-view="h2h"], .view-h2h {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+.h2h-view h1, [data-view="h2h"] h1, .view-h2h h1 {
+  letter-spacing: 0.5px;
+  text-shadow: 0 10px 35px rgba(0,0,0,.55);
+}
+
+.h2h-view label, [data-view="h2h"] label, .view-h2h label {
+  display: block;
+  font-weight: 700;
+  margin: 18px 0 8px;
+  color: rgba(255,255,255,.85);
+}
+
+.h2h-view input[type="text"],
+[data-view="h2h"] input[type="text"],
+.view-h2h input[type="text"] {
+  width: min(520px, 100%);
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 209, 0, .28);
+  background: rgba(9, 14, 20, .55);
+  color: #fff;
+  padding: 0 14px;
+  outline: none;
+  box-shadow: 0 10px 26px rgba(0,0,0,.35);
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+
+.h2h-view input[type="text"]:focus,
+[data-view="h2h"] input[type="text"]:focus,
+.view-h2h input[type="text"]:focus {
+  border-color: rgba(255, 209, 0, .85);
+  box-shadow: 0 14px 36px rgba(255, 209, 0, .12), 0 10px 26px rgba(0,0,0,.35);
+  transform: translateY(-1px);
+}
+
+.h2h-view .h2h-actions, [data-view="h2h"] .h2h-actions, .view-h2h .h2h-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.h2h-view button, [data-view="h2h"] button, .view-h2h button {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.h2h-view button.btn-primary,
+[data-view="h2h"] button.btn-primary,
+.view-h2h button.btn-primary {
+  background: linear-gradient(180deg, #ffd100, #f2b200);
+  color: #101316;
+  box-shadow: 0 18px 40px rgba(0,0,0,.35);
+}
+
+.h2h-view button.btn-secondary,
+[data-view="h2h"] button.btn-secondary,
+.view-h2h button.btn-secondary {
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.9);
+  border: 1px solid rgba(255, 209, 0, .20);
+}
+
