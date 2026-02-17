@@ -1720,115 +1720,64 @@ function showNotification(type, title, message) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FIREBASE CONFIGURATION (Segura - desde endpoint)
+// FIREBASE CONFIGURATION (SÓLO BRIDGE - sin doble inicialización)
 // ═══════════════════════════════════════════════════════════════
+//
+// IMPORTANTE:
+// - La inicialización real de Firebase se hace en /scripts/firebase-init.js
+// - Este bloque solo sincroniza las referencias (auth/database) para el monolito
+//   y evita el bug de doble init que rompía RTDB + Google popup.
 
 let firebaseConfig = null;
 let database = null;
 let auth = null;
 
-async function initFirebaseInline() {
-    try {
-        // Obtener config desde endpoint seguro
-        const response = await fetch('/api/firebase-config');
-        if (!response.ok) throw new Error('No se pudo obtener Firebase config');
-        
-        firebaseConfig = await response.json();
-        
-        // Validar que tenemos config
-        if (!firebaseConfig.apiKey) {
-            throw new Error('Firebase config incompleta');
-        }
-        
-        // Inicializar Firebase (solo si no está inicializado)
-        if (!firebase.apps || firebase.apps.length === 0) {
-            firebase.initializeApp(firebaseConfig);
-            Logger.log('✅ Firebase inicializado correctamente');
-        } else {
-            Logger.log('⚠️ Firebase ya estaba inicializado, usando instancia existente');
-        }
-        
-        // SIEMPRE crear referencias (aunque Firebase ya esté inicializado)
-        database = firebase.database();
-        auth = firebase.auth();
-        
-        // Verificar que se crearon correctamente
-        if (!database || !auth) {
-            throw new Error('No se pudieron crear referencias de database/auth');
-        }
-        
-        Logger.log('✅ Database y Auth creados correctamente');
-        
-        // Configurar persistencia
-        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((e) => {
-            Logger.warn('Auth persistence error:', e);
-        });
-        
-        // Iniciar listeners de auth
-        initAuthListeners();
-        
-    } catch (error) {
-        Logger.error('❌ Error inicializando Firebase:', error);
-        showNotification('Error de configuración. Por favor recarga la página.', 'error');
-        
-        // Intentar recuperarse si Firebase ya existe
-        try {
-            if (firebase.apps && firebase.apps.length > 0) {
-                database = firebase.database();
-                auth = firebase.auth();
-                Logger.log('✅ Recuperado usando Firebase existente');
-                initAuthListeners();
-            }
-        } catch (recoveryError) {
-            Logger.error('❌ No se pudo recuperar:', recoveryError);
-        }
-    }
-}
-
-// Esperar a que Firebase SDK esté disponible y ejecutar
-(function waitForFirebase() {
-    if (typeof firebase !== 'undefined') {
-        initFirebaseInline();
-    } else {
-        setTimeout(waitForFirebase, 50);
-    }
-})();
-
-// Bridge: si scripts/firebase-init.js ya inicializó Firebase, sincronizamos referencias y listeners aquí.
+// Bridge: cuando scripts/firebase-init.js marque Firebase listo, sincronizamos aquí.
 (function bootstrapFirebaseBridge(){
-    const once = () => {
+    const syncOnce = () => {
         try {
             if (window.__FIREBASE_READY__ && window.database && window.auth) {
-                // Sincronizar referencias locales usadas por el resto del monolito
                 database = window.database;
                 auth = window.auth;
-                // Evitar doble init de listeners
+
+                // Evitar registrar listeners múltiples veces
                 if (!window.__NS_AUTH_LISTENERS_READY__) {
-                    initAuthListeners();
+                    try { initAuthListeners(); } catch (e) { Logger.warn('initAuthListeners error:', e); }
+                    window.__NS_AUTH_LISTENERS_READY__ = true;
                 }
-                if (typeof attachFirebaseConnectionListener === 'function') {
-                    attachFirebaseConnectionListener();
+
+                // Listener de conexión (si existe)
+                if (typeof attachFirebaseConnectionListener === 'function' && !window.__NS_CONN_LISTENER_READY__) {
+                    try { attachFirebaseConnectionListener(); } catch (e) { Logger.warn('attachFirebaseConnectionListener error:', e); }
+                    window.__NS_CONN_LISTENER_READY__ = true;
                 }
+
+                Logger.log('✅ Firebase bridge sincronizado (auth/database listos)');
                 return true;
             }
-        } catch {}
+        } catch (e) {
+            Logger.warn('Firebase bridge sync error:', e);
+        }
         return false;
     };
 
-    if (once()) return;
+    if (syncOnce()) return;
 
-    // Esperar a que firebase-init.js termine
-    if (typeof window.waitForFirebaseReady === 'function') {
-        window.waitForFirebaseReady().then(() => { once(); });
-    } else {
-        // fallback
-        const iv = setInterval(() => { if (once()) clearInterval(iv); }, 150);
-        setTimeout(() => clearInterval(iv), 12000);
+    // Esperar a que firebase-init.js termine. Preferimos la promesa global si existe.
+    if (window.__NS_FIREBASE_INIT_PROMISE__ && typeof window.__NS_FIREBASE_INIT_PROMISE__.then === 'function') {
+        window.__NS_FIREBASE_INIT_PROMISE__.then(() => syncOnce()).catch(() => syncOnce());
+        return;
     }
-})();
 
-// ═══════════════════════════════════════════════════════════════
-// AUTH HARDENING + ANTI "SESIONES FANTASMAS" (added)
+    if (typeof window.waitForFirebaseReady === 'function') {
+        window.waitForFirebaseReady().then(() => syncOnce());
+        return;
+    }
+
+    // Fallback ultra-seguro
+    const iv = setInterval(() => { if (syncOnce()) clearInterval(iv); }, 150);
+    setTimeout(() => clearInterval(iv), 12000);
+})();
 // ═════════════════════════════════════════════════════════════==
 
 // 2) Validación de sesión (token refresh). Si falla, forzamos logout "duro".
@@ -2880,7 +2829,8 @@ if (location.hostname.endsWith("vercel.app") && !NBA_STATS_API.startsWith(locati
         } else {
             throw new Error('No se recibieron datos de equipos');
         }
-    } catch (error) {
+    }
+            catch (error) {
         Logger.error('Error cargando stats:', error);
         apiConnected = false;
         showNotification('⚠️ Error cargando stats: usando datos de respaldo', 'warning');
@@ -2925,7 +2875,8 @@ if (location.hostname.endsWith("vercel.app") && !NBA_STATS_API.startsWith(locati
         };
         statsSource = '⚠️ DATOS DE RESPALDO (API offline)';
     }
-}
+            finally { __nsGoogleLoginInProgress = false; }
+        }
 
 // ═══════════════════════════════════════════════════════════════
 // VARIABLES DE ESTADO
@@ -9226,7 +9177,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // GOOGLE SIGN-IN
         // ═══════════════════════════════════════════════════════════
 
+
+        // Guard anti-doble popup (evita auth/cancelled-popup-request)
+        let __nsGoogleLoginInProgress = false;
         async function loginWithGoogle() {
+            if (__nsGoogleLoginInProgress) { logger.warn('⚠️ Google login ya en progreso'); return; }
+            __nsGoogleLoginInProgress = true;
             logger.log('🔐 Iniciando login con Google...');
             
             try {
