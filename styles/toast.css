@@ -1,0 +1,174 @@
+/* styles/toast.css — NioSports Pro Toasts (CSP-friendly) */
+/* ───────────────────────────────────────────────────────────── */
+/* Paleta: fondo oscuro premium + acento dorado + estados claros  */
+/* ───────────────────────────────────────────────────────────── */
+
+:root{
+  --toast-bg: rgba(17, 24, 39, 0.92);
+  --toast-border: rgba(255,255,255,0.10);
+  --toast-text: rgba(255,255,255,0.92);
+  --toast-muted: rgba(255,255,255,0.72);
+  --toast-shadow: 0 12px 44px rgba(0,0,0,.38);
+  --toast-radius: 14px;
+  --toast-gap: 12px;
+
+  --toast-success: #10b981;
+  --toast-error: #ef4444;
+  --toast-warning: #f59e0b;
+  --toast-info: #3b82f6;
+
+  --toast-accent: #fbbf24; /* dorado */
+}
+
+.toast-container{
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 2147483000;
+  width: min(420px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast{
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--toast-gap);
+  padding: 14px 16px;
+  border-radius: var(--toast-radius);
+  background: var(--toast-bg);
+  border: 1px solid var(--toast-border);
+  box-shadow: var(--toast-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 260ms cubic-bezier(.2,.8,.2,1), opacity 260ms ease;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Borde lateral por tipo */
+.toast::before{
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--toast-info);
+  opacity: 0.95;
+}
+
+.toast-success::before{ background: var(--toast-success); }
+.toast-error::before{ background: var(--toast-error); }
+.toast-warning::before{ background: var(--toast-warning); }
+.toast-info::before{ background: var(--toast-info); }
+
+/* Animaciones */
+.toast-enter{
+  opacity: 0;
+  transform: translateX(22px);
+}
+
+.toast-exit{
+  opacity: 0;
+  transform: translateX(22px);
+}
+
+.toast-icon{
+  font-size: 22px;
+  line-height: 1;
+  padding-top: 2px;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,.35));
+}
+
+.toast-content{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.toast-title{
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.toast-message{
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--toast-text);
+  word-break: break-word;
+}
+
+.toast-action{
+  flex: 0 0 auto;
+  margin-left: 6px;
+  border: 1px solid rgba(251,191,36,0.65);
+  background: rgba(251,191,36,0.16);
+  color: #ffd369;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+
+.toast-action:hover{
+  transform: translateY(-1px);
+  background: rgba(251,191,36,0.22);
+  border-color: rgba(251,191,36,0.9);
+}
+
+.toast-action:active{
+  transform: translateY(0px);
+}
+
+.toast-close{
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.62);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.toast-close:hover{
+  background: rgba(255,255,255,0.10);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.toast-close:active{
+  transform: translateY(0px);
+}
+
+/* Mobile: abajo, ancho completo */
+@media (max-width: 768px){
+  .toast-container{
+    top: auto;
+    bottom: 14px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+
+  .toast-enter,
+  .toast-exit{
+    transform: translateY(18px);
+  }
+}
