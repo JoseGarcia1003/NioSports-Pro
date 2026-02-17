@@ -61,7 +61,8 @@
   <link rel="stylesheet" href="/styles/skeletons.css">
   
   <!-- Toast Notification System (carga temprano) -->
-  <script src="/scripts/toast.js"></script>
+  <link rel="stylesheet" href="/styles/toast.css">
+  <script src="/scripts/toast.js" defer></script>
 
   <style>
         /* ══════════════════════════════════════════════════════════
@@ -1308,6 +1309,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     z-index: 9999;
 }
 </style>
+
+  <script>
+    // NioSports UX: reemplazar alert() por toasts (sin dialogs bloqueantes)
+    window.alert = function(msg){
+      try{
+        if (window.toastInfo) return window.toastInfo(String(msg), { title: 'Aviso' });
+        if (window.showToast) return window.showToast(String(msg), 'info', 3500, { title: 'Aviso' });
+      }catch(e){}
+      console.log('[alert]', msg);
+    };
+  </script>
+
 </head>
 <body>
 <!-- Skip to main content -->
@@ -1952,7 +1965,7 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
     if (typeof showNotification === 'function') {
         showNotification('warning', 'Sesión', message);
     } else {
-        alert(message);
+        window.toastInfo ? toastInfo(message,{title:'Notificación'}) : console.log(message);
     }
 }
 
@@ -7740,7 +7753,7 @@ function loadBankrollFromFirebase() {
 
 function saveBankrollToFirebase() {
     if (!firebaseConnected) {
-        alert('⚠️ No hay conexión con Firebase');
+        toastWarning('No hay conexión con Firebase', {title:'Conexión'});
         return false;
     }
     if (!userId) return false;
@@ -7759,7 +7772,7 @@ function canSetDailyBank() {
 function setDailyBank(amount) {
     const today = getTodayDate();
     if (BANKROLL_DATA.dailyBanks[today]) {
-        alert('⚠️ Ya has registrado el bank de hoy');
+        toastWarning('Ya has registrado el bank de hoy', {title:'Bankroll'});
         return false;
     }
     BANKROLL_DATA.dailyBanks[today] = parseFloat(amount);
@@ -8059,7 +8072,7 @@ function submitPickToBankroll() {
     const notes = document.getElementById('pickNotes').value;
 
     if (!odds || !stake || parseFloat(odds) <= 0 || parseFloat(stake) <= 0) {
-        alert('Por favor completa todos los campos correctamente');
+        toastWarning('Completa todos los campos correctamente', {title:'Validación'});
         return;
     }
 
@@ -8978,7 +8991,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!emailOrUsername || !password) {
                         Logger.error('❌ Campos vacíos');
                         showNotification('error', 'Error', 'Por favor completa todos los campos');
-                        alert('Por favor completa todos los campos');
+                        toastWarning('Completa todos los campos', {title:'Validación'});
                         return;
                     }
                     
@@ -9021,7 +9034,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         logger.log('🆔 UID:', userCredential.user.uid);
                         
                         showNotification('success', '¡Bienvenido!', 'Sesión iniciada correctamente');
-                        alert('✅ ¡LOGIN EXITOSO!');
+                        toastSuccess('¡Login exitoso!', {title:'Bienvenido'});
                         
                     } catch (error) {
                         Logger.error('═══════════════════════════════════════════');
@@ -9047,7 +9060,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                         
                         showNotification('error', 'Error de Login', errorMsg);
-                        alert('❌ ERROR: ' + errorMsg);
+                        toastError(errorMsg, {title:'Error'});
                     }
                 });
             } else {
@@ -9081,28 +9094,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!username || !email || !password || !passwordConfirm) {
                         Logger.error('❌ Campos vacíos');
                         showNotification('error', 'Error', 'Por favor completa todos los campos');
-                        alert('Por favor completa todos los campos');
+                        toastWarning('Completa todos los campos', {title:'Validación'});
                         return;
                     }
                     
                     if (password !== passwordConfirm) {
                         Logger.error('❌ Contraseñas no coinciden');
                         showNotification('error', 'Error', 'Las contraseñas no coinciden');
-                        alert('❌ Las contraseñas no coinciden');
+                        toastError('Las contraseñas no coinciden', {title:'Registro'});
                         return;
                     }
                     
                     if (password.length < 6) {
                         Logger.error('❌ Contraseña muy corta');
                         showNotification('error', 'Error', 'La contraseña debe tener mínimo 6 caracteres');
-                        alert('❌ La contraseña debe tener mínimo 6 caracteres');
+                        toastError('La contraseña debe tener mínimo 6 caracteres', {title:'Registro'});
                         return;
                     }
                     
                     if (username.length < 3) {
                         Logger.error('❌ Username muy corto');
                         showNotification('error', 'Error', 'El username debe tener mínimo 3 caracteres');
-                        alert('❌ El username debe tener mínimo 3 caracteres');
+                        toastError('El username debe tener mínimo 3 caracteres', {title:'Registro'});
                         return;
                     }
                     
@@ -9114,7 +9127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         if (usernameExists) {
                             Logger.error('❌ Username ya existe:', username);
                             showNotification('error', 'Username ocupado', 'Este username ya está en uso. Elige otro.');
-                            alert('❌ Username ya existe. Elige otro.');
+                            toastError('Username ya existe. Elige otro.', {title:'Registro'});
                             return;
                         }
 
@@ -9165,7 +9178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         logger.log('═══════════════════════════════════════════');
                         
                         showNotification('success', '¡Cuenta creada!', 'Bienvenido a NioSports Pro');
-                        alert('✅ ¡CUENTA CREADA EXITOSAMENTE!\n\nBienvenido ' + username);
+                        toastSuccess('¡Cuenta creada! Bienvenido ' + username, {title:'Registro'});
                         
                         // El onAuthStateChanged se encargará de mostrar la app
                         
@@ -9191,7 +9204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                         
                         showNotification('error', 'Error de Registro', errorMsg);
-                        alert('❌ ERROR: ' + errorMsg);
+                        toastError(errorMsg, {title:'Error'});
                     }
                 });
             } else {
@@ -9213,7 +9226,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     if (!email) {
                         showNotification('error', 'Error', 'Ingresa tu email');
-                        alert('Ingresa tu email');
+                        toastWarning('Ingresa tu email', {title:'Recuperación'});
                         return;
                     }
                     
@@ -9221,12 +9234,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         await auth.sendPasswordResetEmail(email);
                         logger.log('✅ Email de recuperación enviado');
                         showNotification('success', 'Email enviado', 'Revisa tu bandeja de entrada');
-                        alert('✅ Email de recuperación enviado. Revisa tu correo.');
+                        toastSuccess('Email de recuperación enviado. Revisa tu correo.', {title:'Recuperación'});
                         setTimeout(() => showLogin(), 2000);
                     } catch (error) {
                         Logger.error('❌ Error:', error);
                         showNotification('error', 'Error', 'No se pudo enviar el email');
-                        alert('❌ Error: ' + error.message);
+                        toastError(error.message, {title:'Error'});
                     }
                 });
             } else {
