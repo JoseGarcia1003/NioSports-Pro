@@ -172,3 +172,82 @@
     transform: translateY(18px);
   }
 }
+
+
+/* ───────────────────────────────────────────────────────────── */
+/* Modal premium (reemplazo de confirm del navegador)             */
+/* ───────────────────────────────────────────────────────────── */
+
+#ns-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 2147482999;
+  display: none;
+}
+#ns-modal.open{ display:block; }
+
+.ns-modal-backdrop{
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,0.58);
+  backdrop-filter: blur(8px);
+}
+
+.ns-modal-card{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform: translate(-50%, -50%);
+  width: min(540px, calc(100vw - 32px));
+  border-radius: 18px;
+  background: rgba(17, 24, 39, 0.96);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 18px 70px rgba(0,0,0,0.58);
+  padding: 18px 18px 16px;
+}
+
+.ns-modal-title{
+  color: rgba(255,255,255,0.95);
+  font-weight: 900;
+  font-size: 18px;
+  margin-bottom: 8px;
+  letter-spacing: 0.2px;
+}
+
+.ns-modal-message{
+  white-space: pre-wrap;
+  color: rgba(255,255,255,0.78);
+  font-size: 14px;
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.ns-modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap: 10px;
+}
+
+.ns-btn{
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .12s ease, filter .12s ease, background .12s ease;
+}
+
+.ns-btn:active{ transform: translateY(1px); }
+
+.ns-btn-primary{
+  background: var(--toast-accent, #fbbf24);
+  color: #0b0f16;
+}
+
+.ns-btn-ghost{
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.ns-btn-ghost:hover{ background: rgba(255,255,255,0.10); }
+.ns-btn-primary:hover{ filter: brightness(1.05); }
