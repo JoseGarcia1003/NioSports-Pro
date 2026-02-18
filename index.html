@@ -4640,14 +4640,14 @@ function resolveBacktestPick(pickId) {
 // ═══════════════════════════════════════════════════════════════════
 
 function renderHome() {
-    const totalPicks = Object.keys({...USER_PICKS_TOTALES, ...USER_PICKS_PROPS, ...USER_PICKS_AI}).length;
+    const totalPicks = Object.keys({...USER_PICKS_TOTALES, ...USER_PICKS_AI}).length;
     const bankroll = USER_BANKROLL.current || 0;
     const initial = USER_BANKROLL.initial || 0;
     const profit = bankroll - initial;
     const profitPercent = initial > 0 ? ((profit / initial) * 100).toFixed(1) : '0.0';
     
     // Stats de picks
-    const allPicks = [...Object.values(USER_PICKS_TOTALES), ...Object.values(USER_PICKS_PROPS), ...Object.values(USER_PICKS_AI), ...Object.values(USER_PICKS_BACKTESTING)];
+    const allPicks = [...Object.values(USER_PICKS_TOTALES), ...Object.values(USER_PICKS_AI), ...Object.values(USER_PICKS_BACKTESTING)];
     const resolved = allPicks.filter(p => p.status && p.status !== 'pending');
     const wins = resolved.filter(p => p.status === 'win').length;
     const losses = resolved.filter(p => p.status === 'loss').length;
@@ -6691,7 +6691,6 @@ function renderTotals() {
 function renderMisPicks() {
     const allPicks = [
         ...Object.values(USER_PICKS_TOTALES).map(p => ({...p, type: 'Totales'})),
-        ...Object.values(USER_PICKS_PROPS).map(p => ({...p, type: 'Props'})),
         ...Object.values(USER_PICKS_AI).map(p => ({...p, type: 'AI'})),
         ...Object.values(USER_PICKS_BACKTESTING).map(p => ({...p, type: 'Backtesting'}))
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
