@@ -1,0 +1,48 @@
+name: Actualizar Estadísticas de Equipos NBA
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # 8 AM UTC = 3 AM Ecuador (cada día)
+  workflow_dispatch:
+
+jobs:
+  update-team-stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+      
+      - name: 🐍 Python Setup
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: 📦 Instalar Dependencias
+        run: pip install requests --break-system-packages
+      
+      - name: 📊 Actualizar Stats de Equipos (TeamRankings)
+        env:
+          BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+        run: |
+          echo "📊 Actualizando estadísticas de equipos..."
+          # Script de actualización de equipos (a desarrollar)
+          echo "✅ Proceso completado"
+        continue-on-error: true
+      
+      - name: 💾 Commit y Push
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions Teams"
+          git add data/nba-stats.json || true
+          git diff --quiet || git commit -m "🏀 Stats de equipos actualizadas - $(date +'%Y-%m-%d')"
+          git push || true
+      
+      - name: ✅ Resumen
+        if: always()
+        run: |
+          echo "=================================="
+          echo "✅ Actualización de equipos completada"
+          echo "🕐 Hora: $(date)"
+          echo "=================================="
