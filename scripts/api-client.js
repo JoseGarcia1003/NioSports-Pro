@@ -120,28 +120,6 @@ class BallDontLieClient {
   }
 
   // ════════════════════════════════════════════════════════════════
-  // PLAYERS API
-  // ════════════════════════════════════════════════════════════════
-
-  async getPlayer(playerId) {
-    const endpoint = `/players/${playerId}`;
-    const cacheKey = `player_${playerId}`;
-    return await this.request(endpoint, cacheKey);
-  }
-
-  async searchPlayers(query, perPage = 25) {
-    const endpoint = `/players?search=${encodeURIComponent(query)}&per_page=${perPage}`;
-    const cacheKey = `search_${query}_${perPage}`;
-    return await this.request(endpoint, cacheKey);
-  }
-
-  async getAllPlayers(page = 1, perPage = 100) {
-    const endpoint = `/players?per_page=${perPage}&page=${page}`;
-    const cacheKey = `players_page_${page}_${perPage}`;
-    return await this.request(endpoint, cacheKey);
-  }
-
-  // ════════════════════════════════════════════════════════════════
   // GAMES API
   // ════════════════════════════════════════════════════════════════
 
@@ -172,28 +150,6 @@ class BallDontLieClient {
   // ════════════════════════════════════════════════════════════════
   // STATS API
   // ════════════════════════════════════════════════════════════════
-
-  async getPlayerStats(playerId, params = {}) {
-    const qs = new URLSearchParams({
-      'player_ids[]': playerId,
-      ...params
-    }).toString();
-    const endpoint = `/stats?${qs}`;
-    const cacheKey = `stats_${playerId}_${qs}`;
-    return await this.request(endpoint, cacheKey);
-  }
-
-  async getSeasonAverages(playerIds, season = 2024) {
-    const ids = Array.isArray(playerIds) ? playerIds : [playerIds];
-    let endpoint = `/season_averages?season=${season}`;
-    
-    ids.forEach(id => {
-      endpoint += `&player_ids[]=${id}`;
-    });
-
-    const cacheKey = `season_avg_${ids.join(',')}_${season}`;
-    return await this.request(endpoint, cacheKey);
-  }
 
   // ════════════════════════════════════════════════════════════════
   // CACHE MANAGEMENT
