@@ -11,7 +11,7 @@ class PicksEngine {
     
     // Ponderación de factores (47 factores agrupados en 10 categorías principales)
     this.weights = {
-      playerForm: 0.15,           // Forma reciente de jugadores clave
+      winRate: 0.15,              // Tasa de victorias reciente del equipo
       teamForm: 0.12,             // Racha del equipo (W/L últimos juegos)
       homeAdvantage: 0.10,        // Ventaja de local histórica
       restDays: 0.08,             // Días de descanso entre juegos
@@ -104,7 +104,7 @@ class PicksEngine {
 
       // 2. Calcular todos los factores
       const factors = {
-        playerForm: this.calculatePlayerForm(homeStats, awayStats),
+        winRate: this.calculateWinRate(homeStats, awayStats),
         teamForm: this.calculateTeamForm(homeStats, awayStats),
         homeAdvantage: 0.55, // Home team tiene ventaja estadística
         restDays: this.calculateRestDays(game, homeStats, awayStats),
@@ -182,7 +182,7 @@ class PicksEngine {
   // CÁLCULO DE FACTORES INDIVIDUALES
   // ════════════════════════════════════════════════════════════════
 
-  calculatePlayerForm(homeStats, awayStats) {
+  calculateWinRate(homeStats, awayStats) {
     const homeGames = homeStats.data || [];
     const awayGames = awayStats.data || [];
     
@@ -405,7 +405,7 @@ class PicksEngine {
     const strength = value > 0.7 ? 'fuerte' : 'moderada';
     
     const descriptions = {
-      playerForm: `Forma de jugadores ${strength}`,
+      winRate: `Tasa de victorias reciente ${strength}`,
       teamForm: `Racha del equipo ${strength}`,
       homeAdvantage: 'Ventaja de local significativa',
       restDays: 'Descanso óptimo',
