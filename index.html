@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NioSports Pro v3.0 REVOLUTION | El Sistema NBA #1</title>
-  <meta name="description" content="El sistema predictivo NBA más avanzado del mercado. Motor IA con 47 factores contextuales, analytics profesionales y gestión de bankroll en tiempo real.">
+  <meta name="description" content="El sistema predictivo NBA más avanzado del mercado. Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
   <meta name="theme-color" content="#fbbf24">
   <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -16,7 +16,7 @@
   <meta name="msapplication-TileImage" content="/icons/icon-144.png">
   
   <meta property="og:title" content="NioSports Pro - Sistema Predictivo NBA #1">
-  <meta property="og:description" content="Motor IA con 47 factores, analytics profesionales y gestión de bankroll en tiempo real.">
+  <meta property="og:description" content="Motor IA con 47 factores, 530+ jugadores, analytics profesionales en tiempo real.">
   <meta property="og:type" content="website">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
@@ -1479,7 +1479,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     </div>
 
     <!-- LOADING OVERLAY -->
-    <div id="loadingOverlay" class="loading-overlay">
+    <div id="loadingOverlay" class="loading-overlay hidden">
         <div class="spinner"></div>
         <div class="loading-text">Cargando NioSports Pro...</div>
     </div>
@@ -1504,8 +1504,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
             <div class="nav-links">
                 <a class="nav-link active" data-view="home" onclick="switchView('home')">Inicio</a>
                 <a class="nav-link" data-view="totals" onclick="switchView('totals')">Totales</a>
+                <a class="nav-link" data-view="props" onclick="switchView('props')">Props</a>
                 <a class="nav-link" data-view="picks" onclick="switchView('picks')">Picks IA</a>
-                <a class="nav-link" data-view="teams" onclick="switchView('teams')">Equipos</a>
+                <a class="nav-link" data-view="h2h" onclick="switchView('h2h')">H2H</a>
                 <a class="nav-link" data-view="tracking" onclick="switchView('tracking')">Tracking</a>
                 <button class="nav-cta" onclick="showAuth()">Mi Cuenta</button>
             </div>
@@ -1530,10 +1531,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
                 <span class="gold-gradient">Inteligencia Artificial</span>
             </h1>
             <p class="hero-subtitle">
-                Motor predictivo con 47 factores contextuales. Análisis de Q1, Primera Mitad y Tiempo Completo en tiempo real. La herramienta que usan los profesionales.
+                Motor predictivo con 47 factores contextuales. 530+ jugadores analizados en tiempo real. La herramienta que usan los profesionales.
             </p>
             <div class="hero-actions">
                 <button class="btn-gold" onclick="switchView('totals')">Explorar Sistema →</button>
+                <button class="btn-ghost" onclick="switchView('props')">Base de Datos</button>
             </div>
         </section>
 
@@ -1541,8 +1543,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
         <div class="stats-strip">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-number" data-count="47">0</div>
-                    <div class="stat-label">Factores de Análisis</div>
+                    <div class="stat-number" data-count="530">0</div>
+                    <div class="stat-label">Jugadores NBA</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" data-count="47">0</div>
@@ -1571,7 +1573,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
                     <p class="feature-desc">Sistema v2.5 con calibración automática, análisis B2B, PACE, altitude y 47 factores contextuales.</p>
                     <div class="feature-arrow">Explorar →</div>
                 </div>
-</div>
+                <div class="feature-card" onclick="switchView('props')">
+                    <div class="feature-icon-wrap">🏀</div>
+                    <h3 class="feature-title">Props de Jugadores</h3>
+                    <p class="feature-desc">530+ jugadores con splits Home/Away, consistency scores, últimos 10 juegos y análisis avanzado.</p>
+                    <div class="feature-arrow">Ver Base →</div>
+                </div>
                 <div class="feature-card" onclick="switchView('picks')">
                     <div class="feature-icon-wrap">🤖</div>
                     <h3 class="feature-title">Picks IA</h3>
@@ -1629,6 +1636,48 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- VIEW: PROPS                                                 -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div id="view-props" class="view-panel" style="padding-top:80px;">
+        <div style="max-width:1400px;margin:0 auto;padding:40px 32px;">
+            <!-- HEADER -->
+            <div style="text-align:center;margin-bottom:32px;">
+                <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:8px;">🏀 Props de Jugadores</h1>
+                <p style="color:rgba(255,255,255,0.45);font-size:15px;">Temporada Regular 2025-26 • Stats en tiempo real</p>
+            </div>
+
+            <!-- SEARCH BAR -->
+            <div style="max-width:700px;margin:0 auto 48px;position:relative;">
+                <div style="position:relative;">
+                    <span style="position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:20px;opacity:0.5;">🔍</span>
+                    <input type="text" id="database-search" placeholder="Buscar jugador por nombre..." 
+                        style="width:100%;padding:18px 20px 18px 52px;border-radius:var(--r-lg);border:2px solid var(--glass-border);background:var(--glass-bg);backdrop-filter:blur(16px);color:white;font-size:16px;font-family:var(--font-body);outline:none;transition:all 0.3s;"
+                        onfocus="this.style.borderColor='rgba(255,215,0,0.4)';this.style.boxShadow='0 0 24px rgba(255,215,0,0.1)'"
+                        onblur="this.style.borderColor='var(--glass-border)';this.style.boxShadow='none'"
+                        oninput="propsSearch(this.value)"
+                    />
+                </div>
+                <div id="database-results" style="position:absolute;top:100%;left:0;right:0;z-index:100;margin-top:8px;display:none;"></div>
+            </div>
+
+            <!-- PLAYER DETAIL (hidden by default) -->
+            <div id="propsPlayerDetail" style="display:none;margin-bottom:48px;"></div>
+
+            <!-- SEASON LEADERS -->
+            <div id="propsLeaders">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+                    <div>
+                        <div style="font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">SEASON LEADERS</div>
+                        <h2 style="font-family:var(--font-display);font-size:28px;font-weight:800;">Líderes NBA 2025-26</h2>
+                    </div>
+                    <div style="font-family:var(--font-mono);font-size:12px;color:rgba(255,255,255,0.35);">Actualizado Feb 2026</div>
+                </div>
+                <div id="leadersGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- VIEW: PICKS IA                                              -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div id="view-picks" class="view-panel" style="padding-top:80px;">
@@ -1665,15 +1714,34 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- VIEW: H2H (HEAD-TO-HEAD)                                    -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    
-    <div id="view-teams" class="view-panel" style="padding-top:80px;">
-      <div style="max-width:1200px;margin:0 auto;padding:40px 32px;text-align:center;">
-        <div style="font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">PRÓXIMAMENTE</div>
-        <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:16px;">🏀 Análisis de Equipos</h1>
-        <p style="color:rgba(255,255,255,0.55);font-size:16px;line-height:1.7;">Comparador H2H de equipos, estadísticas por cuarto y análisis contextual completo. Próximamente disponible.</p>
+    <div id="view-h2h" class="view-panel" style="padding-top:80px;">
+      <div style="max-width:1200px;margin:0 auto;padding:40px 32px;">
+        <div style="text-align:center;margin-bottom:28px;">
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">HEAD TO HEAD</div>
+          <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:8px;">⚔️ H2H Comparador</h1>
+          <p style="color:rgba(255,255,255,0.55);font-size:15px;line-height:1.7;margin:0;">Compara 2 jugadores con métricas clave y contexto. Escribe para buscar.</p>
+        </div>
+
+        <div class="h2h-grid">
+          <div class="h2h-search-container">
+            <label>Jugador 1</label>
+            <input type="text" id="h2h-search-1" placeholder="Buscar jugador..." autocomplete="off">
+            <div id="h2h-results-1" class="search-results"></div>
+          </div>
+
+          <div class="h2h-search-container">
+            <label>Jugador 2</label>
+            <input type="text" id="h2h-search-2" placeholder="Buscar jugador..." autocomplete="off">
+            <div id="h2h-results-2" class="search-results"></div>
+          </div>
+        </div>
+
+        <div id="h2h-comparison" class="h2h-comparison"></div>
       </div>
     </div>
-<div id="view-tracking" class="view-panel" style="padding-top:80px;">
+
+
+    <div id="view-tracking" class="view-panel" style="padding-top:80px;">
         <div style="max-width:1000px;margin:0 auto;padding:40px 32px;text-align:center;">
             <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:40px;">📈 Tracking</h1>
             <div class="placeholder-card">
@@ -2051,6 +2119,8 @@ function showLogin() {
     if (registerScreen) registerScreen.style.display = 'none';
     if (forgotScreen) forgotScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = 'none';
+    try { if (typeof hideLoading === 'function') hideLoading(); } catch(_) {}
+
 }
 
 function showRegister() {
@@ -2063,6 +2133,8 @@ function showRegister() {
     if (registerScreen) registerScreen.style.display = 'flex';
     if (forgotScreen) forgotScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = 'none';
+    try { if (typeof hideLoading === 'function') hideLoading(); } catch(_) {}
+
 }
 
 function showForgotPassword() {
@@ -2129,6 +2201,7 @@ function onUserLoggedIn(user) {
 
 // Cargar datos del usuario
 let USER_PICKS_TOTALES = {};
+let USER_PICKS_PROPS = {};
 let USER_PICKS_AI = {};
 let USER_PICKS_BACKTESTING = {};
 let USER_BANKROLL = { current: 0, initial: 0, history: [] };
@@ -2141,6 +2214,11 @@ function loadUserData() {
     database.ref(`users/${userId}/picks_totales`).on('value', (s) => { 
         USER_PICKS_TOTALES = s.val() || {}; 
     });
+    
+    database.ref(`users/${userId}/picks_props`).on('value', (s) => { 
+        USER_PICKS_PROPS = s.val() || {}; 
+    });
+    
     database.ref(`users/${userId}/picks_ai`).on('value', (s) => { 
         USER_PICKS_AI = s.val() || {}; 
     });
@@ -2180,6 +2258,7 @@ function logout() {
         if (userId) {
             try {
                 database.ref(`users/${userId}/picks_totales`).off();
+                database.ref(`users/${userId}/picks_props`).off();
                 database.ref(`users/${userId}/picks_ai`).off();
                 database.ref(`users/${userId}/picks_backtesting`).off();
                 database.ref(`users/${userId}/bankroll`).off();
@@ -2230,7 +2309,12 @@ function logout() {
               - Ajuste automático por PACE
               - Comparación vs líneas de casas de apuestas
               - Guardado de picks con tracking
-
+           
+           4. PROPS DE JUGADORES
+              - Estructura lista para API premium
+              - Análisis individual de jugadores
+              - Stats de puntos, asistencias, rebotes
+              - Sistema de probabilidades
            
            5. AI PICKS AUTOMÁTICAS
               - Generación automática de picks con 75%+ probabilidad
@@ -2277,6 +2361,8 @@ function logout() {
            │   │   └── createdAt
            │   ├── picks_totales/
            │   │   └── {pickId} → picks de calculadora
+           │   ├── picks_props/
+           │   │   └── {pickId} → picks de props
            │   ├── picks_ai/
            │   │   └── {pickId} → AI picks agregados
            │   ├── picks_backtesting/
@@ -2419,6 +2505,7 @@ function logout() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         // Load content if needed
+        if (view === 'props') loadPlayers();
         if (view === 'totals') {
             // Re-render the app if navigating to totals
             if (typeof render === 'function') render();
@@ -2428,6 +2515,9 @@ function logout() {
         }
         if (view === 'h2h') {
             if (typeof window.initH2H === 'function') window.initH2H();
+        }
+        if (view === 'props') {
+            if (typeof window.initDatabaseUI === 'function') window.initDatabaseUI();
         }
 }
 
@@ -2449,9 +2539,887 @@ function logout() {
     }
 
     // ═══════════════════════════════════════════════════════════
-
+    // PROPS SYSTEM — NBA 2025-26 SEASON LEADERS + SEARCH
     // ═══════════════════════════════════════════════════════════
 
+    let PROPS_DB = null; // Will hold fetched player database
+    let propsLoaded = false;
+
+    // NBA 2025-26 Season Leaders (real data as of Feb 2026)
+    const NBA_LEADERS = {
+        ppg: {
+            title: 'POINTS PER GAME', icon: '🏀', color: '#FFD700', abbr: 'PPG',
+            players: [
+                { rank: 1, name: 'Luka Dončić', team: 'LAL', value: 33.6, gp: 40 },
+                { rank: 2, name: 'Shai Gilgeous-Alexander', team: 'OKC', value: 31.8, gp: 49 },
+                { rank: 3, name: 'Anthony Edwards', team: 'MIN', value: 29.7, gp: 42 },
+                { rank: 4, name: 'Jaylen Brown', team: 'BOS', value: 29.5, gp: 46 },
+                { rank: 5, name: 'Tyrese Maxey', team: 'PHI', value: 28.8, gp: 49 }
+            ]
+        },
+        rpg: {
+            title: 'REBOUNDS PER GAME', icon: '💪', color: '#22d3ee', abbr: 'RPG',
+            players: [
+                { rank: 1, name: 'Karl-Anthony Towns', team: 'NYK', value: 11.9, gp: 48 },
+                { rank: 2, name: 'Rudy Gobert', team: 'MIN', value: 11.3, gp: 50 },
+                { rank: 3, name: 'Donovan Clingan', team: 'POR', value: 11.2, gp: 47 },
+                { rank: 4, name: 'Victor Wembanyama', team: 'SAS', value: 11.1, gp: 37 },
+                { rank: 5, name: 'Ivica Zubac', team: 'LAC', value: 11.0, gp: 43 }
+            ]
+        },
+        apg: {
+            title: 'ASSISTS PER GAME', icon: '🎯', color: '#34d399', abbr: 'APG',
+            players: [
+                { rank: 1, name: 'Cade Cunningham', team: 'DET', value: 9.8, gp: 44 },
+                { rank: 2, name: 'Luka Dončić', team: 'LAL', value: 8.6, gp: 42 },
+                { rank: 3, name: 'Jalen Johnson', team: 'ATL', value: 8.2, gp: 48 },
+                { rank: 4, name: 'James Harden', team: 'LAC', value: 8.1, gp: 44 },
+                { rank: 5, name: 'Andrew Nembhard', team: 'IND', value: 7.5, gp: 40 }
+            ]
+        },
+        spg: {
+            title: 'STEALS PER GAME', icon: '🤏', color: '#f43f5e', abbr: 'SPG',
+            players: [
+                { rank: 1, name: 'Cason Wallace', team: 'OKC', value: 2.1, gp: 49 },
+                { rank: 2, name: 'Kawhi Leonard', team: 'LAC', value: 2.0, gp: 37 },
+                { rank: 3, name: 'Tyrese Maxey', team: 'PHI', value: 2.0, gp: 49 },
+                { rank: 4, name: 'Ausar Thompson', team: 'DET', value: 1.9, gp: 46 },
+                { rank: 5, name: 'Dyson Daniels', team: 'ATL', value: 1.9, gp: 51 }
+            ]
+        },
+        bpg: {
+            title: 'BLOCKS PER GAME', icon: '🛡️', color: '#a78bfa', abbr: 'BPG',
+            players: [
+                { rank: 1, name: 'Victor Wembanyama', team: 'SAS', value: 2.7, gp: 37 },
+                { rank: 2, name: 'Alex Sarr', team: 'WAS', value: 2.1, gp: 40 },
+                { rank: 3, name: 'Chet Holmgren', team: 'OKC', value: 2.0, gp: 45 },
+                { rank: 4, name: 'Evan Mobley', team: 'CLE', value: 2.0, gp: 42 },
+                { rank: 5, name: 'Jay Huff', team: 'IND', value: 1.9, gp: 51 }
+            ]
+        },
+        tpm: {
+            title: '3-POINTERS PER GAME', icon: '🎯', color: '#fbbf24', abbr: '3PG',
+            players: [
+                { rank: 1, name: 'Stephen Curry', team: 'GSW', value: 4.5, gp: 43 },
+                { rank: 2, name: 'Donovan Mitchell', team: 'CLE', value: 3.7, gp: 48 },
+                { rank: 3, name: 'Donte DiVincenzo', team: 'MIN', value: 3.4, gp: 49 },
+                { rank: 4, name: 'Kon Knueppel', team: 'CHA', value: 3.4, gp: 50 },
+                { rank: 5, name: 'Tyrese Maxey', team: 'PHI', value: 3.4, gp: 49 }
+            ]
+        },
+        td: {
+            title: 'TRIPLE DOUBLES', icon: '👑', color: '#FFD700', abbr: 'TD',
+            players: [
+                { rank: 1, name: 'Nikola Jokić', team: 'DEN', value: 17, gp: 52 },
+                { rank: 2, name: 'Luka Dončić', team: 'LAL', value: 7, gp: 42 },
+                { rank: 3, name: 'Cade Cunningham', team: 'DET', value: 6, gp: 44 },
+                { rank: 4, name: 'Jalen Johnson', team: 'ATL', value: 5, gp: 48 },
+                { rank: 5, name: 'LeBron James', team: 'LAL', value: 4, gp: 41 }
+            ]
+        },
+        dd: {
+            title: 'DOUBLE DOUBLES', icon: '✌️', color: '#22d3ee', abbr: 'DD',
+            players: [
+                { rank: 1, name: 'Jalen Johnson', team: 'ATL', value: 34, gp: 48 },
+                { rank: 2, name: 'Karl-Anthony Towns', team: 'NYK', value: 34, gp: 48 },
+                { rank: 3, name: 'Nikola Jokić', team: 'DEN', value: 33, gp: 52 },
+                { rank: 4, name: 'Rudy Gobert', team: 'MIN', value: 31, gp: 50 },
+                { rank: 5, name: 'Donovan Clingan', team: 'POR', value: 28, gp: 47 }
+            ]
+        }
+    };
+
+    // Team full names + abbreviations
+    const TEAM_ABBR_MAP = {
+        'LAL':'Los Angeles Lakers','OKC':'Oklahoma City Thunder','MIN':'Minnesota Timberwolves',
+        'BOS':'Boston Celtics','PHI':'Philadelphia 76ers','NYK':'New York Knicks',
+        'POR':'Portland Trail Blazers','SAS':'San Antonio Spurs','LAC':'LA Clippers',
+        'DET':'Detroit Pistons','ATL':'Atlanta Hawks','IND':'Indiana Pacers',
+        'GSW':'Golden State Warriors','CLE':'Cleveland Cavaliers','CHA':'Charlotte Hornets',
+        'DEN':'Denver Nuggets','WAS':'Washington Wizards','MIA':'Miami Heat',
+        'MIL':'Milwaukee Bucks','DAL':'Dallas Mavericks','PHX':'Phoenix Suns',
+        'SAC':'Sacramento Kings','TOR':'Toronto Raptors','HOU':'Houston Rockets',
+        'MEM':'Memphis Grizzlies','CHI':'Chicago Bulls','BKN':'Brooklyn Nets',
+        'NOP':'New Orleans Pelicans','ORL':'Orlando Magic','UTA':'Utah Jazz'
+    };
+
+    function renderLeadersGrid() {
+        const grid = document.getElementById('leadersGrid');
+        if (!grid) return;
+        grid.innerHTML = Object.entries(NBA_LEADERS).map(([key, cat]) => {
+            return `
+            <div style="background:var(--glass-bg);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--r-lg);overflow:hidden;transition:all 0.4s var(--ease-out);"
+                 onmouseover="this.style.borderColor='${cat.color}33';this.style.boxShadow='0 12px 40px ${cat.color}15'"
+                 onmouseout="this.style.borderColor='var(--glass-border)';this.style.boxShadow='none'">
+                <!-- Header -->
+                <div style="padding:20px 24px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:22px;">${cat.icon}</span>
+                        <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1.5px;color:${cat.color};">${cat.title}</span>
+                    </div>
+                    <span style="font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,0.25);">2025-26</span>
+                </div>
+                <!-- Players -->
+                <div style="padding:8px 0;">
+                    ${cat.players.map((p, i) => `
+                    <div onclick="searchAndShowPlayer('${p.name}')" 
+                         style="display:flex;align-items:center;padding:10px 24px;cursor:pointer;transition:all 0.2s;"
+                         onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
+                        <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:${i === 0 ? cat.color : 'rgba(255,255,255,0.35)'};width:28px;">${p.rank}.</span>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-family:var(--font-body);font-size:14px;font-weight:${i === 0 ? '700' : '500'};color:${i === 0 ? 'white' : 'rgba(255,255,255,0.8)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+                            <div style="font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px;">${TEAM_ABBR_MAP[p.team] || p.team} · ${p.gp} GP</div>
+                        </div>
+                        <span style="font-family:var(--font-display);font-size:${i === 0 ? '22px' : '18px'};font-weight:800;color:${i === 0 ? cat.color : 'rgba(255,255,255,0.7)'};">${p.value}</span>
+                    </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // Search system
+    function propsSearch(query) {
+        const container = document.getElementById('database-results');
+        if (!query || query.length < 2) {
+            container.style.display = 'none';
+            return;
+        }
+        const q = query.toLowerCase();
+        // Search in leaders first
+        let results = [];
+        Object.values(NBA_LEADERS).forEach(cat => {
+            cat.players.forEach(p => {
+                if (p.name.toLowerCase().includes(q) && !results.find(r => r.name === p.name)) {
+                    results.push({ name: p.name, team: p.team, stat: `${p.value} ${cat.abbr}` });
+                }
+            });
+        });
+        // Search in loaded database
+        if (PROPS_DB) {
+            Object.entries(PROPS_DB).forEach(([nombre, data]) => {
+                if (nombre.toLowerCase().includes(q) && !results.find(r => r.name === nombre)) {
+                    results.push({ name: nombre, team: data.equipo || data.team || '', stat: `${data.temporada_actual?.pts || '?'} PPG` });
+                }
+            });
+        }
+        results = results.slice(0, 8);
+        if (results.length === 0) {
+            container.style.display = 'block';
+            container.innerHTML = `<div style="background:var(--bg-raised);border:1px solid var(--glass-border);border-radius:var(--r-md);padding:16px 20px;color:rgba(255,255,255,0.5);font-size:14px;">No se encontraron resultados para "${sanitizeHTML(query)}"</div>`;
+            return;
+        }
+        container.style.display = 'block';
+        container.innerHTML = `<div style="background:var(--bg-raised);border:1px solid var(--glass-border);border-radius:var(--r-md);overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,0.5);">
+            ${results.map(r => `
+            <div onclick="searchAndShowPlayer('${r.name.replace(/'/g, "\\'")}')" 
+                 style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;transition:background 0.2s;border-bottom:1px solid rgba(255,255,255,0.04);"
+                 onmouseover="this.style.background='rgba(255,215,0,0.06)'" onmouseout="this.style.background='transparent'">
+                <div>
+                    <div style="font-weight:600;font-size:14px;">${r.name}</div>
+                    <div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">${TEAM_ABBR_MAP[r.team] || r.team}</div>
+                </div>
+                <span style="font-family:var(--font-mono);font-size:13px;color:var(--gold);font-weight:600;">${r.stat}</span>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    function searchAndShowPlayer(name) {
+        document.getElementById('database-results').style.display = 'none';
+        const input = document.getElementById('database-search');
+        if (input) input.value = name;
+
+        const detail = document.getElementById('propsPlayerDetail');
+        const leaders = document.getElementById('propsLeaders');
+
+        // Gather stats from all leader categories for this player
+        let playerStats = {};
+        Object.entries(NBA_LEADERS).forEach(([key, cat]) => {
+            const found = cat.players.find(p => p.name === name);
+            if (found) playerStats[cat.abbr] = { value: found.value, rank: found.rank, gp: found.gp, team: found.team };
+        });
+
+        const team = playerStats[Object.keys(playerStats)[0]]?.team || '';
+        const teamFull = TEAM_ABBR_MAP[team] || team;
+        const gp = playerStats[Object.keys(playerStats)[0]]?.gp || '?';
+
+        // Try database for more detailed stats
+        let dbPlayer = null;
+        if (PROPS_DB) {
+            dbPlayer = PROPS_DB[name] || Object.values(PROPS_DB).find(p => p.nombre === name);
+        }
+
+        const stats = dbPlayer?.temporada_actual || {};
+
+        leaders.style.display = 'none';
+        detail.style.display = 'block';
+        detail.innerHTML = `
+        <div style="animation:viewFadeIn 0.4s var(--ease-out);">
+            <button onclick="closePlayerDetail()" style="background:var(--gold-subtle);border:1px solid rgba(255,215,0,0.2);color:var(--gold);padding:10px 20px;border-radius:var(--r-sm);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:24px;transition:all 0.3s;"
+                onmouseover="this.style.background='rgba(255,215,0,0.15)'" onmouseout="this.style.background='var(--gold-subtle)'">
+                ← Volver a Rankings
+            </button>
+            <div style="background:var(--glass-bg);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--r-xl);padding:40px;overflow:hidden;">
+                <!-- Player Header -->
+                <div style="display:flex;align-items:center;gap:24px;margin-bottom:32px;flex-wrap:wrap;">
+                    <div style="width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,170,0,0.08));display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0;">🏀</div>
+                    <div style="flex:1;">
+                        <h2 style="font-family:var(--font-display);font-size:clamp(24px,4vw,36px);font-weight:800;margin-bottom:4px;">${name}</h2>
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                            <span style="font-family:var(--font-mono);font-size:13px;color:var(--gold);background:var(--gold-subtle);padding:4px 12px;border-radius:6px;">${team}</span>
+                            <span style="color:rgba(255,255,255,0.5);font-size:14px;">${teamFull}</span>
+                            <span style="font-family:var(--font-mono);font-size:12px;color:rgba(255,255,255,0.3);">${gp} GP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rankings Badges -->
+                ${Object.keys(playerStats).length > 0 ? `
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;">
+                    ${Object.entries(playerStats).map(([abbr, s]) => `
+                    <div style="background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,170,0,0.05));border:1px solid rgba(255,215,0,0.15);border-radius:10px;padding:8px 16px;display:flex;align-items:center;gap:8px;">
+                        <span style="font-family:var(--font-mono);font-size:11px;color:var(--gold);font-weight:700;">#${s.rank}</span>
+                        <span style="font-size:13px;color:rgba(255,255,255,0.7);">${abbr}</span>
+                    </div>`).join('')}
+                </div>` : ''}
+
+                <!-- Stats Grid -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px;margin-bottom:28px;">
+                    ${Object.entries(playerStats).map(([abbr, s]) => `
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;">
+                        <div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--gold);margin-bottom:4px;">${s.value}</div>
+                        <div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">${abbr}</div>
+                    </div>`).join('')}
+                    ${dbPlayer && stats.pts ? `
+                    ${!playerStats['PPG'] ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--gold);">${stats.pts}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">PPG</div></div>` : ''}
+                    ${!playerStats['RPG'] && stats.reb ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--cyan);">${stats.reb}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">RPG</div></div>` : ''}
+                    ${!playerStats['APG'] && stats.ast ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--emerald);">${stats.ast}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">APG</div></div>` : ''}
+                    ${stats.stl ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--rose);">${stats.stl}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">SPG</div></div>` : ''}
+                    ${stats.blk ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--violet);">${stats.blk}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">BPG</div></div>` : ''}
+                    ${stats.fg3m ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--amber);">${stats.fg3m}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">3PM</div></div>` : ''}
+                    ${stats.min ? `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r-md);padding:20px 16px;text-align:center;"><div style="font-family:var(--font-display);font-size:32px;font-weight:800;color:rgba(255,255,255,0.7);">${stats.min}</div><div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;">MIN</div></div>` : ''}
+                    ` : ''}
+                </div>
+
+                <!-- Last 5 Games (if available in DB) -->
+                ${dbPlayer && dbPlayer.ultimos_juegos && dbPlayer.ultimos_juegos.length > 0 ? `
+                <div style="margin-top:8px;">
+                    <h3 style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:16px;color:var(--cyan);">📊 Últimos Juegos</h3>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                            <thead>
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                                    <th style="padding:10px 12px;text-align:left;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">FECHA</th>
+                                    <th style="padding:10px 12px;text-align:left;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">VS</th>
+                                    <th style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">PTS</th>
+                                    <th style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">AST</th>
+                                    <th style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">REB</th>
+                                    <th style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.4);font-family:var(--font-mono);font-size:11px;">MIN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dbPlayer.ultimos_juegos.slice(0, 5).map((g, i) => `
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.04);${i % 2 === 0 ? 'background:rgba(255,255,255,0.02);' : ''}">
+                                    <td style="padding:10px 12px;color:rgba(255,255,255,0.6);">${g.fecha}</td>
+                                    <td style="padding:10px 12px;font-weight:600;">${g.oponente}</td>
+                                    <td style="padding:10px 12px;text-align:center;font-weight:700;color:var(--gold);">${g.pts}</td>
+                                    <td style="padding:10px 12px;text-align:center;font-weight:700;color:var(--emerald);">${g.ast}</td>
+                                    <td style="padding:10px 12px;text-align:center;font-weight:700;color:var(--cyan);">${g.reb}</td>
+                                    <td style="padding:10px 12px;text-align:center;color:rgba(255,255,255,0.5);">${g.min}</td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>` : ''}
+            </div>
+        </div>`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closePlayerDetail() {
+        document.getElementById('propsPlayerDetail').style.display = 'none';
+        document.getElementById('propsLeaders').style.display = 'block';
+        document.getElementById('database-search').value = '';
+    }
+
+    async function loadPlayers() {
+        if (propsLoaded) return;
+        propsLoaded = true;
+        renderLeadersGrid();
+        // Load database in background for search
+        try {
+            const res = await fetch('/data/nba_players_database_v3.json');
+            if (res.ok) {
+                PROPS_DB = await res.json();
+                // [debug] 
+            }
+        } catch (e) {
+            // [debug] 
+        }
+    }
+
+    // Close search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#propsSearchInput') && !e.target.closest('#propsSearchResults')) {
+            const sr = document.getElementById('database-results');
+            if (sr) sr.style.display = 'none';
+        }
+    });
+
+    // [debug] 
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- SISTEMA COMPLETO v2.5 — MOTOR DE PREDICCIÓN               -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <script>
+        // ═══ DEBUG LOGGER — Set to true for development debugging ═══
+        const DEBUG_MODE = false;
+        // Usamos el Logger global seguro (expuesto en window) para evitar ReferenceError en módulos
+        const logger = {
+            log:  (...args) => { if (DEBUG_MODE) window.logger.log(...args); },
+            warn: (...args) => { if (DEBUG_MODE) window.logger.warn(...args); },
+            info: (...args) => { if (DEBUG_MODE) window.logger.info(...args); },
+            error:(...args) => { window.logger.error(...args); }
+        };
+        // (Opcional) exponer también este wrapper, por si otro bloque lo espera
+        window.logger = window.logger || Logger;
+
+        // Basic HTML sanitizer for user-generated content
+        function sanitizeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+
+// LOGO SVG - NUEVO DISEÑO AZUL MARINO + DORADO + BASKETBALL
+// ═══════════════════════════════════════════════════════════════
+const LOGO_SVG = `
+<svg class="logo-icon logo-glow" width="70" height="70" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="primaryGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#FFD700"/>
+            <stop offset="50%" style="stop-color:#FFA500"/>
+            <stop offset="100%" style="stop-color:#FF8C00"/>
+        </linearGradient>
+        <linearGradient id="accentBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#1e3a8a"/>
+            <stop offset="100%" style="stop-color:#0d1b2a"/>
+        </linearGradient>
+        <linearGradient id="glowGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#FFED4E; stop-opacity:0.8"/>
+            <stop offset="100%" style="stop-color:#FFD700; stop-opacity:0.3"/>
+        </linearGradient>
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+        <filter id="shadow">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.5"/>
+        </filter>
+    </defs>
+    <circle cx="50" cy="50" r="45" fill="url(#accentBlue)" filter="url(#shadow)"/>
+    <circle cx="50" cy="50" r="42" fill="none" stroke="url(#primaryGold)" stroke-width="4" opacity="0.9" filter="url(#glow)"/>
+    <g transform="translate(50, 50)">
+        <polygon points="0,-25 21.65,-12.5 21.65,12.5 0,25 -21.65,12.5 -21.65,-12.5"
+                 fill="none" stroke="url(#primaryGold)" stroke-width="2.5" opacity="0.8"/>
+        <polygon points="0,-18 15.59,-9 15.59,9 0,18 -15.59,9 -15.59,-9"
+                 fill="url(#glowGold)" opacity="0.3"/>
+        <line x1="0" y1="-25" x2="0" y2="-18" stroke="url(#primaryGold)" stroke-width="2"/>
+        <line x1="21.65" y1="-12.5" x2="15.59" y2="-9" stroke="url(#primaryGold)" stroke-width="2"/>
+        <line x1="21.65" y1="12.5" x2="15.59" y2="9" stroke="url(#primaryGold)" stroke-width="2"/>
+        <line x1="0" y1="25" x2="0" y2="18" stroke="url(#primaryGold)" stroke-width="2"/>
+        <line x1="-21.65" y1="12.5" x2="-15.59" y2="9" stroke="url(#primaryGold)" stroke-width="2"/>
+        <line x1="-21.65" y1="-12.5" x2="-15.59" y2="-9" stroke="url(#primaryGold)" stroke-width="2"/>
+        <circle cx="0" cy="0" r="8" fill="url(#primaryGold)" opacity="0.9"/>
+        <line x1="-8" y1="0" x2="8" y2="0" stroke="#0d1b2a" stroke-width="1.5"/>
+        <line x1="0" y1="-8" x2="0" y2="8" stroke="#0d1b2a" stroke-width="1.5"/>
+        <circle cx="0" cy="-22" r="2" fill="#FFD700"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/></circle>
+        <circle cx="19" cy="-11" r="2" fill="#FFD700"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" begin="0.3s" repeatCount="indefinite"/></circle>
+        <circle cx="19" cy="11" r="2" fill="#FFD700"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" begin="0.6s" repeatCount="indefinite"/></circle>
+        <circle cx="0" cy="22" r="2" fill="#FFD700"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" begin="0.9s" repeatCount="indefinite"/></circle>
+        <circle cx="-19" cy="11" r="2" fill="#FFD700"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" begin="1.2s" repeatCount="indefinite"/></circle>
+        <circle cx="-19" cy="-11" r="2" fill="#FFD700"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" begin="1.5s" repeatCount="indefinite"/></circle>
+    </g>
+    <circle cx="15" cy="15" r="2" fill="#FFD700" opacity="0.6"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/></circle>
+    <circle cx="85" cy="15" r="2" fill="#FFD700" opacity="0.6"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" begin="0.5s" repeatCount="indefinite"/></circle>
+    <circle cx="85" cy="85" r="2" fill="#FFD700" opacity="0.6"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" begin="1s" repeatCount="indefinite"/></circle>
+    <circle cx="15" cy="85" r="2" fill="#FFD700" opacity="0.6"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" begin="1.5s" repeatCount="indefinite"/></circle>
+</svg>`;
+
+// ═══════════════════════════════════════════════════════════════
+// TEAM STATS - CARGA DINÁMICA DESDE API
+// ═══════════════════════════════════════════════════════════════
+const NBA_STATS_API = 'https://nba-stats-api.joseluisgarciafonseca.workers.dev/';
+let TEAM_STATS = {};
+let statsLastUpdated = null;
+let statsSource = 'Cargando...';
+let apiConnected = false;
+
+// Cargar estadísticas desde la API
+async function loadTeamStatsFromAPI() {
+
+// On some hardened CSP setups (like strict Vercel headers), external Worker endpoints
+// may be blocked. Fail fast to prevent the UI from hanging.
+if (location.hostname.endsWith("vercel.app") && !NBA_STATS_API.startsWith(location.origin)) {
+  
+  return null;
+}
+
+    try {
+        showLoading('Cargando estadísticas NBA...');
+        const response = await fetchWithTimeout(NBA_STATS_API, {}, 9000);
+        const data = await response.json();
+
+        if (data.teams && Object.keys(data.teams).length > 0) {
+            TEAM_STATS = data.teams;
+            statsLastUpdated = data.lastUpdated;
+            statsSource = data.source || 'TeamRankings.com';
+            apiConnected = true;
+
+            // NUEVO: Cargar promedios de liga si vienen en la API
+            if (data.leagueAverages) {
+                LEAGUE_AVG = {
+                    ...LEAGUE_AVG,
+                    ...data.leagueAverages
+                };
+                // Debug: Promedios actualizados
+            }
+
+            // Calcular promedios de liga si no vienen en la API
+            if (!data.leagueAverages) {
+                let totalPace = 0, totalPpg = 0, count = 0;
+                Object.values(TEAM_STATS).forEach(team => {
+                    if (team.pace) { totalPace += team.pace; count++; }
+                    if (team.full) totalPpg += team.full;
+                });
+                if (count > 0) {
+                    LEAGUE_AVG.pace = totalPace / count;
+                    LEAGUE_AVG.ppg = totalPpg / Object.keys(TEAM_STATS).length;
+                }
+            }
+
+            // Mostrar si los datos vinieron del caché
+            if (data.cached) {
+                // Stats desde caché
+            } else {
+                // Stats actualizadas
+            }
+
+            // Mostrar versión del modelo
+            // Modelo v2.5 activo
+
+            showNotification('📊 Modelo v2.0 cargado correctamente', 'success');
+        } else {
+            throw new Error('No se recibieron datos de equipos');
+        }
+    } catch (error) {
+        Logger.error('Error cargando stats:', error);
+        apiConnected = false;
+        showNotification('⚠️ Error cargando stats: usando datos de respaldo', 'warning');
+
+        // ⚠️ DATOS DE RESPALDO - SOLO PARA EMERGENCIAS
+        // Si ves estos datos, significa que la API falló
+        // Los datos HOME/AWAY pueden no ser precisos
+        logger.warn('⚠️ USANDO DATOS DE RESPALDO - API NO DISPONIBLE');
+        showNotification('⚠️ API offline - usando datos de respaldo (pueden no ser precisos)', 'warning');
+
+        TEAM_STATS = {
+            "Nuggets": { fullHome: 122.7, fullAway: 117.5, full: 119.9, q1Home: 32.6, q1Away: 30.1, q1: 31.2, halfHome: 60.3, halfAway: 58.0, half: 59.2, pace: 101.5, oppPpg: 115.2, oppQ1: 28.5, oppHalf: 56.5 },
+            "Thunder": { fullHome: 121.0, fullAway: 118.5, full: 120.1, q1Home: 31.3, q1Away: 30.6, q1: 31.1, halfHome: 59.8, halfAway: 58.8, half: 59.3, pace: 99.8, oppPpg: 106.5, oppQ1: 26.5, oppHalf: 53.0 },
+            "Cavaliers": { fullHome: 122.5, fullAway: 119.0, full: 120.9, q1Home: 31.3, q1Away: 29.0, q1: 30.1, halfHome: 61.1, halfAway: 59.2, half: 60.2, pace: 98.2, oppPpg: 108.5, oppQ1: 27.0, oppHalf: 54.0 },
+            "Celtics": { fullHome: 119.5, fullAway: 115.2, full: 117.6, q1Home: 31.4, q1Away: 30.0, q1: 30.9, halfHome: 59.4, halfAway: 58.7, half: 59.0, pace: 99.5, oppPpg: 109.8, oppQ1: 27.5, oppHalf: 55.0 },
+            "Knicks": { fullHome: 118.8, fullAway: 114.5, full: 116.8, q1Home: 31.1, q1Away: 29.1, q1: 30.4, halfHome: 58.8, halfAway: 57.0, half: 58.0, pace: 98.5, oppPpg: 110.5, oppQ1: 27.5, oppHalf: 55.5 },
+            "Grizzlies": { fullHome: 116.5, fullAway: 113.8, full: 115.2, q1Home: 28.9, q1Away: 28.6, q1: 28.7, halfHome: 57.0, halfAway: 56.2, half: 56.6, pace: 99.2, oppPpg: 113.8, oppQ1: 28.5, oppHalf: 57.0 },
+            "Rockets": { fullHome: 115.0, fullAway: 113.5, full: 114.5, q1Home: 29.5, q1Away: 28.4, q1: 30.0, halfHome: 57.5, halfAway: 56.8, half: 57.2, pace: 99.2, oppPpg: 110.8, oppQ1: 27.5, oppHalf: 55.5 },
+            "Lakers": { fullHome: 115.8, fullAway: 112.0, full: 114.0, q1Home: 30.9, q1Away: 28.2, q1: 29.5, halfHome: 58.0, halfAway: 55.5, half: 56.8, pace: 100.5, oppPpg: 114.5, oppQ1: 28.5, oppHalf: 57.0 },
+            "Heat": { fullHome: 112.5, fullAway: 110.8, full: 111.5, q1Home: 28.9, q1Away: 27.8, q1: 28.4, halfHome: 55.5, halfAway: 54.8, half: 55.2, pace: 97.2, oppPpg: 111.5, oppQ1: 28.0, oppHalf: 56.0 },
+            "Bucks": { fullHome: 114.5, fullAway: 109.8, full: 112.5, q1Home: 28.8, q1Away: 27.7, q1: 28.6, halfHome: 56.5, halfAway: 54.8, half: 55.8, pace: 99.2, oppPpg: 114.2, oppQ1: 28.5, oppHalf: 57.0 },
+            "Warriors": { fullHome: 116.0, fullAway: 111.5, full: 114.1, q1Home: 27.1, q1Away: 26.0, q1: 26.5, halfHome: 56.8, halfAway: 52.7, half: 54.6, pace: 100.2, oppPpg: 113.5, oppQ1: 28.5, oppHalf: 57.0 },
+            "Suns": { fullHome: 115.5, fullAway: 113.0, full: 114.3, q1Home: 27.8, q1Away: 29.6, q1: 28.7, halfHome: 57.0, halfAway: 56.5, half: 56.8, pace: 98.5, oppPpg: 115.2, oppQ1: 29.0, oppHalf: 57.5 },
+            "Mavericks": { fullHome: 117.5, fullAway: 113.7, full: 115.5, q1Home: 28.2, q1Away: 28.2, q1: 28.2, halfHome: 57.2, halfAway: 57.0, half: 57.1, pace: 99.8, oppPpg: 112.8, oppQ1: 28.0, oppHalf: 56.5 },
+            "Clippers": { fullHome: 114.0, fullAway: 110.5, full: 112.5, q1Home: 28.9, q1Away: 27.5, q1: 29.8, halfHome: 56.5, halfAway: 54.5, half: 55.5, pace: 97.5, oppPpg: 110.5, oppQ1: 27.5, oppHalf: 55.0 },
+            "Kings": { fullHome: 115.5, fullAway: 118.0, full: 116.8, q1Home: 30.5, q1Away: 28.7, q1: 29.1, halfHome: 57.5, halfAway: 58.5, half: 58.0, pace: 101.2, oppPpg: 117.8, oppQ1: 29.5, oppHalf: 59.0 },
+            "Pacers": { fullHome: 118.0, fullAway: 115.5, full: 116.8, q1Home: 28.9, q1Away: 28.8, q1: 28.9, halfHome: 57.5, halfAway: 57.0, half: 57.3, pace: 102.8, oppPpg: 119.5, oppQ1: 30.0, oppHalf: 60.0 },
+            "76ers": { fullHome: 116.5, fullAway: 114.0, full: 115.5, q1Home: 30.9, q1Away: 27.5, q1: 30.8, halfHome: 58.5, halfAway: 56.5, half: 57.5, pace: 98.2, oppPpg: 115.8, oppQ1: 29.0, oppHalf: 58.0 },
+            "Hawks": { fullHome: 117.0, fullAway: 116.5, full: 118.4, q1Home: 31.6, q1Away: 29.2, q1: 30.7, halfHome: 59.2, halfAway: 58.5, half: 59.9, pace: 101.5, oppPpg: 118.8, oppQ1: 29.5, oppHalf: 59.0 },
+            "Bulls": { fullHome: 115.0, fullAway: 114.5, full: 117.1, q1Home: 28.0, q1Away: 28.3, q1: 29.3, halfHome: 56.5, halfAway: 56.2, half: 57.6, pace: 99.8, oppPpg: 116.2, oppQ1: 29.0, oppHalf: 58.0 },
+            "Nets": { fullHome: 108.5, fullAway: 110.5, full: 109.5, q1Home: 27.3, q1Away: 27.7, q1: 27.5, halfHome: 53.5, halfAway: 55.0, half: 54.5, pace: 98.2, oppPpg: 117.2, oppQ1: 29.5, oppHalf: 58.5 },
+            "Magic": { fullHome: 112.0, fullAway: 108.5, full: 110.5, q1Home: 28.0, q1Away: 27.1, q1: 29.9, halfHome: 55.0, halfAway: 53.0, half: 54.2, pace: 96.5, oppPpg: 106.5, oppQ1: 26.5, oppHalf: 53.0 },
+            "Pistons": { fullHome: 113.0, fullAway: 110.5, full: 112.0, q1Home: 29.3, q1Away: 28.0, q1: 29.8, halfHome: 56.5, halfAway: 55.5, half: 56.0, pace: 100.2, oppPpg: 120.5, oppQ1: 30.0, oppHalf: 60.0 },
+            "Raptors": { fullHome: 114.0, fullAway: 109.0, full: 111.5, q1Home: 29.2, q1Away: 27.3, q1: 28.8, halfHome: 56.5, halfAway: 54.0, half: 55.2, pace: 98.5, oppPpg: 118.5, oppQ1: 29.5, oppHalf: 59.0 },
+            "Hornets": { fullHome: 108.5, fullAway: 107.0, full: 107.8, q1Home: 30.3, q1Away: 25.0, q1: 30.7, halfHome: 55.0, halfAway: 52.5, half: 53.7, pace: 101.8, oppPpg: 121.2, oppQ1: 30.5, oppHalf: 60.5 },
+            "Wizards": { fullHome: 109.5, fullAway: 107.5, full: 108.5, q1Home: 29.1, q1Away: 27.5, q1: 29.4, halfHome: 54.5, halfAway: 53.5, half: 54.0, pace: 100.5, oppPpg: 122.5, oppQ1: 30.5, oppHalf: 61.0 },
+            "Trail Blazers": { fullHome: 112.0, fullAway: 108.5, full: 110.5, q1Home: 29.4, q1Away: 26.5, q1: 29.6, halfHome: 56.0, halfAway: 53.5, half: 55.0, pace: 99.5, oppPpg: 119.2, oppQ1: 30.0, oppHalf: 59.5 },
+            "Spurs": { fullHome: 112.5, fullAway: 110.0, full: 111.2, q1Home: 30.2, q1Away: 27.5, q1: 30.7, halfHome: 56.0, halfAway: 54.5, half: 55.3, pace: 101.2, oppPpg: 117.5, oppQ1: 29.5, oppHalf: 59.0 },
+            "Jazz": { fullHome: 118.5, fullAway: 110.0, full: 114.5, q1Home: 33.4, q1Away: 24.3, q1: 29.3, halfHome: 60.0, halfAway: 52.5, half: 56.5, pace: 100.5, oppPpg: 119.8, oppQ1: 30.0, oppHalf: 60.0 },
+            "Pelicans": { fullHome: 111.5, fullAway: 108.0, full: 109.8, q1Home: 30.5, q1Away: 26.4, q1: 28.8, halfHome: 55.5, halfAway: 53.0, half: 54.3, pace: 98.8, oppPpg: 116.5, oppQ1: 29.0, oppHalf: 58.0 },
+            "Timberwolves": { fullHome: 114.0, fullAway: 111.5, full: 112.8, q1Home: 29.6, q1Away: 27.5, q1: 29.1, halfHome: 56.5, halfAway: 55.0, half: 55.8, pace: 98.8, oppPpg: 108.2, oppQ1: 27.0, oppHalf: 54.0 }
+        };
+        statsSource = '⚠️ DATOS DE RESPALDO (API offline)';
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VARIABLES DE ESTADO
+// ═══════════════════════════════════════════════════════════════
+let H2H_DATABASE = {};
+let PICKS_DATABASE = {};
+let VALUE_PICKS = []; // Picks de alto valor detectados automáticamente
+let BANKROLL_DATA = {
+    dailyBanks: {},
+    picks: [],
+    settings: { alertThreshold: 20, initialBank: 0 }
+};
+let bankrollChart = null;
+let filterPeriod = 'all';
+let filterType = 'all';
+let currentView = 'home';
+
+// BALLDONTLIE (SIEMPRE vía /api/proxy) — sin exponer API keys
+const BAPI_PROXY = `${location.origin}/api/proxy`;
+
+async function nsGetToken() {
+  const k = "ns_token";
+  const cached = sessionStorage.getItem(k);
+  if (cached) return cached;
+
+  const r = await fetch(`${BAPI_PROXY}?init=1`, { method: "GET" });
+  const j = await r.json();
+  if (!r.ok || !j?.token) throw new Error(j?.error || "No se pudo inicializar token");
+
+  sessionStorage.setItem(k, j.token);
+  return j.token;
+}
+
+<script>
+  // --- Auto DB Updater (players cache) ---
+  // Objetivo: que NO dependa de un botón y que NO rompa si falta scripts externos.
+  (function () {
+    const LS_PLAYERS = "ns_players_cache_v1";
+    const LS_UPDATED_AT = "ns_players_updated_at";
+    const REFRESH_EVERY_MS = 6 * 60 * 60 * 1000; // 6 horas
+
+    function now() { return Date.now(); }
+
+    async function fetchPlayersAllPages(maxPages = 25) {
+      const all = [];
+      for (let page = 1; page <= maxPages; page++) {
+        const endpoint = `/players?per_page=100&page=${page}`;
+        const url = `/api/proxy?endpoint=${encodeURIComponent(endpoint)}`;
+        const res = await fetch(url, { headers: { "Accept": "application/json" }});
+        if (!res.ok) {
+          const t = await res.text().catch(() => "");
+          throw new Error(`Proxy ${res.status}: ${t.slice(0, 200)}`);
+        }
+        const json = await res.json();
+        const data = Array.isArray(json?.data) ? json.data : [];
+        if (!data.length) break;
+        all.push(...data);
+        // si viene meta.next_cursor y es null/undefined, igual cortamos si ya no hay más
+        if (json?.meta && (json.meta.next_cursor === null || json.meta.next_cursor === undefined) && data.length < 100) break;
+      }
+      return all;
+    }
+
+    async function updateDatabase({ force = false } = {}) {
+      const last = Number(localStorage.getItem(LS_UPDATED_AT) || "0");
+      if (!force && last && (now() - last) < REFRESH_EVERY_MS) {
+        return { ok: true, skipped: true, ageMin: Math.round((now() - last) / 60000) };
+      }
+      const players = await fetchPlayersAllPages();
+      localStorage.setItem(LS_PLAYERS, JSON.stringify(players));
+      localStorage.setItem(LS_UPDATED_AT, String(now()));
+      return { ok: true, players: players.length };
+    }
+
+    // Exponer global para integraciones (y para evitar "DatabaseUpdater is undefined")
+    window.DatabaseUpdater = window.DatabaseUpdater || {};
+    window.DatabaseUpdater.updateDatabase = updateDatabase;
+
+    // Auto-run en background (sin botón)
+    window.__nsPlayersLoaded = (async () => {
+      try {
+        const r = await updateDatabase({ force: false });
+        if (r.skipped) {
+          console.log(`[DB] Players cache OK (skip). age=${r.ageMin}m`);
+        } else {
+          console.log(`[DB] Players cache actualizado: ${r.players} jugadores`);
+        }
+        return r;
+      } catch (e) {
+        console.warn("[DB] Error actualizando players cache:", e?.message || e);
+        // Si existe toast, mostramos uno no-bloqueante
+        try { window.toast?.error?.("Error cargando base de datos. Reintentando..."); } catch (_) {}
+        return { ok: false, error: String(e?.message || e) };
+      }
+    })();
+  })();
+</script>
+
+async function bapi(endpoint) {
+  const token = await nsGetToken();
+  const url = `${BAPI_PROXY}?endpoint=${encodeURIComponent(endpoint)}`;
+
+  const r = await fetch(url, {
+    headers: { "X-NS-Token": token }
+  });
+
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data?.error || `Proxy error HTTP ${r.status}`);
+  return data;
+}
+
+async function buscarJugador(nombre) {
+  const data = await bapi(`/players?search=${encodeURIComponent(nombre)}`);
+  logger.log("Resultado:", data);
+
+  if (data?.data?.length > 0) return data.data[0];
+  logger.log("No encontrado");
+  return null;
+}
+
+async function verStats(jugadorId) {
+  const data = await bapi(`/season_averages?season=2024&player_ids[]=${encodeURIComponent(jugadorId)}`);
+  if (data?.data?.length > 0) return data.data[0];
+  return null;
+}
+
+async /*
+  ====== LEGACY BLOQUEADO (usa BAPI_URL/BAPI_KEY y contiene await fuera de async) ======
+function buscarJugador(nombre) {
+    const url = BAPI_URL + '/players?search=' + nombre;
+    const resp = await fetch(url, {
+        headers: { 'Authorization': BAPI_KEY }
+    });
+    const data = await resp.json();
+    logger.log('Resultado:', data);
+    if (data.data.length > 0) {
+        const j = data.data[0];
+        logger.log('Jugador:', j.first_name, j.last_name);
+        logger.log('Equipo:', j.team.full_name);
+        logger.log('Posicion:', j.position);
+        return j;
+    } else {
+        logger.log('No encontrado');
+        return null;
+    }
+}
+
+async function verStats(jugadorId) {
+    const url = BAPI_URL + '/season_averages?season=2024&player_ids[]=' + jugadorId;
+    const resp = await fetch(url, {
+        headers: { 'Authorization': BAPI_KEY }
+    });
+    const data = await resp.json();
+    if (data.data.length > 0) {
+        const s = data.data[0];
+        logger.log('Puntos:', s.pts);
+        logger.log('Asistencias:', s.ast);
+        logger.log('Rebotes:', s.reb);
+        return s;
+    }
+    return null;
+}
+
+async function pruebaAPI() {
+    logger.log('Probando API...');
+    const jugador = await buscarJugador('Curry');
+    if (jugador) {
+        await verStats(jugador.id);
+        logger.log('Exito!');
+    }
+}
+
+
+  ====== FIN LEGACY BLOQUEADO ======
+*/
+let localTeam = '', visitingTeam = '';
+let lineQ1 = '', lineHalf = '', lineFull = '';
+let typeQ1 = 'OVER', typeHalf = 'OVER', typeFull = 'OVER';
+// NUEVO: Variables para cuotas (odds decimales)
+let oddsQ1 = '', oddsHalf = '', oddsFull = '';
+// NUEVO: Variables para línea Vegas (comparación)
+let vegasLineQ1 = '', vegasLineHalf = '', vegasLineFull = '';
+// ═══════════════════════════════════════════════════════════════
+// VARIABLES DE AJUSTE CONTEXTUAL v2.5
+// ═══════════════════════════════════════════════════════════════
+let localB2B = false, awayB2B = false;
+let localRestDays = 1, awayRestDays = 1;
+let localInjury = false, awayInjury = false;
+let localStreak = 0, awayStreak = 0;
+let awayTravel = 'none';
+let localScheduleDensity = 'normal', awayScheduleDensity = 'normal';
+let isDivisionRivalry = false;
+let gameDay = 'weekday';
+
+// NUEVO: Cache para datos de API y auto-detección
+let TEAM_SCHEDULE_CACHE = {};
+let TEAM_GAMES_CACHE = {};
+let autoDetectEnabled = true;
+
+let ingestTeam1 = '', ingestTeam2 = '', ingestLocalTeam = '', ingestDate = '';
+let ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
+let firebaseConnected = false;
+let isLoading = true;
+
+// ═══════════════════════════════════════════════════════════════
+// UTILIDADES Y HELPERS v2.5
+// ═══════════════════════════════════════════════════════════════
+
+// Debounce para evitar over-rendering
+let renderTimeout = null;
+function debouncedRender(delay = 50) {
+    if (renderTimeout) clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(() => render(), delay);
+}
+
+// Cache de cálculos de tendencia
+const TREND_CACHE = {};
+function getCachedTrend(localTeam, awayTeam, period) {
+    const key = `${localTeam}_${awayTeam}_${period}_${localB2B}_${awayB2B}_${localRestDays}_${awayRestDays}`;
+    if (TREND_CACHE[key] && Date.now() - TREND_CACHE[key].time < 5000) {
+        return TREND_CACHE[key].data;
+    }
+    return null;
+}
+function setCachedTrend(localTeam, awayTeam, period, data) {
+    const key = `${localTeam}_${awayTeam}_${period}_${localB2B}_${awayB2B}_${localRestDays}_${awayRestDays}`;
+    TREND_CACHE[key] = { data, time: Date.now() };
+}
+
+// Helper para obtener valor por período (evita código repetitivo)
+function getByPeriod(period, values) {
+    if (period === 'q1') return values.q1;
+    if (period === 'half') return values.half;
+    return values.full;
+}
+
+// Multiplicador por período
+function getPeriodMultiplier(period) {
+    if (period === 'q1') return 0.25;
+    if (period === 'half') return 0.5;
+    return 1;
+}
+
+// ParseFloat seguro con fallback
+function safeParseFloat(value, fallback = 0) {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? fallback : parsed;
+}
+
+// ParseInt seguro con fallback
+function safeParseInt(value, fallback = 0) {
+    const parsed = parseInt(value);
+    return isNaN(parsed) ? fallback : parsed;
+}
+
+// Formatear número con decimales seguros
+function safeFixed(value, decimals = 1) {
+    const num = safeParseFloat(value);
+    return num.toFixed(decimals);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOADING & NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════
+function showLoading(text = 'Cargando...') {
+    const overlay = document.getElementById('loadingOverlay');
+    const loadingText = overlay.querySelector('.loading-text');
+    loadingText.textContent = text;
+    overlay.classList.remove('hidden');
+    try { if (typeof hideLoading === 'function') hideLoading(); } catch(_) {}
+
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('hidden');
+    isLoading = false;
+}
+
+function showNotification(arg1, arg2 = 'info', arg3 = null) {
+    // Handle both calling conventions: (message, type) and (type, title, message)
+    let type, title, message;
+    if (arg3 !== null) {
+        // Called as showNotification(type, title, message)
+        type = arg1; title = arg2; message = arg3;
+    } else {
+        // Called as showNotification(message, type)
+        message = arg1; type = arg2; title = '';
+    }
+    
+    const container = document.getElementById('notificationContainer');
+    if (!container) return;
+    
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️', value: '🔥' };
+    
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.style.cssText = 'opacity:0; transform:translateX(100%);';
+    
+    // Build content safely (no innerHTML with user data)
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'notification-icon';
+    iconSpan.textContent = icons[type] || '📢';
+    
+    const textDiv = document.createElement('div');
+    textDiv.style.cssText = 'flex:1;min-width:0;';
+    
+    if (title) {
+        const titleEl = document.createElement('div');
+        titleEl.className = 'notification-title';
+        titleEl.textContent = title;
+        textDiv.appendChild(titleEl);
+    }
+    
+    const msgEl = document.createElement('div');
+    msgEl.className = 'notification-message';
+    msgEl.textContent = message;
+    textDiv.appendChild(msgEl);
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;font-size:16px;padding:0 0 0 8px;opacity:0.6;';
+    closeBtn.onclick = () => dismissNotification(notification);
+    
+    notification.style.display = 'flex';
+    notification.style.alignItems = 'center';
+    notification.style.gap = '12px';
+    notification.appendChild(iconSpan);
+    notification.appendChild(textDiv);
+    notification.appendChild(closeBtn);
+    container.appendChild(notification);
+    
+    // Animate in
+    requestAnimationFrame(() => {
+        notification.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    });
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => dismissNotification(notification), 5000);
+}
+
+function dismissNotification(el) {
+    if (!el || !el.parentNode) return;
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(100%)';
+    setTimeout(() => { if (el.parentNode) el.remove(); }, 400);
+}
+
+// Flush any notifications that were queued before this script loaded
+if (typeof _pendingNotifications !== 'undefined' && _pendingNotifications.length > 0) {
+    _pendingNotifications.forEach(n => showNotification(n.type, n.title, n.message));
+    _pendingNotifications = [];
+}
+
+// ═══════════════════════════════════════════════════════════════
 // FIREBASE DATABASE FUNCTIONS
 // ═══════════════════════════════════════════════════════════════
 function updateFirebaseStatus(status) {
@@ -4360,6 +5328,7 @@ function render() {
     else if (currentView === 'mispicks') app.innerHTML = renderMisPicks();
     else if (currentView === 'bestPicks') app.innerHTML = renderBestPicks();
     else if (currentView === 'dashboard') app.innerHTML = renderDashboard();
+    else if (currentView === 'playerProps' || currentView === 'props') app.innerHTML = renderPlayerProps();
     else if (currentView === 'bankroll') {
         app.innerHTML = renderBankrollView();
         setTimeout(() => createBankrollChart(), 100);
@@ -4640,14 +5609,14 @@ function resolveBacktestPick(pickId) {
 // ═══════════════════════════════════════════════════════════════════
 
 function renderHome() {
-    const totalPicks = Object.keys({...USER_PICKS_TOTALES, ...USER_PICKS_AI}).length;
+    const totalPicks = Object.keys({...USER_PICKS_TOTALES, ...USER_PICKS_PROPS, ...USER_PICKS_AI}).length;
     const bankroll = USER_BANKROLL.current || 0;
     const initial = USER_BANKROLL.initial || 0;
     const profit = bankroll - initial;
     const profitPercent = initial > 0 ? ((profit / initial) * 100).toFixed(1) : '0.0';
     
     // Stats de picks
-    const allPicks = [...Object.values(USER_PICKS_TOTALES), ...Object.values(USER_PICKS_AI), ...Object.values(USER_PICKS_BACKTESTING)];
+    const allPicks = [...Object.values(USER_PICKS_TOTALES), ...Object.values(USER_PICKS_PROPS), ...Object.values(USER_PICKS_AI), ...Object.values(USER_PICKS_BACKTESTING)];
     const resolved = allPicks.filter(p => p.status && p.status !== 'pending');
     const wins = resolved.filter(p => p.status === 'win').length;
     const losses = resolved.filter(p => p.status === 'loss').length;
@@ -6691,6 +7660,7 @@ function renderTotals() {
 function renderMisPicks() {
     const allPicks = [
         ...Object.values(USER_PICKS_TOTALES).map(p => ({...p, type: 'Totales'})),
+        ...Object.values(USER_PICKS_PROPS).map(p => ({...p, type: 'Props'})),
         ...Object.values(USER_PICKS_AI).map(p => ({...p, type: 'AI'})),
         ...Object.values(USER_PICKS_BACKTESTING).map(p => ({...p, type: 'Backtesting'}))
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -6798,7 +7768,7 @@ function navigateTo(v) {
     
     // Sync mobile bottom nav
     if (typeof updateMobileNav === 'function') {
-        const navMap = { 'home':'home', 'totales':'totales', 'tendencia':'totales', 'bankroll':'bankroll', 'mispicks':'mispicks', 'picks':'mispicks' };
+        const navMap = { 'home':'home', 'totales':'totales', 'tendencia':'totales', 'props':'props', 'playerProps':'props', 'bankroll':'bankroll', 'mispicks':'mispicks', 'picks':'mispicks' };
         updateMobileNav(navMap[v] || 'home');
     }
     
@@ -7552,6 +8522,266 @@ function renderBankrollView() {
         </div>
     `;
 }
+// ═══════════════════════════════════════════════════════════════
+// SISTEMA DE PROPS DE JUGADORES
+// ═══════════════════════════════════════════════════════════════
+
+let NBA_PLAYERS_DATA = {};
+let PLAYER_FAVORITES = JSON.parse(localStorage.getItem('playerFavorites') || '[]');
+let PLAYER_SEARCH_HISTORY = JSON.parse(localStorage.getItem('playerSearchHistory') || '[]');
+
+async function cargarDatosJugadores() {
+    if (Object.keys(NBA_PLAYERS_DATA).length > 0) return true;
+    try {
+        const response = await fetch('nba_players_database.json');
+        if (!response.ok) return false;
+        NBA_PLAYERS_DATA = await response.json();
+        logger.log(`✅ ${Object.keys(NBA_PLAYERS_DATA).length} jugadores cargados`);
+        return true;
+    } catch (error) {
+        Logger.error('❌ Error:', error);
+        return false;
+    }
+}
+
+function buscarJugadorLocal(query) {
+    if (!query || query.length < 2) return [];
+    const queryLower = query.toLowerCase().trim();
+    const results = [];
+    for (const nombre in NBA_PLAYERS_DATA) {
+        const nombreLower = nombre.toLowerCase();
+        if (nombreLower.includes(queryLower)) {
+            results.push({
+                nombre: nombre,
+                datos: NBA_PLAYERS_DATA[nombre],
+                score: nombreLower.startsWith(queryLower) ? 100 : 50
+            });
+        }
+    }
+    results.sort((a, b) => b.score - a.score);
+    return results.slice(0, 20);
+}
+
+function toggleFavorito(nombreJugador) {
+    const idx = PLAYER_FAVORITES.indexOf(nombreJugador);
+    if (idx > -1) {
+        PLAYER_FAVORITES.splice(idx, 1);
+    } else {
+        PLAYER_FAVORITES.push(nombreJugador);
+    }
+    localStorage.setItem('playerFavorites', JSON.stringify(PLAYER_FAVORITES));
+}
+
+function esFavorito(nombreJugador) {
+    return PLAYER_FAVORITES.includes(nombreJugador);
+}
+
+function agregarAlHistorial(nombreJugador) {
+    PLAYER_SEARCH_HISTORY = PLAYER_SEARCH_HISTORY.filter(n => n !== nombreJugador);
+    PLAYER_SEARCH_HISTORY.unshift(nombreJugador);
+    PLAYER_SEARCH_HISTORY = PLAYER_SEARCH_HISTORY.slice(0, 10);
+    localStorage.setItem('playerSearchHistory', JSON.stringify(PLAYER_SEARCH_HISTORY));
+}
+
+function renderPlayerProps() {
+    const totalJugadores = Object.keys(NBA_PLAYERS_DATA).length;
+    return `
+        <div class="p-4 max-w-7xl mx-auto fade-in">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="bg-yellow-900/30 hover:bg-yellow-800/50 text-yellow-400 hover:text-yellow-300 px-4 py-2 rounded-xl font-semibold transition-all border border-yellow-700/30">
+                        ← Volver al Inicio
+                    </button>
+                    <h1 class="text-3xl font-display gradient-text">Props de Jugadores</h1>
+                </div>
+                <div class="text-sm text-gray-400">
+                    <span class="bg-cyan-900/30 px-3 py-1 rounded-full">${totalJugadores} jugadores</span>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6 mb-6">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="playerSearchInput" 
+                        placeholder="🔍 Buscar jugador..." 
+                        class="w-full bg-navy-light text-white px-6 py-4 rounded-xl border-2 border-gray-700 focus:border-cyan-500 text-lg"
+                        oninput="buscarJugadoresEnTiempoReal(this.value)"
+                    />
+                </div>
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <span class="text-sm text-gray-400">Favoritos:</span>
+                    ${PLAYER_FAVORITES.slice(0, 5).map(nombre => 
+                        `<button onclick="buscarYMostrar('${nombre}')" class="bg-yellow-900/30 hover:bg-yellow-800/50 px-3 py-1 rounded-full text-sm text-yellow-300">
+                            ⭐ ${nombre}
+                        </button>`
+                    ).join('')}
+                </div>
+            </div>
+
+            <div id="searchResults" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
+            <div id="playerDetails"></div>
+        </div>
+    `;
+}
+
+function buscarJugadoresEnTiempoReal(query) {
+    const container = document.getElementById('searchResults');
+    if (!query || query.length < 2) {
+        container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">Escribe al menos 2 caracteres...</div>';
+        return;
+    }
+    const resultados = buscarJugadorLocal(query);
+    if (resultados.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No se encontraron jugadores</div>';
+        return;
+    }
+    container.innerHTML = resultados.map(r => {
+        const stats = r.datos.temporada_actual;
+        const isFav = esFavorito(r.nombre);
+        return `
+            <div class="player-card glass rounded-xl p-4 cursor-pointer hover:border-cyan-500 border-2 border-transparent transition-all" 
+                 onclick="mostrarDetallesJugador('${r.nombre}')">
+                <div class="flex justify-between items-start mb-3">
+                    <h3 class="font-bold text-lg text-white">${r.nombre}</h3>
+                    <button onclick="event.stopPropagation(); toggleFavoritoYRefresh('${r.nombre}')" class="text-xl">
+                        ${isFav ? '⭐' : '☆'}
+                    </button>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-orange-900/30 rounded-lg p-2">
+                        <div class="text-2xl font-bold text-orange-400">${stats.pts}</div>
+                        <div class="text-xs text-gray-400">PPG</div>
+                    </div>
+                    <div class="bg-blue-900/30 rounded-lg p-2">
+                        <div class="text-2xl font-bold text-blue-400">${stats.ast}</div>
+                        <div class="text-xs text-gray-400">APG</div>
+                    </div>
+                    <div class="bg-green-900/30 rounded-lg p-2">
+                        <div class="text-2xl font-bold text-green-400">${stats.reb}</div>
+                        <div class="text-xs text-gray-400">RPG</div>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-500 text-center">${stats.partidos} GP</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function mostrarDetallesJugador(nombreJugador) {
+    const datos = NBA_PLAYERS_DATA[nombreJugador];
+    if (!datos) return;
+    agregarAlHistorial(nombreJugador);
+    const stats = datos.temporada_actual;
+    const ultimos5 = datos.ultimos_5_juegos || [];
+    let avg5 = { pts: 0, ast: 0, reb: 0 };
+    if (ultimos5.length > 0) {
+        avg5.pts = (ultimos5.reduce((s, j) => s + j.pts, 0) / ultimos5.length).toFixed(1);
+        avg5.ast = (ultimos5.reduce((s, j) => s + j.ast, 0) / ultimos5.length).toFixed(1);
+        avg5.reb = (ultimos5.reduce((s, j) => s + j.reb, 0) / ultimos5.length).toFixed(1);
+    }
+    const container = document.getElementById('playerDetails');
+    container.innerHTML = `
+        <div class="glass rounded-2xl p-6 fade-in">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold gradient-text mb-2">${nombreJugador}</h2>
+                    <div class="text-gray-400">${datos.temporada} • ${stats.partidos} GP</div>
+                </div>
+                <button onclick="toggleFavoritoYRefresh('${nombreJugador}')" class="text-4xl">
+                    ${esFavorito(nombreJugador) ? '⭐' : '☆'}
+                </button>
+            </div>
+            <h3 class="text-xl font-bold text-cyan-400 mb-4">📊 Promedios Temporada</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+                <div class="bg-gradient-to-br from-orange-900/40 to-orange-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-orange-400">${stats.pts}</div>
+                    <div class="text-xs text-gray-400 mt-1">PPG</div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-900/40 to-blue-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-blue-400">${stats.ast}</div>
+                    <div class="text-xs text-gray-400 mt-1">APG</div>
+                </div>
+                <div class="bg-gradient-to-br from-green-900/40 to-green-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-green-400">${stats.reb}</div>
+                    <div class="text-xs text-gray-400 mt-1">RPG</div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-900/40 to-purple-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-purple-400">${stats.stl}</div>
+                    <div class="text-xs text-gray-400 mt-1">STL</div>
+                </div>
+                <div class="bg-gradient-to-br from-red-900/40 to-red-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-red-400">${stats.blk}</div>
+                    <div class="text-xs text-gray-400 mt-1">BLK</div>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-900/40 to-yellow-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-yellow-400">${stats.fg3m}</div>
+                    <div class="text-xs text-gray-400 mt-1">3PM</div>
+                </div>
+                <div class="bg-gradient-to-br from-cyan-900/40 to-cyan-800/20 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-numbers text-cyan-400">${stats.min}</div>
+                    <div class="text-xs text-gray-400 mt-1">MIN</div>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold text-cyan-400 mb-4">🏀 Últimos 5 Juegos</h3>
+            <div class="overflow-x-auto mb-4">
+                <table class="w-full text-sm">
+                    <thead class="bg-navy-lighter">
+                        <tr>
+                            <th class="p-3 text-left">Fecha</th>
+                            <th class="p-3 text-left">vs</th>
+                            <th class="p-3 text-center">PTS</th>
+                            <th class="p-3 text-center">AST</th>
+                            <th class="p-3 text-center">REB</th>
+                            <th class="p-3 text-center">MIN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${ultimos5.map((juego, i) => `
+                            <tr class="${i % 2 === 0 ? 'bg-navy-light/30' : ''}">
+                                <td class="p-3">${juego.fecha}</td>
+                                <td class="p-3 font-semibold">${juego.oponente}</td>
+                                <td class="p-3 text-center font-bold text-orange-400">${juego.pts}</td>
+                                <td class="p-3 text-center font-bold text-blue-400">${juego.ast}</td>
+                                <td class="p-3 text-center font-bold text-green-400">${juego.reb}</td>
+                                <td class="p-3 text-center text-gray-400">${juego.min}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="bg-yellow-900/20 border border-yellow-700/30 rounded-xl p-4">
+                <div class="font-bold text-yellow-400 mb-2">📈 Promedio Últimos 5</div>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-orange-400">${avg5.pts}</div>
+                        <div class="text-xs text-gray-400">PPG</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-blue-400">${avg5.ast}</div>
+                        <div class="text-xs text-gray-400">APG</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-green-400">${avg5.reb}</div>
+                        <div class="text-xs text-gray-400">RPG</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function buscarYMostrar(nombre) {
+    document.getElementById('playerSearchInput').value = nombre;
+    buscarJugadoresEnTiempoReal(nombre);
+    setTimeout(() => mostrarDetallesJugador(nombre), 300);
+}
+
+function toggleFavoritoYRefresh(nombre) {
+    toggleFavorito(nombre);
+    render();
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // AI PICKS ENGINE - Generación automática de picks con IA
@@ -7679,7 +8909,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadValuePicksFromStorage();
     // Primero cargar estadísticas desde API (no requiere auth)
     await loadTeamStatsFromAPI();
-// Cargar AI Picks desde cache local
+    // CARGAR DATOS DE JUGADORES AUTOMÁTICAMENTE (no requiere auth)
+    await cargarDatosJugadores();
+    // Cargar AI Picks desde cache local
     loadAIPicks();
     logger.log('✅ NioSports Pro v4.0 - Datos públicos cargados. Esperando autenticación...');
 });
@@ -7806,7 +9038,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             
             const dbPath = type === 'Totales' ? 'picks_totales' :
-                                                      type === 'AI' ? 'picks_ai' :
+                           type === 'Props' ? 'picks_props' :
+                           type === 'AI' ? 'picks_ai' :
                            'picks_backtesting';
             
             database.ref(`users/${userId}/${dbPath}/${pickId}`).once('value').then(snapshot => {
@@ -8329,7 +9562,8 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'h' || e.key === 'H') { if (typeof navigateTo === 'function') navigateTo('home'); }
     else if (e.key === 't' || e.key === 'T') { if (typeof navigateTo === 'function') navigateTo('totales'); }
     else if (e.key === 'b' || e.key === 'B') { if (typeof navigateTo === 'function') navigateTo('bankroll'); }
-else if (e.key === 'r' || e.key === 'R') { if (typeof refreshData === 'function') refreshData(); }
+    else if (e.key === 'p' || e.key === 'P') { if (typeof navigateTo === 'function') navigateTo('props'); }
+    else if (e.key === 'r' || e.key === 'R') { if (typeof refreshData === 'function') refreshData(); }
 });
 // MOBILE BOTTOM NAV + REFRESH
 // ═══════════════════════════════════════════════════════════════
@@ -8338,7 +9572,8 @@ function mobileNav(view) {
     const viewMap = {
         'home': 'home',
         'totales': 'totales',
-'bankroll': 'bankroll',
+        'props': 'props',
+        'bankroll': 'bankroll',
         'mispicks': 'mispicks'
     };
     
@@ -8428,6 +9663,10 @@ document.addEventListener('click', function(e) {
                 <span class="nav-icon">📊</span>
                 <span>Totales</span>
             </button>
+            <button class="nav-item" onclick="mobileNav('props')" id="mnav-props" aria-label="Props">
+                <span class="nav-icon">👤</span>
+                <span>Props</span>
+            </button>
             <button class="nav-item" onclick="mobileNav('bankroll')" id="mnav-bankroll" aria-label="Bankroll">
                 <span class="nav-icon">💰</span>
                 <span>Bank</span>
@@ -8454,6 +9693,27 @@ function fetchWithTimeout(resource, options = {}, timeoutMs = 10000) {
 // Avoid ReferenceErrors if other modules expect these.
 window._pendingNotifications = window._pendingNotifications || [];
 window.__niosports = window.__niosports || {};
+
+// Early UI helpers (so external scripts like firebase-init.js never crash if they run first)
+window.showLoading = window.showLoading || function(text = 'Cargando...') {
+  try {
+    const overlay = document.getElementById('loadingOverlay');
+    if (!overlay) return;
+    const loadingText = overlay.querySelector('.loading-text');
+    if (loadingText) loadingText.textContent = text;
+    overlay.classList.remove('hidden');
+  } catch (_) {}
+};
+window.hideLoading = window.hideLoading || function() {
+  try {
+    const overlay = document.getElementById('loadingOverlay');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+  } catch (_) {}
+};
+window.showNotification = window.showNotification || function(message, type = 'info') {
+  try { console.log('[notif]', type, message); } catch(_) {}
+};
 let __picksLoadTimer = null;
 let __h2hLoadTimer = null;
 
@@ -8498,6 +9758,8 @@ function __stopTimer(t) { try { if (t) clearTimeout(t); } catch(_) {} }
             setTimeout(tryInit, 50);
         } else {
             console.error('❌ No se pudo auto-ejecutar initFirebase después de 5 segundos');
+            try { if (typeof hideLoading === 'function') hideLoading(); } catch(_) {}
+            try { if (typeof showNotification === 'function') showNotification('No se pudo inicializar Firebase. Recarga la página o revisa tu conexión.', 'warning'); } catch(_) {}
         }
     }
     
