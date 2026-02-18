@@ -1,4 +1,3 @@
-
 // scripts/api-client.js
 // Cliente profesional para consumir BallDontLie API vía proxy seguro
 // ════════════════════════════════════════════════════════════════
