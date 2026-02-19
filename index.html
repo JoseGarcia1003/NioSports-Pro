@@ -1504,9 +1504,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
             <div class="nav-links">
                 <a class="nav-link active" data-view="home" onclick="switchView('home')">Inicio</a>
                 <a class="nav-link" data-view="totals" onclick="switchView('totals')">Totales</a>
-                <a class="nav-link" data-view="props" onclick="switchView('props')">Props</a>
                 <a class="nav-link" data-view="picks" onclick="switchView('picks')">Picks IA</a>
-                <a class="nav-link" data-view="h2h" onclick="switchView('h2h')">H2H</a>
+                <a class="nav-link" data-view="bankroll" onclick="switchView('bankroll')">Bankroll</a>
                 <a class="nav-link" data-view="tracking" onclick="switchView('tracking')">Tracking</a>
                 <button class="nav-cta" onclick="showAuth()">Mi Cuenta</button>
             </div>
@@ -1535,7 +1534,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
             </p>
             <div class="hero-actions">
                 <button class="btn-gold" onclick="switchView('totals')">Explorar Sistema →</button>
-                <button class="btn-ghost" onclick="switchView('props')">Base de Datos</button>
+                <button class="btn-ghost" onclick="switchView('bankroll')">Mi Bankroll</button>
             </div>
         </section>
 
@@ -1573,11 +1572,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
                     <p class="feature-desc">Sistema v2.5 con calibración automática, análisis B2B, PACE, altitude y 47 factores contextuales.</p>
                     <div class="feature-arrow">Explorar →</div>
                 </div>
-                <div class="feature-card" onclick="switchView('props')">
-                    <div class="feature-icon-wrap">🏀</div>
-                    <h3 class="feature-title">Props de Jugadores</h3>
-                    <p class="feature-desc">530+ jugadores con splits Home/Away, consistency scores, últimos 10 juegos y análisis avanzado.</p>
-                    <div class="feature-arrow">Ver Base →</div>
+                <div class="feature-card" onclick="switchView('bankroll')">
+                    <div class="feature-icon-wrap">💰</div>
+                    <h3 class="feature-title">Bankroll Pro</h3>
+                    <p class="feature-desc">Gestión profesional de bankroll: capital inicial, historial, gráfico de evolución y Kelly Criterion.</p>
+                    <div class="feature-arrow">Mi Bankroll →</div>
                 </div>
                 <div class="feature-card" onclick="switchView('picks')">
                     <div class="feature-icon-wrap">🤖</div>
@@ -1636,45 +1635,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- VIEW: PROPS                                                 -->
+    <!-- VIEW: BANKROLL                                              -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="view-props" class="view-panel" style="padding-top:80px;">
-        <div style="max-width:1400px;margin:0 auto;padding:40px 32px;">
-            <!-- HEADER -->
-            <div style="text-align:center;margin-bottom:32px;">
-                <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:8px;">🏀 Props de Jugadores</h1>
-                <p style="color:rgba(255,255,255,0.45);font-size:15px;">Temporada Regular 2025-26 • Stats en tiempo real</p>
-            </div>
-
-            <!-- SEARCH BAR -->
-            <div style="max-width:700px;margin:0 auto 48px;position:relative;">
-                <div style="position:relative;">
-                    <span style="position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:20px;opacity:0.5;">🔍</span>
-                    <input type="text" id="database-search" placeholder="Buscar jugador por nombre..." 
-                        style="width:100%;padding:18px 20px 18px 52px;border-radius:var(--r-lg);border:2px solid var(--glass-border);background:var(--glass-bg);backdrop-filter:blur(16px);color:white;font-size:16px;font-family:var(--font-body);outline:none;transition:all 0.3s;"
-                        onfocus="this.style.borderColor='rgba(255,215,0,0.4)';this.style.boxShadow='0 0 24px rgba(255,215,0,0.1)'"
-                        onblur="this.style.borderColor='var(--glass-border)';this.style.boxShadow='none'"
-                        oninput="propsSearch(this.value)"
-                    />
-                </div>
-                <div id="database-results" style="position:absolute;top:100%;left:0;right:0;z-index:100;margin-top:8px;display:none;"></div>
-            </div>
-
-            <!-- PLAYER DETAIL (hidden by default) -->
-            <div id="propsPlayerDetail" style="display:none;margin-bottom:48px;"></div>
-
-            <!-- SEASON LEADERS -->
-            <div id="propsLeaders">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
-                    <div>
-                        <div style="font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">SEASON LEADERS</div>
-                        <h2 style="font-family:var(--font-display);font-size:28px;font-weight:800;">Líderes NBA 2025-26</h2>
-                    </div>
-                    <div style="font-family:var(--font-mono);font-size:12px;color:rgba(255,255,255,0.35);">Actualizado Feb 2026</div>
-                </div>
-                <div id="leadersGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;"></div>
-            </div>
-        </div>
+    <div id="view-bankroll" class="view-panel" style="padding-top:80px;">
+        <div id="bankroll-app-container" style="max-width:1200px;margin:0 auto;padding:40px 32px;"></div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════ -->
@@ -1711,36 +1675,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     <!-- VIEW: TRACKING                                              -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- VIEW: H2H (HEAD-TO-HEAD)                                    -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <div id="view-h2h" class="view-panel" style="padding-top:80px;">
-      <div style="max-width:1200px;margin:0 auto;padding:40px 32px;">
-        <div style="text-align:center;margin-bottom:28px;">
-          <div style="font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">HEAD TO HEAD</div>
-          <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:8px;">⚔️ H2H Comparador</h1>
-          <p style="color:rgba(255,255,255,0.55);font-size:15px;line-height:1.7;margin:0;">Compara 2 jugadores con métricas clave y contexto. Escribe para buscar.</p>
-        </div>
-
-        <div class="h2h-grid">
-          <div class="h2h-search-container">
-            <label>Jugador 1</label>
-            <input type="text" id="h2h-search-1" placeholder="Buscar jugador..." autocomplete="off">
-            <div id="h2h-results-1" class="search-results"></div>
-          </div>
-
-          <div class="h2h-search-container">
-            <label>Jugador 2</label>
-            <input type="text" id="h2h-search-2" placeholder="Buscar jugador..." autocomplete="off">
-            <div id="h2h-results-2" class="search-results"></div>
-          </div>
-        </div>
-
-        <div id="h2h-comparison" class="h2h-comparison"></div>
-      </div>
-    </div>
-
-
     <div id="view-tracking" class="view-panel" style="padding-top:80px;">
         <div style="max-width:1000px;margin:0 auto;padding:40px 32px;text-align:center;">
             <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:40px;">📈 Tracking</h1>
@@ -2505,19 +2439,19 @@ function logout() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         // Load content if needed
-        if (view === 'props') loadPlayers();
+        if (view === 'bankroll') {
+            if (typeof loadBankrollPanel === 'function') loadBankrollPanel();
+            else if (typeof renderBankrollView === 'function') {
+                const container = document.getElementById('bankroll-app-container');
+                if (container) { container.innerHTML = renderBankrollView(); setTimeout(() => { if (typeof createBankrollChart === 'function') createBankrollChart(); }, 100); }
+            }
+        }
         if (view === 'totals') {
             // Re-render the app if navigating to totals
             if (typeof render === 'function') render();
         }
             if (view === 'picks') {
             if (typeof window.loadPicksIA === 'function') window.loadPicksIA();
-        }
-        if (view === 'h2h') {
-            if (typeof window.initH2H === 'function') window.initH2H();
-        }
-        if (view === 'props') {
-            if (typeof window.initDatabaseUI === 'function') window.initDatabaseUI();
         }
 }
 
@@ -9664,7 +9598,7 @@ document.addEventListener('click', function(e) {
                 <span class="nav-icon">📊</span>
                 <span>Totales</span>
             </button>
-            <button class="nav-item" onclick="mobileNav('props')" id="mnav-props" aria-label="Props">
+            <button class="nav-item" onclick="mobileNav('props')" id="mnav-props" aria-label="Props" style="display:none">
                 <span class="nav-icon">👤</span>
                 <span>Props</span>
             </button>
