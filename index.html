@@ -2416,43 +2416,58 @@ function logout() {
     // View switching system
     function switchView(view) {
         // Track user action
-        if (window.trackAction) {
-            window.trackAction('switch_view', { view });
-        }
-        window.currentView = view;
-        
-        // Hide all views
-        document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
-        // Show target view
-        const target = document.getElementById('view-' + view);
-        if (target) target.classList.add('active');
+        if (window.trackAction) window.trackAction('switch_view', { view });
 
-        // Update nav links
+        // ── Map external nav names → internal currentView names ──────────
+        // render() uses 'totales'/'tendencia' for Totales, 'bankroll' for Bankroll
+        const viewNameMap = {
+            'totals':   'totales',   // nav says 'totals', render() expects 'totales'
+            'bankroll': 'bankroll',
+            'picks':    'picks',
+            'tracking': 'tracking',
+            'home':     'home'
+        };
+        const internalView = viewNameMap[view] || view;
+        window.currentView = internalView;   // render() reads this
+
+        // ── Show/hide outer panels ────────────────────────────────────────
+        document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
+
+        if (view === 'totals') {
+            // Totales lives inside view-totals → #app
+            const panel = document.getElementById('view-totals');
+            if (panel) panel.classList.add('active');
+            if (typeof render === 'function') render();
+
+        } else if (view === 'bankroll') {
+            // Bankroll has its own panel with #bankroll-app-container
+            const panel = document.getElementById('view-bankroll');
+            if (panel) panel.classList.add('active');
+            const container = document.getElementById('bankroll-app-container');
+            if (container && typeof renderBankrollView === 'function') {
+                container.innerHTML = renderBankrollView();
+                setTimeout(() => { if (typeof createBankrollChart === 'function') createBankrollChart(); }, 150);
+            }
+
+        } else if (view === 'picks') {
+            const panel = document.getElementById('view-picks');
+            if (panel) panel.classList.add('active');
+            if (typeof window.loadPicksIA === 'function') window.loadPicksIA();
+
+        } else {
+            // home, tracking, etc.
+            const panel = document.getElementById('view-' + view);
+            if (panel) panel.classList.add('active');
+        }
+
+        // ── Sync nav active state ─────────────────────────────────────────
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         const activeLink = document.querySelector('.nav-link[data-view="' + view + '"]');
         if (activeLink) activeLink.classList.add('active');
 
-        // Close mobile nav
+        // ── Close mobile nav & scroll to top ─────────────────────────────
         document.querySelector('.nav-links')?.classList.remove('open');
-
-        // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        // Load content if needed
-        if (view === 'bankroll') {
-            if (typeof loadBankrollPanel === 'function') loadBankrollPanel();
-            else if (typeof renderBankrollView === 'function') {
-                const container = document.getElementById('bankroll-app-container');
-                if (container) { container.innerHTML = renderBankrollView(); setTimeout(() => { if (typeof createBankrollChart === 'function') createBankrollChart(); }, 100); }
-            }
-        }
-        if (view === 'totals') {
-            // Re-render the app if navigating to totals
-            if (typeof render === 'function') render();
-        }
-            if (view === 'picks') {
-            if (typeof window.loadPicksIA === 'function') window.loadPicksIA();
-        }
 }
 
     function showAuth() {
