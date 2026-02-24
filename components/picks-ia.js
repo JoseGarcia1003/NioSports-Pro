@@ -1,615 +1,649 @@
 // components/picks-ia.js
-// Componente Picks IA v3.0 — 100% Robusto
+// Sistema de Picks TOTALES NBA — NioSports Pro v3.0
+// Diseñado para la estructura REAL de picks-engine.js
+// Mercados: Q1 | Primera Mitad | Tiempo Completo
 // ════════════════════════════════════════════════════════════════
 
-console.log('📊 Picks IA Component v3.0 cargando...');
+console.log('🎯 Picks IA Totales v3.0 cargando...');
 
 window.initPicksIa = async function (container) {
-  if (!container) {
-    console.error('[Picks IA] Contenedor no encontrado');
-    return;
-  }
+  if (!container) { console.error('[Picks IA] Contenedor no encontrado'); return; }
 
-  // ── Helpers seguros ────────────────────────────────────────
-  function safe(val, fallback = '—') {
-    if (val === undefined || val === null || val === '') return fallback;
-    return val;
-  }
+  // ── HELPERS ────────────────────────────────────────────────────
+  const safe   = (v, fb = '—') => (v === undefined || v === null || v === '') ? fb : v;
+  const safeNum = (v, fb = 0) => { const n = parseFloat(v); return isNaN(n) ? fb : n; };
+  const fmt1   = (v) => safeNum(v).toFixed(1);
 
-  function safeTeamName(teamObj, fallback = 'Equipo') {
-    if (!teamObj) return fallback;
-    return teamObj.full_name || teamObj.name || teamObj.abbreviation || fallback;
-  }
-
-  function safeRecommendation(rec) {
-    if (!rec || typeof rec !== 'object') {
-      return { type: 'medium', text: 'Pick Analizado', units: 1 };
-    }
-    return {
-      type: rec.type || 'medium',
-      text: rec.text || 'Pick Analizado',
-      units: rec.units || 1,
-    };
-  }
-
-  function safeFactors(factors) {
-    const defaults = {
-      playerForm: 0.55, teamForm: 0.55, homeAdvantage: 0.60,
-      restDays: 0.50, injuries: 0.65, h2hHistory: 0.55,
-      pace: 0.60, defense: 0.60, offense: 0.65, momentum: 0.55,
-    };
-    if (!factors || typeof factors !== 'object') return defaults;
-    const result = {};
-    for (const [k, v] of Object.entries(factors)) {
-      const num = parseFloat(v);
-      result[k] = isNaN(num) ? 0.5 : Math.min(1, Math.max(0, num));
-    }
-    return Object.keys(result).length ? result : defaults;
-  }
-
-  function isHomeTeam(teamObj, game) {
-    if (!teamObj || !game || !game.home_team) return false;
-    return teamObj.id === game.home_team.id;
-  }
-
-  // ── Estados ────────────────────────────────────────────────
+  // ── LOADING ────────────────────────────────────────────────────
   function showLoading() {
     container.innerHTML = `
-      <div class="pia-loading">
-        <div class="pia-loading-header">
-          <div class="pia-pulse-dot"></div>
-          <span>Motor IA analizando 47 factores...</span>
+      <div class="pts-loading">
+        <div class="pts-loading-bar"><div class="pts-loading-fill"></div></div>
+        <div class="pts-loading-label"><span class="pts-dot"></span>Analizando juegos con datos reales de TeamRankings.com...</div>
+        <div class="pts-skel-grid">
+          ${[0,1,2].map(() => `
+            <div class="pts-skel-card">
+              <div class="pts-skel-row" style="width:55%;height:18px;margin-bottom:8px"></div>
+              <div class="pts-skel-row" style="width:35%;height:13px;margin-bottom:18px"></div>
+              <div style="display:flex;gap:8px;margin-bottom:16px">
+                <div class="pts-skel-row" style="width:22%;height:28px;margin:0"></div>
+                <div class="pts-skel-row" style="width:22%;height:28px;margin:0"></div>
+                <div class="pts-skel-row" style="width:22%;height:28px;margin:0"></div>
+              </div>
+              <div class="pts-skel-row" style="width:90%;height:58px;margin-bottom:14px"></div>
+              <div class="pts-skel-row" style="width:80%;height:11px;margin-bottom:7px"></div>
+              <div class="pts-skel-row" style="width:65%;height:11px;margin-bottom:7px"></div>
+              <div class="pts-skel-row" style="width:73%;height:11px"></div>
+            </div>`).join('')}
         </div>
-        <div class="pia-skeletons">
-          ${Array(3).fill('').map(() => `
-            <div class="pia-skel-card">
-              <div class="pia-skel-row" style="width:65%;height:22px;"></div>
-              <div class="pia-skel-row" style="width:40%;height:16px;margin-top:10px;"></div>
-              <div class="pia-skel-row" style="width:90%;height:13px;margin-top:14px;"></div>
-              <div class="pia-skel-row" style="width:75%;height:13px;margin-top:8px;"></div>
-              <div class="pia-skel-row" style="width:80%;height:13px;margin-top:8px;"></div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
+      </div>`;
   }
 
   function showError(msg) {
     container.innerHTML = `
-      <div class="pia-error">
-        <div class="pia-error-icon">❌</div>
-        <h3 class="pia-error-title">Error cargando picks</h3>
-        <p class="pia-error-msg">${safe(msg, 'Error desconocido')}</p>
-        <button class="pia-btn-retry" onclick="window.loadPicksIA()">
-          🔄 Reintentar
-        </button>
-        <div class="pia-error-tips">
-          <p>💡 Sugerencias:</p>
-          <ul>
-            <li>Verifica tu conexión a internet</li>
-            <li>Recarga la página (Ctrl+R)</li>
-          </ul>
-        </div>
-      </div>
-    `;
+      <div class="pts-state-box pts-error-box">
+        <div class="pts-state-icon">❌</div>
+        <h3 class="pts-state-title">Error cargando análisis</h3>
+        <p class="pts-state-msg">${safe(msg, 'Error desconocido')}</p>
+        <button class="pts-btn-primary" onclick="window.loadPicksIA()">🔄 Reintentar</button>
+        <p class="pts-tips">💡 Verifica tu conexión · Recarga (Ctrl+R)</p>
+      </div>`;
   }
 
   function showEmpty() {
-    const today = new Date().toLocaleDateString('es-ES', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
+    const today = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
     container.innerHTML = `
-      <div class="pia-empty">
-        <div class="pia-empty-icon">📅</div>
-        <h3>No hay juegos programados para hoy</h3>
-        <p class="pia-empty-date">${today}</p>
-        <p>La NBA programa juegos de forma variable. Vuelve mañana para nuevos picks.</p>
-        <button class="pia-btn-retry" onclick="window.loadPicksIA()">🔄 Actualizar</button>
-      </div>
-    `;
+      <div class="pts-state-box">
+        <div class="pts-state-icon">📅</div>
+        <h3 class="pts-state-title">No hay juegos programados hoy</h3>
+        <p class="pts-state-date">${today}</p>
+        <p class="pts-state-msg">La NBA programa juegos de forma variable. Vuelve mañana para nuevos análisis.</p>
+        <button class="pts-btn-primary" onclick="window.loadPicksIA()">🔄 Actualizar</button>
+      </div>`;
   }
 
-  // ── Render de una pick card ────────────────────────────────
-  function renderCard(pick) {
-    // Sanitizar datos con defensas completas
-    const rec         = safeRecommendation(pick.recommendation);
-    const factors     = safeFactors(pick.factors);
-    const pickTeam    = pick.pickTeam || { full_name: 'Equipo A', id: 0 };
-    const oppTeam     = pick.opponentTeam || { full_name: 'Equipo B', id: 1 };
-    const game        = pick.game || {};
-    const confidence  = parseInt(pick.confidence) || 60;
-    const gameId      = safe(pick.gameId, 'game-' + Math.random().toString(36).slice(2));
-    const spread      = safe(pick.spread, 'N/D');
-    const moneyline   = safe(pick.moneyline, 'N/D');
-    const overUnder   = safe(pick.overUnder, 'N/D');
-    const explanation = safe(pick.explanation, 'Análisis completado por el motor IA.');
-    const reasoning   = Array.isArray(pick.reasoning) ? pick.reasoning : [];
-    const isDemo      = pick.isDemo === true;
-
-    const confColor   = confidence >= 78 ? '#10b981' : confidence >= 68 ? '#f59e0b' : '#ef4444';
-    const confClass   = confidence >= 78 ? 'strong' : confidence >= 68 ? 'medium' : 'weak';
-    const recEmoji    = rec.type === 'strong' ? '🔥' : rec.type === 'medium' ? '⚡' : '💡';
-
-    const circumference = 2 * Math.PI * 30;
-    const dashOffset    = circumference * (1 - confidence / 100);
-
-    const topFactors = Object.entries(factors).slice(0, 6);
-
-    return `
-      <div class="pia-card ${confClass}" data-confidence="${confClass}" data-game-id="${gameId}">
-        ${isDemo ? '<div class="pia-demo-badge">📊 Modo Demo</div>' : ''}
-
-        <!-- HEADER -->
-        <div class="pia-card-head">
-          <div class="pia-matchup">
-            <div class="pia-team pia-team-pick">
-              <span class="pia-team-abbr">${pickTeam.abbreviation || pickTeam.full_name?.slice(0,3).toUpperCase() || 'AAA'}</span>
-              <span class="pia-team-name">${safeTeamName(pickTeam)}</span>
-              <span class="pia-loc-badge ${isHomeTeam(pickTeam, game) ? 'home' : 'away'}">
-                ${isHomeTeam(pickTeam, game) ? '🏠 Local' : '✈️ Visitante'}
-              </span>
-            </div>
-
-            <div class="pia-vs">VS</div>
-
-            <div class="pia-team pia-team-opp">
-              <span class="pia-team-abbr">${oppTeam.abbreviation || oppTeam.full_name?.slice(0,3).toUpperCase() || 'BBB'}</span>
-              <span class="pia-team-name">${safeTeamName(oppTeam)}</span>
-              <span class="pia-loc-badge ${isHomeTeam(oppTeam, game) ? 'home' : 'away'}">
-                ${isHomeTeam(oppTeam, game) ? '🏠 Local' : '✈️ Visitante'}
-              </span>
-            </div>
-          </div>
-
-          <div class="pia-conf-ring">
-            <svg width="80" height="80" viewBox="0 0 80 80">
-              <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
-              <circle cx="40" cy="40" r="30" fill="none"
-                      stroke="${confColor}"
-                      stroke-width="7"
-                      stroke-linecap="round"
-                      stroke-dasharray="${circumference}"
-                      stroke-dashoffset="${dashOffset}"
-                      transform="rotate(-90 40 40)"
-                      style="transition: stroke-dashoffset 1s ease-out;"/>
-            </svg>
-            <div class="pia-conf-value">
-              <span class="pia-conf-num">${confidence}</span>
-              <span class="pia-conf-pct">%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- RECOMMENDATION BADGE -->
-        <div class="pia-rec-badge ${confClass}">
-          <span>${recEmoji} ${rec.text}</span>
-          <span class="pia-rec-units">${rec.units} u.</span>
-        </div>
-
-        <!-- EXPLANATION -->
-        <div class="pia-explanation">
-          <span class="pia-exp-icon">💡</span>
-          <p>${explanation}</p>
-        </div>
-
-        <!-- BETTING LINES -->
-        <div class="pia-lines">
-          <div class="pia-line">
-            <span class="pia-line-label">Spread</span>
-            <span class="pia-line-val">${spread}</span>
-          </div>
-          <div class="pia-line">
-            <span class="pia-line-label">Moneyline</span>
-            <span class="pia-line-val">${moneyline}</span>
-          </div>
-          <div class="pia-line">
-            <span class="pia-line-label">O/U</span>
-            <span class="pia-line-val">${overUnder}</span>
-          </div>
-        </div>
-
-        <!-- FACTORS -->
-        <div class="pia-factors">
-          <h4 class="pia-factors-title">Factores Clave</h4>
-          <div class="pia-factors-grid">
-            ${topFactors.map(([key, val]) => {
-              const pct = Math.round(val * 100);
-              const cls = pct > 65 ? 'high' : pct > 45 ? 'mid' : 'low';
-              return `
-                <div class="pia-factor">
-                  <div class="pia-factor-head">
-                    <span class="pia-factor-name">${formatFactor(key)}</span>
-                    <span class="pia-factor-pct ${cls}">${pct}%</span>
-                  </div>
-                  <div class="pia-factor-bar">
-                    <div class="pia-factor-fill ${cls}" style="width:${pct}%"></div>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-
-        <!-- REASONING -->
-        ${reasoning.length > 0 ? `
-          <div class="pia-reasoning">
-            <h4 class="pia-reasoning-title">📋 Razones Principales</h4>
-            <ul class="pia-reasoning-list">
-              ${reasoning.slice(0, 4).map(r => `<li>${safe(r)}</li>`).join('')}
-            </ul>
-          </div>
-        ` : ''}
-
-        <!-- FOOTER -->
-        <div class="pia-card-foot">
-          <button class="pia-btn-track" onclick="window.addPickToTracking('${gameId}', '${safeTeamName(pickTeam)}')">
-            📊 Agregar a Tracking
-          </button>
-          <button class="pia-btn-details" onclick="window.showPickDetails('${gameId}')">
-            📈 Detalles
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  // ── Render principal ───────────────────────────────────────
+  // ── RENDER PRINCIPAL ───────────────────────────────────────────
   function renderPicks(picks) {
-    const strong = picks.filter(p => (p.confidence || 0) >= 78);
-    const medium = picks.filter(p => (p.confidence || 0) >= 68 && (p.confidence || 0) < 78);
-    const weak   = picks.filter(p => (p.confidence || 0) < 68);
+    const highConf = picks.filter(p => safeNum(p.bestPick?.confidence) >= 75).length;
+    const midConf  = picks.filter(p => { const c = safeNum(p.bestPick?.confidence); return c >= 65 && c < 75; }).length;
+    const hasReal  = picks.filter(p => p.hasRealData).length;
 
-    const allStyles = `
-      <style>
-        /* ── PICKS IA STYLES v3.0 ─────────────────────────────── */
-        .pia-wrapper { font-family: 'DM Sans', sans-serif; }
+    container.innerHTML = buildStyles() + `
+      <div class="pts-wrapper">
 
-        /* Loading */
-        .pia-loading { padding: 20px; }
-        .pia-loading-header {
-          display: flex; align-items: center; gap: 10px;
-          color: rgba(255,255,255,0.6); font-size: 14px; margin-bottom: 24px;
-        }
-        .pia-pulse-dot {
-          width: 10px; height: 10px; border-radius: 50%;
-          background: #fbbf24; animation: piaPulse 1.4s ease-in-out infinite;
-        }
-        @keyframes piaPulse {
-          0%,100% { opacity:1; transform: scale(1); }
-          50% { opacity:0.4; transform: scale(0.7); }
-        }
-        .pia-skeletons { display: grid; gap: 16px; }
-        .pia-skel-card {
-          background: rgba(255,255,255,0.04); border-radius: 16px;
-          padding: 24px; border: 1px solid rgba(255,255,255,0.07);
-        }
-        .pia-skel-row {
-          background: linear-gradient(90deg,rgba(255,255,255,0.06) 25%,rgba(255,255,255,0.12) 50%,rgba(255,255,255,0.06) 75%);
-          background-size: 400% 100%;
-          border-radius: 8px; animation: piaShimmer 1.6s linear infinite;
-        }
-        @keyframes piaShimmer { 0%{background-position:200%} 100%{background-position:-200%} }
-
-        /* Error / Empty */
-        .pia-error, .pia-empty {
-          text-align: center; padding: 60px 24px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 20px;
-        }
-        .pia-error-icon, .pia-empty-icon { font-size: 56px; margin-bottom: 16px; }
-        .pia-error-title { color: #f87171; font-size: 22px; font-weight: 700; margin-bottom: 10px; }
-        .pia-error-msg { color: rgba(255,255,255,0.55); margin-bottom: 24px; }
-        .pia-empty-date { color: #fbbf24; margin-bottom: 12px; font-weight: 600; }
-        .pia-error-tips { text-align: left; max-width: 280px; margin: 20px auto 0; color: rgba(255,255,255,0.5); font-size: 13px; }
-        .pia-error-tips ul { margin-top: 8px; padding-left: 20px; }
-        .pia-error-tips li { margin-bottom: 4px; }
-
-        /* Buttons */
-        .pia-btn-retry {
-          background: #fbbf24; color: #000; border: none;
-          padding: 12px 28px; border-radius: 12px;
-          font-weight: 700; font-size: 14px; cursor: pointer;
-          transition: all 0.2s;
-        }
-        .pia-btn-retry:hover { background: #f59e0b; transform: translateY(-1px); }
-
-        /* Filtros */
-        .pia-filters {
-          display: flex; gap: 8px; flex-wrap: wrap;
-          margin-bottom: 28px; padding-bottom: 20px;
-          border-bottom: 1px solid rgba(255,255,255,0.07);
-        }
-        .pia-filter {
-          padding: 8px 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15);
-          background: transparent; color: rgba(255,255,255,0.6);
-          font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-        }
-        .pia-filter:hover { border-color: #fbbf24; color: #fbbf24; }
-        .pia-filter.active {
-          background: #fbbf24; color: #000;
-          border-color: #fbbf24; box-shadow: 0 0 16px rgba(251,191,36,0.3);
-        }
-
-        /* Grid */
-        .pia-grid { display: grid; gap: 20px; }
-        @media (min-width: 800px) { .pia-grid { grid-template-columns: 1fr 1fr; } }
-        @media (min-width: 1200px) { .pia-grid { grid-template-columns: 1fr 1fr 1fr; } }
-
-        /* Card */
-        .pia-card {
-          background: rgba(10,22,40,0.85);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 20px; padding: 22px;
-          position: relative; overflow: hidden;
-          transition: transform 0.2s, box-shadow 0.2s;
-          text-align: left;
-          animation: piaFadeIn 0.4s ease-out both;
-        }
-        @keyframes piaFadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-        .pia-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.5); }
-        .pia-card::before {
-          content:''; position:absolute; top:0; left:0; right:0; height:3px;
-          border-radius:20px 20px 0 0;
-        }
-        .pia-card.strong::before { background: linear-gradient(90deg,#10b981,#34d399); box-shadow: 0 0 12px rgba(16,185,129,0.5); }
-        .pia-card.medium::before { background: linear-gradient(90deg,#f59e0b,#fbbf24); box-shadow: 0 0 12px rgba(245,158,11,0.5); }
-        .pia-card.weak::before   { background: linear-gradient(90deg,#ef4444,#f87171); }
-
-        .pia-demo-badge {
-          position: absolute; top: 14px; right: 14px;
-          background: rgba(255,215,0,0.15); color: #fbbf24;
-          font-size: 11px; font-weight: 700; padding: 4px 10px;
-          border-radius: 20px; border: 1px solid rgba(255,215,0,0.3);
-          letter-spacing: 0.5px;
-        }
-
-        /* Card head */
-        .pia-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-        .pia-matchup { flex: 1; }
-        .pia-team { margin-bottom: 10px; }
-        .pia-team-pick { margin-bottom: 12px; }
-        .pia-team-abbr {
-          display: inline-block; min-width: 40px;
-          font-size: 11px; font-weight: 800; letter-spacing: 1px;
-          color: #fbbf24; font-family: 'JetBrains Mono', monospace;
-          margin-right: 6px;
-        }
-        .pia-team-name { font-size: 15px; font-weight: 700; color: #e2e8f0; margin-right: 8px; }
-        .pia-loc-badge {
-          font-size: 11px; padding: 2px 8px; border-radius: 10px;
-          font-weight: 600;
-        }
-        .pia-loc-badge.home { background: rgba(16,185,129,0.15); color: #10b981; }
-        .pia-loc-badge.away { background: rgba(100,116,139,0.15); color: #94a3b8; }
-        .pia-vs {
-          font-size: 12px; font-weight: 800; letter-spacing: 2px;
-          color: rgba(255,255,255,0.3); padding: 4px 0; margin: 4px 0;
-        }
-
-        /* Confidence ring */
-        .pia-conf-ring { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
-        .pia-conf-value {
-          position: absolute; inset: 0;
-          display: flex; align-items: center; justify-content: center; flex-direction: column;
-        }
-        .pia-conf-num { font-size: 22px; font-weight: 800; color: #fff; line-height: 1; }
-        .pia-conf-pct { font-size: 11px; color: rgba(255,255,255,0.5); }
-
-        /* Recommendation badge */
-        .pia-rec-badge {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 10px 16px; border-radius: 12px;
-          font-size: 13px; font-weight: 700; margin-bottom: 14px;
-        }
-        .pia-rec-badge.strong { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
-        .pia-rec-badge.medium { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
-        .pia-rec-badge.weak   { background: rgba(239,68,68,0.10); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
-        .pia-rec-units { font-size: 12px; opacity: 0.8; font-weight: 600; }
-
-        /* Explanation */
-        .pia-explanation {
-          display: flex; gap: 10px; align-items: flex-start;
-          background: rgba(255,255,255,0.04); border-radius: 12px;
-          padding: 12px 14px; margin-bottom: 14px;
-        }
-        .pia-exp-icon { flex-shrink: 0; }
-        .pia-explanation p { font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.6; margin: 0; }
-
-        /* Lines */
-        .pia-lines { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
-        .pia-line {
-          flex: 1; min-width: 80px;
-          background: rgba(255,255,255,0.04); border-radius: 10px;
-          padding: 8px 10px; text-align: center;
-          border: 1px solid rgba(255,255,255,0.07);
-        }
-        .pia-line-label { display: block; font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-        .pia-line-val { font-size: 13px; font-weight: 700; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; }
-
-        /* Factors */
-        .pia-factors { margin-bottom: 16px; }
-        .pia-factors-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-        .pia-factors-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .pia-factor { }
-        .pia-factor-head { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .pia-factor-name { font-size: 11px; color: rgba(255,255,255,0.55); }
-        .pia-factor-pct { font-size: 11px; font-weight: 700; }
-        .pia-factor-pct.high { color: #10b981; }
-        .pia-factor-pct.mid  { color: #f59e0b; }
-        .pia-factor-pct.low  { color: #ef4444; }
-        .pia-factor-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
-        .pia-factor-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease-out; }
-        .pia-factor-fill.high { background: linear-gradient(90deg,#10b981,#34d399); }
-        .pia-factor-fill.mid  { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
-        .pia-factor-fill.low  { background: linear-gradient(90deg,#ef4444,#f87171); }
-
-        /* Reasoning */
-        .pia-reasoning { margin-bottom: 16px; }
-        .pia-reasoning-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-        .pia-reasoning-list { list-style: none; padding: 0; margin: 0; }
-        .pia-reasoning-list li {
-          font-size: 13px; color: rgba(255,255,255,0.65);
-          padding: 6px 0 6px 20px; border-bottom: 1px solid rgba(255,255,255,0.04);
-          position: relative; line-height: 1.5;
-        }
-        .pia-reasoning-list li::before { content: '›'; position: absolute; left: 6px; color: #fbbf24; font-weight: 800; }
-        .pia-reasoning-list li:last-child { border-bottom: none; }
-
-        /* Card footer */
-        .pia-card-foot { display: flex; gap: 8px; margin-top: 4px; }
-        .pia-btn-track, .pia-btn-details {
-          flex: 1; padding: 10px; border-radius: 10px;
-          font-size: 12px; font-weight: 700; cursor: pointer;
-          transition: all 0.2s; border: none;
-        }
-        .pia-btn-track { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
-        .pia-btn-track:hover { background: rgba(251,191,36,0.25); }
-        .pia-btn-details { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); }
-        .pia-btn-details:hover { background: rgba(255,255,255,0.1); }
-        .pia-btn-track:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* Disclaimer */
-        .pia-disclaimer {
-          display: flex; gap: 12px; align-items: flex-start;
-          background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.15);
-          border-radius: 14px; padding: 16px 18px; margin-top: 28px;
-        }
-        .pia-disclaimer p { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.6; margin: 0; }
-        .pia-disclaimer strong { color: rgba(255,255,255,0.7); }
-
-        .pia-footer-stats {
-          display: flex; justify-content: space-between; flex-wrap: wrap;
-          gap: 12px; margin-top: 14px; padding-top: 14px;
-          border-top: 1px solid rgba(255,255,255,0.07);
-          font-size: 12px; color: rgba(255,255,255,0.4);
-        }
-      </style>
-    `;
-
-    container.innerHTML = allStyles + `
-      <div class="pia-wrapper">
-        <!-- Filtros -->
-        <div class="pia-filters">
-          <button class="pia-filter active" data-f="all" onclick="window.__piaFilter('all')">
-            Todos (${picks.length})
-          </button>
-          <button class="pia-filter" data-f="strong" onclick="window.__piaFilter('strong')">
-            🔥 Fuertes (${strong.length})
-          </button>
-          <button class="pia-filter" data-f="medium" onclick="window.__piaFilter('medium')">
-            ⚡ Sólidos (${medium.length})
-          </button>
-          <button class="pia-filter" data-f="weak" onclick="window.__piaFilter('weak')">
-            💡 Estándar (${weak.length})
-          </button>
+        <!-- Context bar -->
+        <div class="pts-context-bar">
+          <div class="pts-ctx-left">
+            <span class="pts-live-dot"></span>
+            <span class="pts-ctx-label">ANÁLISIS EN TIEMPO REAL · TeamRankings.com</span>
+          </div>
+          <div class="pts-ctx-stats">
+            <span><b>${picks.length}</b> juegos</span>
+            <span class="pts-sep">·</span>
+            <span class="pts-green"><b>${highConf}</b> alta confianza</span>
+            <span class="pts-sep">·</span>
+            <span class="pts-yellow"><b>${midConf}</b> media</span>
+            <span class="pts-sep">·</span>
+            <span class="pts-muted"><b>${hasReal}</b> con datos reales</span>
+          </div>
         </div>
 
-        <!-- Grid de picks -->
-        <div class="pia-grid" id="pia-grid">
-          ${picks.map((p, i) => {
-            const card = renderCard(p);
-            return card.replace('animation: piaFadeIn', `animation-delay:${i * 0.08}s; animation: piaFadeIn`);
-          }).join('')}
+        <!-- Filtros mercado -->
+        <div class="pts-market-filter">
+          <button class="pts-mf active" data-m="best" onclick="window.__ptsFilter('best')">🏆 Mejor Pick</button>
+          <button class="pts-mf" data-m="q1"   onclick="window.__ptsFilter('q1')">1️⃣ 1er Cuarto</button>
+          <button class="pts-mf" data-m="half" onclick="window.__ptsFilter('half')">½ Primera Mitad</button>
+          <button class="pts-mf" data-m="full" onclick="window.__ptsFilter('full')">🏀 Tiempo Completo</button>
+        </div>
+
+        <!-- Filtro confianza -->
+        <div class="pts-conf-filter">
+          <span class="pts-cf-lbl">Confianza mínima:</span>
+          <button class="pts-cf active" data-min="0"  onclick="window.__ptsConfFilter(0)">Todos</button>
+          <button class="pts-cf" data-min="65" onclick="window.__ptsConfFilter(65)">≥ 65%</button>
+          <button class="pts-cf" data-min="70" onclick="window.__ptsConfFilter(70)">≥ 70%</button>
+          <button class="pts-cf" data-min="75" onclick="window.__ptsConfFilter(75)">≥ 75%</button>
+        </div>
+
+        <!-- Grid -->
+        <div class="pts-grid" id="pts-grid">
+          ${picks.map((p, i) => buildCard(p, i)).join('')}
         </div>
 
         <!-- Disclaimer -->
-        <div class="pia-disclaimer">
+        <div class="pts-disclaimer">
           <span>⚠️</span>
-          <p><strong>Disclaimer:</strong> Estas recomendaciones son generadas por IA con fines informativos. Siempre realiza tu propia investigación y apuesta responsablemente. No garantizamos resultados.</p>
+          <div>
+            <p><b>Disclaimer:</b> Análisis generado con datos reales de TeamRankings.com + BallDontLie API. Los mercados de totales implican variabilidad inherente. Gestiona tu bankroll responsablemente.</p>
+            <div class="pts-disc-meta">
+              <span>⏱ ${new Date().toLocaleTimeString('es-ES')}</span>
+              <span>·</span><span>📊 Fuente: TeamRankings.com</span>
+              <span>·</span><span>🧠 3 mercados analizados por juego</span>
+            </div>
+          </div>
         </div>
+      </div>`;
 
-        <div class="pia-footer-stats">
-          <span>⏱ Actualizado: ${new Date().toLocaleTimeString('es-ES')}</span>
-          <span>🧠 Motor: 47 factores contextuales</span>
-          ${picks.some(p => p.isDemo) ? '<span>📊 Datos de demostración activos</span>' : '<span>📡 Datos en tiempo real</span>'}
-        </div>
-      </div>
-    `;
-
-    // Función de filtrado
-    window.__piaFilter = function (filter) {
-      const grid = document.getElementById('pia-grid');
-      if (!grid) return;
-      grid.querySelectorAll('.pia-card').forEach(card => {
-        const c = card.dataset.confidence;
-        const show = filter === 'all' || c === filter;
-        card.style.display = show ? '' : 'none';
-      });
-      document.querySelectorAll('.pia-filter').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.f === filter);
-      });
-    };
+    window.__ptsCurrentMarket = 'best';
+    window.__ptsCurrentMin    = 0;
+    applyFilters();
   }
 
-  // ── Factor name formatter ──────────────────────────────────
-  const FACTOR_NAMES = {
-    playerForm: 'Forma Jugadores', teamForm: 'Forma Equipo',
-    homeAdvantage: 'Ventaja Local', restDays: 'Descanso',
-    injuries: 'Lesiones', h2hHistory: 'H2H', pace: 'Ritmo',
-    defense: 'Defensa', offense: 'Ofensiva', momentum: 'Momentum',
+  // ── CARD ───────────────────────────────────────────────────────
+  function buildCard(pick, idx) {
+    const homeTeam = safe(pick.homeTeam, 'Local');
+    const awayTeam = safe(pick.awayTeam, 'Visitante');
+    const gameId   = safe(String(pick.gameId), `g-${idx}`);
+    const dateStr  = pick.date
+      ? new Date(pick.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
+      : 'Hoy';
+    const statusTxt = pick.status === 'Final' ? '✅ Finalizado' : '🟡 Programado';
+    const conf      = safeNum(pick.bestPick?.confidence, 0);
+    const cls       = conf >= 75 ? 'high' : conf >= 65 ? 'mid' : 'low';
+
+    return `
+      <div class="pts-card ${cls}"
+           data-game-id="${gameId}"
+           data-best-conf="${conf}"
+           data-has-data="${pick.hasRealData ? 'true' : 'false'}"
+           style="animation-delay:${idx * 0.07}s">
+
+        ${!pick.hasRealData ? '<div class="pts-no-data-badge">⚠️ Sin datos reales</div>' : ''}
+
+        <!-- HEADER -->
+        <div class="pts-card-head">
+          <div class="pts-teams">
+            <div class="pts-team-away">
+              <span class="pts-tname">${awayTeam}</span>
+              <span class="pts-trole">✈ Visitante</span>
+            </div>
+            <div class="pts-at">@</div>
+            <div class="pts-team-home">
+              <span class="pts-tname">${homeTeam}</span>
+              <span class="pts-trole">🏠 Local</span>
+            </div>
+          </div>
+          <div class="pts-meta">${dateStr} · ${statusTxt}</div>
+        </div>
+
+        <!-- TABS -->
+        <div class="pts-tabs" id="tabs-${gameId}">
+          <button class="pts-tab active" data-tab="best" onclick="window.__switchTab('${gameId}','best')">🏆 Mejor</button>
+          <button class="pts-tab" data-tab="q1"   onclick="window.__switchTab('${gameId}','q1')">Q1</button>
+          <button class="pts-tab" data-tab="half" onclick="window.__switchTab('${gameId}','half')">1H</button>
+          <button class="pts-tab" data-tab="full" onclick="window.__switchTab('${gameId}','full')">Full</button>
+        </div>
+
+        <!-- PANELS -->
+        <div id="panels-${gameId}">
+          ${buildPanel('best', pick.bestPick || {}, pick)}
+          ${buildPanel('q1',   pick.markets?.q1   || {}, pick)}
+          ${buildPanel('half', pick.markets?.half || {}, pick)}
+          ${buildPanel('full', pick.markets?.full || {}, pick)}
+        </div>
+
+        <!-- STATS COMPARATIVA (togglable) -->
+        ${pick.hasRealData ? buildStatsTable(pick) : ''}
+
+        <!-- FOOTER -->
+        <div class="pts-foot">
+          <button class="pts-btn-track" data-tid="${gameId}"
+                  onclick="window.addPickToTracking('${gameId}','${homeTeam}','${awayTeam}','${safe(pick.bestPick?.market,'?')}','${safe(pick.bestPick?.direction,'?')}')">
+            📊 Trackear Pick
+          </button>
+          <button class="pts-btn-info" onclick="window.__ptsToggleStats('${gameId}')">
+            📈 Comparar Stats
+          </button>
+        </div>
+      </div>`;
+  }
+
+  // ── PANEL DE MERCADO ───────────────────────────────────────────
+  function buildPanel(key, mkt, pick) {
+    const isActive = key === 'best';
+    const dir      = safe(mkt.direction, null);
+    if (!dir) return `<div class="pts-panel${isActive ? ' active' : ''}" data-panel="${key}"><p class="pts-panel-empty">Sin datos para este mercado</p></div>`;
+
+    const proj     = safeNum(mkt.projectedTotal, 0);
+    const line     = safeNum(mkt.line, proj);
+    const conf     = safeNum(mkt.confidence, 0);
+    const label    = safe(mkt.marketLabel, key.toUpperCase());
+    const diff     = proj - line;
+    const isOver   = dir === 'OVER';
+    const confCls  = conf >= 75 ? 'high' : conf >= 65 ? 'mid' : 'low';
+    const confClr  = conf >= 75 ? '#10b981' : conf >= 65 ? '#f59e0b' : '#818cf8';
+    const circum   = 2 * Math.PI * 26;
+    const dashOff  = circum * (1 - conf / 100);
+    const reasoning = Array.isArray(mkt.reasoning) ? mkt.reasoning : [];
+    const factors   = mkt.factors || {};
+
+    const homeShort = (pick.homeTeam || '').split(' ').slice(-1)[0];
+    const awayShort = (pick.awayTeam || '').split(' ').slice(-1)[0];
+
+    return `
+      <div class="pts-panel${isActive ? ' active' : ''}" data-panel="${key}">
+
+        <!-- Dirección + Confianza -->
+        <div class="pts-ptop">
+          <div class="pts-pleft">
+            <span class="pts-mkt-badge">${label}</span>
+            <div class="pts-dir ${isOver ? 'over' : 'under'}">
+              <span class="pts-dir-arrow">${isOver ? '▲' : '▼'}</span>
+              <span class="pts-dir-word">${dir}</span>
+            </div>
+            <span class="pts-dir-sub">Total proyectado</span>
+          </div>
+          <div class="pts-cring">
+            <svg width="60" height="60" viewBox="0 0 60 60">
+              <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="6"/>
+              <circle cx="30" cy="30" r="26" fill="none"
+                stroke="${confClr}" stroke-width="6" stroke-linecap="round"
+                stroke-dasharray="${circum}" stroke-dashoffset="${dashOff}"
+                transform="rotate(-90 30 30)"
+                style="transition:stroke-dashoffset 1.2s cubic-bezier(.16,1,.3,1)"/>
+            </svg>
+            <div class="pts-cval"><span class="pts-cnum">${conf}</span><span class="pts-cpct">%</span></div>
+          </div>
+        </div>
+
+        <!-- Totales -->
+        <div class="pts-totals">
+          <div class="pts-tbox">
+            <span class="pts-tlbl">Proyección</span>
+            <span class="pts-tnum">${fmt1(proj)}</span>
+          </div>
+          <div class="pts-tbox ${confCls}">
+            <span class="pts-tlbl">Línea sugerida</span>
+            <span class="pts-tnum">${fmt1(line)}</span>
+          </div>
+          <div class="pts-tbox">
+            <span class="pts-tlbl">Diferencia</span>
+            <span class="pts-tnum ${diff >= 0 ? 'pos' : 'neg'}">${diff >= 0 ? '+' : ''}${Math.abs(diff).toFixed(1)}</span>
+          </div>
+        </div>
+
+        <!-- Barras de equipo -->
+        ${mkt.homeExpected && mkt.awayExpected ? `
+          <div class="pts-tproj">
+            <div class="pts-tprow">
+              <span class="pts-tpname">${homeShort}</span>
+              <div class="pts-tpbar-wrap"><div class="pts-tpbar home" style="width:${Math.min(100,(safeNum(mkt.homeExpected)/Math.max(proj,1))*100)}%"></div></div>
+              <span class="pts-tpval">${fmt1(mkt.homeExpected)}</span>
+            </div>
+            <div class="pts-tprow">
+              <span class="pts-tpname">${awayShort}</span>
+              <div class="pts-tpbar-wrap"><div class="pts-tpbar away" style="width:${Math.min(100,(safeNum(mkt.awayExpected)/Math.max(proj,1))*100)}%"></div></div>
+              <span class="pts-tpval">${fmt1(mkt.awayExpected)}</span>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Factores -->
+        ${buildFactors(factors)}
+
+        <!-- Reasoning -->
+        ${reasoning.length ? `
+          <div class="pts-rsn">
+            <span class="pts-rsn-lbl">📋 Análisis del motor</span>
+            <ul>${reasoning.map(r => `<li>${safe(r)}</li>`).join('')}</ul>
+          </div>
+        ` : ''}
+      </div>`;
+  }
+
+  // ── FACTORES ──────────────────────────────────────────────────
+  const FACTOR_META = {
+    homeQ1Scored:    { lbl: 'Local anota Q1',      ref: 29.0, allowedType: false },
+    homeQ1Allowed:   { lbl: 'Local permite Q1',    ref: 29.0, allowedType: true  },
+    awayQ1Scored:    { lbl: 'Visit. anota Q1',     ref: 28.0, allowedType: false },
+    awayQ1Allowed:   { lbl: 'Visit. permite Q1',   ref: 29.0, allowedType: true  },
+    homeHalfScored:  { lbl: 'Local anota 1H',      ref: 59.0, allowedType: false },
+    homeHalfAllowed: { lbl: 'Local permite 1H',    ref: 58.0, allowedType: true  },
+    awayHalfScored:  { lbl: 'Visit. anota 1H',     ref: 57.0, allowedType: false },
+    awayHalfAllowed: { lbl: 'Visit. permite 1H',   ref: 58.0, allowedType: true  },
+    homeFullScored:  { lbl: 'Local anota TC',      ref: 115.0, allowedType: false },
+    homeFullAllowed: { lbl: 'Local permite TC',    ref: 115.0, allowedType: true  },
+    awayFullScored:  { lbl: 'Visit. anota TC',     ref: 113.0, allowedType: false },
+    awayFullAllowed: { lbl: 'Visit. permite TC',   ref: 115.0, allowedType: true  },
+    combinedPace:    { lbl: 'Ritmo combinado',     ref: 103.7, allowedType: false },
+    paceVsLeague:    { lbl: 'Ritmo vs liga',       ref: 0,     allowedType: false },
   };
-  function formatFactor(key) {
-    return FACTOR_NAMES[key] || key.replace(/([A-Z])/g, ' $1').trim();
+
+  function buildFactors(factors) {
+    const entries = Object.entries(factors).filter(([k]) => FACTOR_META[k]);
+    if (!entries.length) return '';
+
+    return `
+      <div class="pts-factors">
+        <span class="pts-flbl-hdr">Factores del análisis</span>
+        ${entries.map(([k, v]) => {
+          const m    = FACTOR_META[k];
+          const num  = safeNum(v, 0);
+          const ref  = m.ref;
+          const pct  = k === 'paceVsLeague'
+            ? Math.min(100, Math.max(0, 50 + num * 10))
+            : Math.min(100, Math.max(0, (num / (ref * 1.3)) * 100));
+          const hi   = num >= ref;
+          return `
+            <div class="pts-frow">
+              <span class="pts-flbl">${m.lbl}</span>
+              <div class="pts-fbar"><div class="pts-ffill ${hi ? 'hi' : 'lo'}" style="width:${pct}%"></div></div>
+              <span class="pts-fval">${fmt1(num)}</span>
+            </div>`;
+        }).join('')}
+      </div>`;
   }
 
-  // ── Tracking ───────────────────────────────────────────────
-  window.addPickToTracking = async function (gameId, teamName) {
+  // ── STATS TABLE ────────────────────────────────────────────────
+  function buildStatsTable(pick) {
+    const h = pick.homeStats || {};
+    const a = pick.awayStats || {};
+    const hn = (pick.homeTeam || '').split(' ').slice(-1)[0];
+    const an = (pick.awayTeam || '').split(' ').slice(-1)[0];
+    const rows = [
+      { lbl:'Q1 (local/visit.)',     hv:h.q1Home,   av:a.q1Away,   hr:h.q1HomeRank,   ar:a.q1AwayRank,   hi:true  },
+      { lbl:'Permite Q1',            hv:h.oppQ1,    av:a.oppQ1,    hr:h.oppQ1Rank,    ar:a.oppQ1Rank,    hi:false },
+      { lbl:'1H (local/visit.)',     hv:h.halfHome, av:a.halfAway, hr:h.halfHomeRank, ar:a.halfAwayRank, hi:true  },
+      { lbl:'PPG Tiempo completo',   hv:h.full,     av:a.full,     hr:h.fullRank,     ar:a.fullRank,     hi:true  },
+      { lbl:'DEF — PPG permitido',   hv:h.oppPpg,   av:a.oppPpg,   hr:h.oppPpgRank,   ar:a.oppPpgRank,   hi:false },
+      { lbl:'Ritmo (poss/game)',     hv:h.pace,     av:a.pace,     hr:h.paceRank,     ar:a.paceRank,     hi:true  },
+    ];
+
+    return `
+      <div class="pts-stbl" id="stats-${pick.gameId}" style="display:none">
+        <div class="pts-stbl-head">
+          <span>${an}</span><span>Estadística</span><span>${hn}</span>
+        </div>
+        ${rows.map(r => {
+          const hNum = safeNum(r.hv, 0), aNum = safeNum(r.av, 0);
+          const hW   = r.hi ? hNum >= aNum : hNum <= aNum;
+          return `
+            <div class="pts-stbl-row">
+              <span class="${hW ? '' : 'win'}">${fmt1(aNum)} <sub>#${r.ar||'?'}</sub></span>
+              <span class="lbl">${r.lbl}</span>
+              <span class="${hW ? 'win' : ''}">${fmt1(hNum)} <sub>#${r.hr||'?'}</sub></span>
+            </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  // ── CONTROLES ─────────────────────────────────────────────────
+  window.__switchTab = function (gid, tab) {
+    document.getElementById(`tabs-${gid}`)?.querySelectorAll('.pts-tab')
+      .forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.getElementById(`panels-${gid}`)?.querySelectorAll('.pts-panel')
+      .forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+  };
+
+  window.__ptsToggleStats = function (gid) {
+    const el = document.getElementById(`stats-${gid}`);
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  };
+
+  window.__ptsFilter = function (m) {
+    window.__ptsCurrentMarket = m;
+    applyFilters();
+    document.querySelectorAll('.pts-mf').forEach(b => b.classList.toggle('active', b.dataset.m === m));
+  };
+
+  window.__ptsConfFilter = function (min) {
+    window.__ptsCurrentMin = min;
+    applyFilters();
+    document.querySelectorAll('.pts-cf').forEach(b => b.classList.toggle('active', parseInt(b.dataset.min) === min));
+  };
+
+  function applyFilters() {
+    const market = window.__ptsCurrentMarket || 'best';
+    const minC   = window.__ptsCurrentMin   || 0;
+    document.getElementById('pts-grid')?.querySelectorAll('.pts-card').forEach(card => {
+      const conf = parseInt(card.dataset.bestConf) || 0;
+      const show = conf >= minC;
+      card.style.display = show ? '' : 'none';
+      if (show) window.__switchTab(card.dataset.gameId, market === 'best' ? 'best' : market);
+    });
+  }
+
+  // ── TRACKING ──────────────────────────────────────────────────
+  window.addPickToTracking = async function (gameId, home, away, market, dir) {
     if (!window.currentUser) {
-      window.toastError && window.toastError('Debes iniciar sesión para usar tracking');
+      window.toastError?.('Inicia sesión para trackear picks');
       return;
     }
     try {
       await window.firebase.database()
         .ref(`users/${window.currentUser.uid}/picks/${gameId}`)
-        .set({ gameId, pick: teamName, timestamp: Date.now(), status: 'pending' });
-
-      window.toastSuccess && window.toastSuccess(`Pick agregado: ${teamName}`);
-
-      const btn = document.querySelector(`.pia-btn-track[onclick*="${gameId}"]`);
-      if (btn) { btn.disabled = true; btn.innerHTML = '✅ Agregado'; }
+        .set({ gameId, homeTeam: home, awayTeam: away, market, direction: dir, timestamp: Date.now(), status: 'pending' });
+      window.toastSuccess?.(`✅ Trackeado: ${dir} ${market} — ${home} vs ${away}`);
+      const btn = document.querySelector(`.pts-btn-track[data-tid="${gameId}"]`);
+      if (btn) { btn.disabled = true; btn.textContent = '✅ Trackeado'; }
     } catch (err) {
       console.error('[Picks IA] Tracking error:', err);
-      window.toastError && window.toastError('Error agregando pick');
+      window.toastError?.('Error al trackear pick');
     }
   };
 
-  window.showPickDetails = function (gameId) {
-    window.toastInfo && window.toastInfo('Detalles completos próximamente...');
-  };
+  // ── ESTILOS ────────────────────────────────────────────────────
+  function buildStyles() {
+    return `<style>
+/* ═══════════════════════════════════════════════════════
+   NIOSPORTS PICKS IA TOTALES v3.0
+   ═══════════════════════════════════════════════════════ */
 
-  // ── Ejecución principal ────────────────────────────────────
+/* Loading */
+.pts-loading { padding:8px 0 }
+.pts-loading-bar { height:3px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin-bottom:14px }
+.pts-loading-fill { height:100%;width:35%;background:linear-gradient(90deg,#fbbf24,#f59e0b);animation:ptsScan 1.8s ease-in-out infinite }
+@keyframes ptsScan { 0%{transform:translateX(-200%)} 100%{transform:translateX(500%)} }
+.pts-loading-label { display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.45);font-size:13px;margin-bottom:20px }
+.pts-dot { width:8px;height:8px;border-radius:50%;background:#fbbf24;flex-shrink:0;animation:ptsPulse 1.2s ease-in-out infinite }
+@keyframes ptsPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.55)} }
+.pts-skel-grid { display:grid;gap:16px }
+@media(min-width:900px){.pts-skel-grid{grid-template-columns:1fr 1fr}}
+.pts-skel-card { background:rgba(255,255,255,0.03);border-radius:18px;padding:20px;border:1px solid rgba(255,255,255,0.06) }
+.pts-skel-row { background:linear-gradient(90deg,rgba(255,255,255,0.05) 25%,rgba(255,255,255,0.1) 50%,rgba(255,255,255,0.05) 75%);background-size:400%;border-radius:7px;animation:ptsShim 1.8s linear infinite;margin-bottom:0 }
+@keyframes ptsShim { 0%{background-position:200%} 100%{background-position:-200%} }
+
+/* State boxes */
+.pts-state-box { text-align:center;padding:60px 24px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:22px }
+.pts-error-box { border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.04) }
+.pts-state-icon { font-size:52px;margin-bottom:14px }
+.pts-state-title { font-size:21px;font-weight:800;color:#e2e8f0;margin-bottom:10px }
+.pts-state-date { color:#fbbf24;font-weight:700;margin-bottom:8px }
+.pts-state-msg { color:rgba(255,255,255,0.45);font-size:14px;line-height:1.7;margin-bottom:22px }
+.pts-btn-primary { background:#fbbf24;color:#000;border:none;padding:12px 30px;border-radius:13px;font-weight:800;font-size:14px;cursor:pointer;transition:all .2s }
+.pts-btn-primary:hover { background:#f59e0b;transform:translateY(-2px) }
+.pts-tips { margin-top:16px;color:rgba(255,255,255,0.3);font-size:12px }
+
+/* Wrapper */
+.pts-wrapper { font-family:'DM Sans',sans-serif }
+
+/* Context bar */
+.pts-context-bar { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:20px }
+.pts-ctx-left { display:flex;align-items:center;gap:8px }
+.pts-live-dot { width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px rgba(16,185,129,0.7);animation:ptsPulse 2s infinite }
+.pts-ctx-label { font-size:10px;font-weight:800;letter-spacing:1.8px;color:rgba(255,255,255,0.35);text-transform:uppercase }
+.pts-ctx-stats { display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,0.4) }
+.pts-ctx-stats b { color:#e2e8f0 }
+.pts-green b { color:#10b981 }
+.pts-yellow b { color:#f59e0b }
+.pts-muted  b { color:rgba(255,255,255,0.35) }
+.pts-sep { opacity:.3 }
+
+/* Market filter */
+.pts-market-filter { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px }
+.pts-mf { padding:9px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.5);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s }
+.pts-mf:hover { border-color:rgba(251,191,36,0.5);color:#fbbf24 }
+.pts-mf.active { background:rgba(251,191,36,0.14);border-color:#fbbf24;color:#fbbf24;box-shadow:0 0 14px rgba(251,191,36,0.18) }
+
+/* Confidence filter */
+.pts-conf-filter { display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:26px }
+.pts-cf-lbl { font-size:11px;color:rgba(255,255,255,0.3);font-weight:600 }
+.pts-cf { padding:5px 13px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.35);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s }
+.pts-cf.active { background:rgba(255,255,255,0.09);border-color:rgba(255,255,255,0.28);color:#e2e8f0 }
+
+/* Grid */
+.pts-grid { display:grid;gap:20px }
+@media(min-width:860px){ .pts-grid{grid-template-columns:1fr 1fr} }
+@media(min-width:1280px){ .pts-grid{grid-template-columns:1fr 1fr 1fr} }
+
+/* Card */
+.pts-card {
+  background:rgba(7,17,33,0.92);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:22px;overflow:hidden;
+  position:relative;
+  transition:transform .25s,box-shadow .25s;
+  animation:ptsFadeUp .45s ease-out both;
+}
+@keyframes ptsFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+.pts-card:hover { transform:translateY(-4px);box-shadow:0 22px 55px rgba(0,0,0,.6) }
+.pts-card::before { content:'';position:absolute;top:0;left:0;right:0;height:3px }
+.pts-card.high::before { background:linear-gradient(90deg,#10b981,#34d399);box-shadow:0 0 10px rgba(16,185,129,.55) }
+.pts-card.mid::before  { background:linear-gradient(90deg,#f59e0b,#fbbf24);box-shadow:0 0 10px rgba(245,158,11,.45) }
+.pts-card.low::before  { background:linear-gradient(90deg,#6366f1,#818cf8) }
+.pts-no-data-badge { position:absolute;top:13px;right:13px;background:rgba(245,158,11,.13);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px }
+
+/* Card head */
+.pts-card-head { padding:18px 18px 0 }
+.pts-teams { display:flex;align-items:center;gap:6px;margin-bottom:5px }
+.pts-team-away,.pts-team-home { flex:1 }
+.pts-tname { display:block;font-size:14px;font-weight:800;color:#f1f5f9;line-height:1.2 }
+.pts-trole { display:block;font-size:10px;color:rgba(255,255,255,0.28);font-weight:600;margin-top:2px }
+.pts-team-home .pts-tname { text-align:right }
+.pts-team-home .pts-trole { text-align:right }
+.pts-at { font-size:12px;font-weight:900;color:rgba(255,255,255,0.2);padding:0 4px;flex-shrink:0 }
+.pts-meta { font-size:11px;color:rgba(255,255,255,0.28);padding:5px 0 14px;border-bottom:1px solid rgba(255,255,255,0.06) }
+
+/* Tabs */
+.pts-tabs { display:flex;padding:10px 14px 0;gap:2px;border-bottom:1px solid rgba(255,255,255,0.06) }
+.pts-tab { flex:1;padding:8px 4px;border:none;background:transparent;color:rgba(255,255,255,0.3);font-size:11px;font-weight:800;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.3px }
+.pts-tab:hover { color:rgba(255,255,255,0.65) }
+.pts-tab.active { color:#fbbf24;border-bottom-color:#fbbf24 }
+
+/* Panels */
+.pts-panel { display:none;padding:16px 18px }
+.pts-panel.active { display:block }
+.pts-panel-empty { text-align:center;padding:28px;color:rgba(255,255,255,0.28);font-size:13px }
+
+/* Panel top */
+.pts-ptop { display:flex;align-items:flex-start;gap:10px;margin-bottom:14px }
+.pts-pleft { flex:1 }
+.pts-mkt-badge { display:inline-block;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px 9px;font-size:10px;font-weight:800;color:rgba(255,255,255,0.5);letter-spacing:.5px;margin-bottom:6px }
+.pts-dir { display:flex;align-items:baseline;gap:2px;line-height:1 }
+.pts-dir-arrow { font-size:18px }
+.pts-dir-word { font-size:26px;font-weight:900;letter-spacing:.5px }
+.pts-dir.over .pts-dir-arrow,.pts-dir.over .pts-dir-word { color:#10b981 }
+.pts-dir.under .pts-dir-arrow,.pts-dir.under .pts-dir-word { color:#818cf8 }
+.pts-dir-sub { display:block;font-size:9px;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:.5px;margin-top:3px }
+.pts-cring { position:relative;width:60px;height:60px;flex-shrink:0 }
+.pts-cval { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center }
+.pts-cnum { font-size:17px;font-weight:900;color:#fff;line-height:1 }
+.pts-cpct { font-size:10px;color:rgba(255,255,255,0.35) }
+
+/* Totals */
+.pts-totals { display:flex;gap:7px;margin-bottom:13px }
+.pts-tbox { flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 6px;text-align:center }
+.pts-tbox.high { border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.06) }
+.pts-tbox.mid  { border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06) }
+.pts-tbox.low  { border-color:rgba(129,140,248,.3);background:rgba(129,140,248,.06) }
+.pts-tlbl { display:block;font-size:9px;color:rgba(255,255,255,0.33);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px }
+.pts-tnum { font-size:17px;font-weight:800;color:#f1f5f9;font-family:'JetBrains Mono',monospace }
+.pts-tnum.pos { color:#10b981 }
+.pts-tnum.neg { color:#818cf8 }
+
+/* Team projection */
+.pts-tproj { margin-bottom:13px;display:flex;flex-direction:column;gap:7px }
+.pts-tprow { display:flex;align-items:center;gap:7px }
+.pts-tpname { font-size:11px;font-weight:700;color:rgba(255,255,255,0.42);width:48px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap }
+.pts-tpbar-wrap { flex:1;height:5px;background:rgba(255,255,255,0.07);border-radius:5px;overflow:hidden }
+.pts-tpbar { height:100%;border-radius:5px;transition:width 1.1s cubic-bezier(.16,1,.3,1) }
+.pts-tpbar.home { background:linear-gradient(90deg,#fbbf24,#f59e0b) }
+.pts-tpbar.away { background:linear-gradient(90deg,#818cf8,#6366f1) }
+.pts-tpval { font-size:11px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace;width:30px;text-align:right }
+
+/* Factors */
+.pts-factors { margin-bottom:13px }
+.pts-flbl-hdr { font-size:9px;font-weight:800;letter-spacing:1.2px;color:rgba(255,255,255,0.28);text-transform:uppercase;display:block;margin-bottom:8px }
+.pts-frow { display:flex;align-items:center;gap:7px;margin-bottom:5px }
+.pts-flbl { font-size:11px;color:rgba(255,255,255,0.4);width:110px;flex-shrink:0 }
+.pts-fbar { flex:1;height:4px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden }
+.pts-ffill { height:100%;border-radius:4px;transition:width 1s cubic-bezier(.16,1,.3,1) }
+.pts-ffill.hi { background:linear-gradient(90deg,#10b981,#34d399) }
+.pts-ffill.lo { background:linear-gradient(90deg,#818cf8,#6366f1) }
+.pts-fval { font-size:11px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace;min-width:34px;text-align:right }
+
+/* Reasoning */
+.pts-rsn { background:rgba(255,255,255,0.03);border-radius:11px;padding:11px;margin-bottom:4px }
+.pts-rsn-lbl { font-size:9px;font-weight:800;letter-spacing:1px;color:rgba(255,255,255,0.28);text-transform:uppercase;display:block;margin-bottom:7px }
+.pts-rsn ul { list-style:none;margin:0;padding:0 }
+.pts-rsn li { font-size:12px;color:rgba(255,255,255,0.55);padding:5px 0 5px 15px;position:relative;line-height:1.5;border-bottom:1px solid rgba(255,255,255,0.04) }
+.pts-rsn li:last-child { border-bottom:none }
+.pts-rsn li::before { content:'›';position:absolute;left:3px;color:#fbbf24;font-weight:900 }
+
+/* Stats table */
+.pts-stbl { border-top:1px solid rgba(255,255,255,0.06);padding:14px 18px }
+.pts-stbl-head,.pts-stbl-row { display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;text-align:center;padding:5px 0 }
+.pts-stbl-head { font-size:11px;font-weight:800;color:rgba(255,255,255,0.4) }
+.pts-stbl-row { font-size:12px;font-weight:700;color:rgba(255,255,255,0.45);border-bottom:1px solid rgba(255,255,255,0.04) }
+.pts-stbl-row:last-child { border-bottom:none }
+.pts-stbl-row .lbl { font-size:11px;color:rgba(255,255,255,0.28);font-weight:400 }
+.pts-stbl-row .win { color:#fbbf24 }
+.pts-stbl-row sub { font-size:9px;color:rgba(255,255,255,0.25) }
+
+/* Footer */
+.pts-foot { display:flex;gap:7px;padding:0 18px 16px }
+.pts-btn-track,.pts-btn-info { flex:1;padding:10px 8px;border-radius:11px;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s }
+.pts-btn-track { background:rgba(251,191,36,.11);color:#fbbf24;border:1px solid rgba(251,191,36,.2) }
+.pts-btn-track:hover { background:rgba(251,191,36,.22) }
+.pts-btn-track:disabled { opacity:.55;cursor:not-allowed }
+.pts-btn-info { background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);border:1px solid rgba(255,255,255,0.09) }
+.pts-btn-info:hover { background:rgba(255,255,255,0.1) }
+
+/* Disclaimer */
+.pts-disclaimer { display:flex;gap:13px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.14);border-radius:16px;padding:16px 18px;margin-top:30px;align-items:flex-start;font-size:20px;flex-shrink:0 }
+.pts-disclaimer>div { flex:1 }
+.pts-disclaimer p { font-size:12px;color:rgba(255,255,255,0.4);line-height:1.7;margin:0 0 7px }
+.pts-disclaimer b { color:rgba(255,255,255,0.6) }
+.pts-disc-meta { display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,0.28) }
+
+@media(max-width:600px){
+  .pts-totals { flex-direction:column }
+  .pts-ptop { flex-wrap:wrap }
+  .pts-context-bar { flex-direction:column;align-items:flex-start }
+}
+</style>`;
+  }
+
+  // ── MAIN ───────────────────────────────────────────────────────
   try {
     showLoading();
 
     if (!window.picksEngine) {
-      console.error('[Picks IA] picksEngine no disponible');
-      showError('Motor de picks no inicializado. Recarga la página.');
+      showError('Motor de análisis no inicializado. Recarga la página.');
       return;
     }
 
     const picks = await window.picksEngine.generateTodayPicks();
 
-    if (!Array.isArray(picks) || picks.length === 0) {
-      showEmpty();
-      return;
-    }
+    if (!Array.isArray(picks) || !picks.length) { showEmpty(); return; }
 
-    renderPicks(picks);
-    window.toastSuccess && window.toastSuccess(`${picks.length} picks generados con IA`);
+    const valid = picks.filter(p => p && p.bestPick && p.homeTeam && p.awayTeam);
+    if (!valid.length) { showEmpty(); return; }
+
+    renderPicks(valid);
+    window.toastSuccess?.(`${valid.length} juegos analizados — Q1, 1H y Full`);
 
   } catch (err) {
-    console.error('[Picks IA] Error fatal:', err);
-    showError(err.message || 'Error desconocido al generar picks');
-    window.toastError && window.toastError('Error generando picks');
+    console.error('[Picks IA] Error:', err);
+    showError(err.message || 'Error generando análisis');
+    window.toastError?.('Error en motor de análisis');
   }
 };
 
-// Alias para compatibilidad
-window.loadPicksIA = function () {
-  const container = document.getElementById('picks-ia-container');
-  if (container) window.initPicksIa(container);
+// Alias de compatibilidad
+window.loadPicksIA = () => {
+  const c = document.getElementById('picks-ia-container');
+  if (c) window.initPicksIa(c);
 };
 
-console.log('✅ Picks IA Component v3.0 listo');
+console.log('✅ Picks IA Totales v3.0 listo');
