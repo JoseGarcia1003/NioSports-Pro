@@ -2111,7 +2111,6 @@ function onUserLoggedIn(user) {
     loadUserData();
     
     // Cargar datos de Firebase que requieren autenticación
-    if (typeof loadH2HFromFirebase === 'function') loadH2HFromFirebase();
     if (typeof loadBankrollFromFirebase === 'function') loadBankrollFromFirebase();
     if (typeof loadPicksFromFirebase === 'function') loadPicksFromFirebase();
     
@@ -2483,34 +2482,6 @@ function attachFirebaseConnectionListener() {
     }
 }
 
-
-// Cargar datos de Firebase al iniciar
-function loadH2HFromFirebase() {
-    if (!userId) { logger.warn('⚠️ loadH2H: sin userId'); return; }
-    showLoading('Cargando datos H2H...');
-    __h2hLoadTimer = __startLoadingGuard('carga de H2H', 12000);
-    const db = database || window.database;
-    if (!db || typeof db.ref !== 'function') {
-        Logger.warn('⚠️ Firebase DB no lista todavía. Reintentando H2H...');
-        if (typeof window.waitForFirebaseReady === 'function') {
-            window.waitForFirebaseReady().then(() => loadH2HFromFirebase());
-        }
-        return;
-    }
-    db.ref(`users/${userId}/h2h_games`).on('value', (snapshot) => {
-        if (snapshot.exists()) {
-            H2H_DATABASE = snapshot.val();
-        } else {
-            H2H_DATABASE = {};
-        }
-        loadPicksFromFirebase();
-    }, (error) => {
-        Logger.error('Error cargando datos:', error);
-        updateFirebaseStatus('disconnected');
-        __stopTimer(__h2hLoadTimer);
-      hideLoading();
-    });
-}
 
 // Cargar picks de Firebase
 function loadPicksFromFirebase() {
@@ -8414,7 +8385,6 @@ function refreshData() {
     }
     
     // Reload data from Firebase
-    if (typeof loadH2HFromFirebase === 'function') loadH2HFromFirebase();
     if (typeof loadBankrollFromFirebase === 'function') loadBankrollFromFirebase();
     if (typeof loadPicksFromFirebase === 'function') loadPicksFromFirebase();
     
