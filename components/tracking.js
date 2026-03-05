@@ -86,7 +86,7 @@ window.initTracking = async function(container) {
             <span>Análisis de rendimiento</span>
           </div>
         </div>
-        <button onclick="switchView('picks')" class="btn-primary">
+        <button onclick="navigateTo('picks')" class="btn-primary">
           🎯 Ir a Picks IA
         </button>
       </div>
@@ -240,7 +240,7 @@ window.initTracking = async function(container) {
               <span class="badge-icon">${statusIcon[pick.status]}</span>
               <span class="badge-text">${statusText[pick.status]}</span>
             </div>
-            <h4 class="pick-team">${pick.pick}</h4>
+            <h4 class="pick-team">${pick.direction || '?'} ${pick.market || ''} · ${pick.awayTeam || ''} @ ${pick.homeTeam || ''}</h4>
             <p class="pick-date">${date}</p>
           </div>
           
@@ -338,7 +338,7 @@ window.initTracking = async function(container) {
     if (!window.firebase || !window.currentUser) return;
 
     try {
-      const pickRef = window.firebase.database()
+      const pickRef = window.database
         .ref(`users/${window.currentUser.uid}/picks/${gameId}`);
       
       const snapshot = await pickRef.once('value');
@@ -385,7 +385,7 @@ window.initTracking = async function(container) {
     if (!confirm('¿Eliminar este pick del tracking?')) return;
 
     try {
-      await window.firebase.database()
+      await window.database
         .ref(`users/${window.currentUser.uid}/picks/${gameId}`)
         .remove();
 
@@ -409,7 +409,7 @@ window.initTracking = async function(container) {
     }
 
     try {
-      await window.firebase.database()
+      await window.database
         .ref(`users/${window.currentUser.uid}/picks`)
         .remove();
 
@@ -455,7 +455,7 @@ window.initTracking = async function(container) {
 
   try {
     // Verificar autenticación
-    if (!window.firebase) {
+    if (!window.database) {
       showError('Firebase no está inicializado. Recarga la página.');
       return;
     }
@@ -481,7 +481,7 @@ window.initTracking = async function(container) {
     showLoading();
 
     // Listener en tiempo real para los picks del usuario
-    const picksRef = window.firebase.database()
+    const picksRef = window.database
       .ref(`users/${window.currentUser.uid}/picks`);
 
     picksListener = picksRef.on('value', (snapshot) => {
@@ -507,7 +507,7 @@ window.initTracking = async function(container) {
   // Cleanup function (llamar cuando se cambie de vista)
   return function cleanup() {
     if (picksListener && window.firebase && window.currentUser) {
-      window.firebase.database()
+      window.database
         .ref(`users/${window.currentUser.uid}/picks`)
         .off('value', picksListener);
       console.log('[Tracking] 🧹 Listener desactivado');
