@@ -6758,3 +6758,88 @@ if ('serviceWorker' in navigator) {
             .catch(err => Logger.warn('SW failed:', err));
     });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// STATS/TEAMS VIEW MODULO
+// ═══════════════════════════════════════════════════════════════
+window.initTeamsView = function () {
+    const container = document.getElementById('view-stats');
+    if (!container) return;
+
+    if (!window.TEAM_STATS || Object.keys(window.TEAM_STATS).length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding: 40px; padding-top: 100px;">
+            <div class="spinner" style="margin: 0 auto 20px;"></div>
+            <h2 style="color: var(--gold); font-family: var(--font-display);">Cargando estadísticas de equipos...</h2>
+        </div>`;
+        if (typeof window.loadTeamStatsFromAPI === 'function') {
+            window.loadTeamStatsFromAPI().then(() => initTeamsView()).catch(e => {
+                container.innerHTML = `<div style="text-align:center; padding: 40px; padding-top: 100px;">
+                    <h2 style="color: #ef4444; font-family: var(--font-display);">Error al cargar estadísticas.</h2>
+                </div>`;
+            });
+        }
+        return;
+    }
+
+    const teams = Object.keys(window.TEAM_STATS).sort();
+
+    let html = `
+        <div style="max-width:1200px;margin:0 auto;padding:40px 32px; animation: slideUp 0.5s ease forwards;">
+            <div style="text-align:center; margin-bottom: 40px;">
+                <div style="font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">
+                    ESTADÍSTICAS OFICIALES
+                </div>
+                <h1 style="font-family:var(--font-display);font-size:clamp(32px,5vw,48px);font-weight:800;margin-bottom:16px;">
+                    🏀 Análisis de Equipos
+                </h1>
+                <p style="color:rgba(255,255,255,0.55);font-size:16px;line-height:1.7;max-width:600px;margin: 0 auto;">
+                    Métricas promedio detalladas de todos los equipos de la NBA utilizadas por el motor predictivo.
+                </p>
+            </div>
+            
+            <div style="overflow-x: auto; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid rgba(200, 160, 80, 0.2); color: var(--gold); font-family: var(--font-display); font-size: 14px; text-transform: uppercase;">
+                            <th style="padding: 20px 24px;">Equipo</th>
+                            <th style="padding: 20px 24px;">PPG (Full)</th>
+                            <th style="padding: 20px 24px;">PPG (Home)</th>
+                            <th style="padding: 20px 24px;">PPG (Away)</th>
+                            <th style="padding: 20px 24px;">Pace</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+
+    teams.forEach(team => {
+        const stats = window.TEAM_STATS[team];
+        const ppg = stats.full ? stats.full.toFixed(1) : '-';
+        const ppgHome = stats.fullHome ? stats.fullHome.toFixed(1) : '-';
+        const ppgAway = stats.fullAway ? stats.fullAway.toFixed(1) : '-';
+        const pace = stats.pace ? stats.pace.toFixed(1) : '-';
+
+        html += `
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                <td style="padding: 16px 24px; font-weight: 600; color: white;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="https://a.espncdn.com/i/teamlogos/nba/500/${team.substring(0, 3).toLowerCase()}.png" alt="${team}" style="width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" onerror="this.src='https://ui-avatars.com/api/?name=${team}&background=random&color=fff&size=32'">
+                        ${team}
+                    </div>
+                </td>
+                <td style="padding: 16px 24px; color: rgba(255,255,255,0.8);">${ppg}</td>
+                <td style="padding: 16px 24px; color: rgba(255,255,255,0.8);">${ppgHome}</td>
+                <td style="padding: 16px 24px; color: rgba(255,255,255,0.8);">${ppgAway}</td>
+                <td style="padding: 16px 24px; color: rgba(255,255,255,0.8); font-family: var(--font-mono);">${pace}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+};
