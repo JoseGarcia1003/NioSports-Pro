@@ -193,10 +193,7 @@ if (document.readyState === 'loading') {
       await window.apiClient.ensureToken();
       console.log('[API] ✅ Cliente inicializado y listo');
       
-      // Notificar éxito
-      if (typeof window.toastSuccess === 'function') {
-        window.toastSuccess('Sistema NBA conectado');
-      }
+      // Token listo (sin notificación al usuario - es interno)
     } catch (error) {
       console.error('[API] ❌ Error inicializando cliente:', error);
       
@@ -209,9 +206,7 @@ if (document.readyState === 'loading') {
   window.apiClient.ensureToken()
     .then(() => {
       console.log('[API] ✅ Cliente inicializado y listo');
-      if (typeof window.toastSuccess === 'function') {
-        window.toastSuccess('Sistema NBA conectado');
-      }
+      // Token listo (sin notificación al usuario - es interno)
     })
     .catch(error => {
       console.error('[API] ❌ Error inicializando:', error);
