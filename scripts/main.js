@@ -43,6 +43,24 @@ function __startLoadingGuard(kind = 'carga', ms = 12000) {
 
 function __stopTimer(t) { try { if (t) clearTimeout(t); } catch(_) {} }
 
+// ── LOADING OVERLAY ──────────────────────────────────────────────
+function showLoading(msg) {
+    try {
+        const overlay = document.getElementById('loadingOverlay');
+        if (!overlay) return;
+        const txt = overlay.querySelector('.loading-text');
+        if (txt && msg) txt.textContent = msg;
+        overlay.classList.remove('hidden');
+    } catch(e) {}
+}
+
+function hideLoading() {
+    try {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) overlay.classList.add('hidden');
+    } catch(e) {}
+}
+
 
 // ═══════════════════════════════════════════════════════════════
 // LOGGER CONDICIONAL (Solo en desarrollo)
@@ -112,8 +130,31 @@ function showNotification(type, title, message) {
 
 // ── NOTA: Firebase es inicializado EXCLUSIVAMENTE por /scripts/firebase-init.js ──
 // main.js usa window.database y window.auth una vez que firebase-init.js termina.
-let database = null;
-let auth = null;
+// Usamos getters para que siempre obtengan la referencia más reciente de window.
+let _database = null;
+let _auth = null;
+Object.defineProperty(window, '__mainDb', { get: () => _database || window.database });
+Object.defineProperty(window, '__mainAuth', { get: () => _auth || window.auth });
+
+// Shims locales: cualquier `database.ref(...)` o `auth.xxx` en este archivo
+// los resolvemos a través de los getters de window para evitar null errors.
+// Se sincronizan explícitamente en bootstrapFirebaseBridge e initAuthListeners.
+let database = new Proxy({}, {
+    get(_, prop) {
+        const db = _database || window.database;
+        if (!db) { console.error('[main] database no disponible aún'); return () => {}; }
+        const val = db[prop];
+        return typeof val === 'function' ? val.bind(db) : val;
+    }
+});
+let auth = new Proxy({}, {
+    get(_, prop) {
+        const a = _auth || window.auth;
+        if (!a) { console.error('[main] auth no disponible aún'); return () => {}; }
+        const val = a[prop];
+        return typeof val === 'function' ? val.bind(a) : val;
+    }
+});
 
 // Bridge: si scripts/firebase-init.js ya inicializó Firebase, sincronizamos referencias y listeners aquí.
 (function bootstrapFirebaseBridge(){
@@ -121,8 +162,8 @@ let auth = null;
         try {
             if (window.__FIREBASE_READY__ && window.database && window.auth) {
                 // Sincronizar referencias locales usadas por el resto del monolito
-                database = window.database;
-                auth = window.auth;
+                _database = window.database;
+                _auth = window.auth;
                 // Evitar doble init de listeners
                 if (!window.__NS_AUTH_LISTENERS_READY__) {
                     initAuthListeners();
@@ -289,9 +330,9 @@ function initAuthListeners() {
     if (window.__NS_AUTH_LISTENERS_READY__) return;
     window.__NS_AUTH_LISTENERS_READY__ = true;
     // Sincronizar referencias locales desde window (asignadas por firebase-init.js)
-    if (!auth)     auth     = window.auth;
-    if (!database) database = window.database;
-    if (!auth || !database) {
+    if (!_auth)     _auth     = window.auth;
+    if (!_database) _database = window.database;
+    if (!(_auth || window.auth) || !(_database || window.database)) {
         Logger.error('❌ FIREBASE NO INICIALIZADO CORRECTAMENTE');
         return;
     }
