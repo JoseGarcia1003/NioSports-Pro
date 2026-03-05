@@ -5,19 +5,19 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── 0. ALERT OVERRIDE (lo antes posible, antes de cualquier librería) ──
-window.alert = function(msg) {
-  try {
-    if (window.toastInfo)  return window.toastInfo(String(msg), { title: 'Aviso' });
-    if (window.showToast)  return window.showToast(String(msg), 'info', 3500, { title: 'Aviso' });
-  } catch(e) {}
-  console.log('[alert]', msg);
+window.alert = function (msg) {
+    try {
+        if (window.toastInfo) return window.toastInfo(String(msg), { title: 'Aviso' });
+        if (window.showToast) return window.showToast(String(msg), 'info', 3500, { title: 'Aviso' });
+    } catch (e) { }
+    console.log('[alert]', msg);
 };
 
 // ── 1. SAFETY GUARDS (enterprise hardening - sin dependencias de DOM) ──
 function fetchWithTimeout(resource, options = {}, timeoutMs = 10000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
-  return fetch(resource, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    return fetch(resource, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
 }
 
 // Evitar ReferenceErrors si otros módulos dependen de estas variables
@@ -27,21 +27,21 @@ let __picksLoadTimer = null;
 let __h2hLoadTimer = null;
 
 function __startLoadingGuard(kind = 'carga', ms = 12000) {
-  return setTimeout(() => {
-    try {
-      const overlay = document.getElementById('loadingOverlay');
-      if (overlay && !overlay.classList.contains('hidden')) {
-        hideLoading();
-        showNotification(
-          `La ${kind} está tardando demasiado. Revisa tu conexión o recarga la página.`,
-          'warning'
-        );
-      }
-    } catch (_) {}
-  }, ms);
+    return setTimeout(() => {
+        try {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay && !overlay.classList.contains('hidden')) {
+                hideLoading();
+                showNotification(
+                    `La ${kind} está tardando demasiado. Revisa tu conexión o recarga la página.`,
+                    'warning'
+                );
+            }
+        } catch (_) { }
+    }, ms);
 }
 
-function __stopTimer(t) { try { if (t) clearTimeout(t); } catch(_) {} }
+function __stopTimer(t) { try { if (t) clearTimeout(t); } catch (_) { } }
 
 // ── LOADING OVERLAY ──────────────────────────────────────────────
 function showLoading(msg) {
@@ -51,14 +51,14 @@ function showLoading(msg) {
         const txt = overlay.querySelector('.loading-text');
         if (txt && msg) txt.textContent = msg;
         overlay.classList.remove('hidden');
-    } catch(e) {}
+    } catch (e) { }
 }
 
 function hideLoading() {
     try {
         const overlay = document.getElementById('loadingOverlay');
         if (overlay) overlay.classList.add('hidden');
-    } catch(e) {}
+    } catch (e) { }
 }
 
 
@@ -66,9 +66,9 @@ function hideLoading() {
 // LOGGER CONDICIONAL (Solo en desarrollo)
 // ═══════════════════════════════════════════════════════════════
 
-const IS_PRODUCTION = window.location.hostname !== 'localhost' && 
-                      window.location.hostname !== '127.0.0.1' &&
-                      window.location.hostname !== '';
+const IS_PRODUCTION = window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1' &&
+    window.location.hostname !== '';
 
 const Logger = {
     log(...args) {
@@ -116,8 +116,8 @@ function showNotification(type, title, message) {
         type = 'info';
     }
     // Queue notifications hasta que el sistema principal cargue
-    _pendingNotifications.push({type, title, message});
-    
+    _pendingNotifications.push({ type, title, message });
+
     // Si el sistema completo ya está cargado, procesarlas
     if (typeof processNotificationQueue === 'function') {
         processNotificationQueue();
@@ -142,7 +142,7 @@ Object.defineProperty(window, '__mainAuth', { get: () => _auth || window.auth })
 let database = new Proxy({}, {
     get(_, prop) {
         const db = _database || window.database;
-        if (!db) { console.error('[main] database no disponible aún'); return () => {}; }
+        if (!db) { console.error('[main] database no disponible aún'); return () => { }; }
         const val = db[prop];
         return typeof val === 'function' ? val.bind(db) : val;
     }
@@ -150,14 +150,14 @@ let database = new Proxy({}, {
 let auth = new Proxy({}, {
     get(_, prop) {
         const a = _auth || window.auth;
-        if (!a) { console.error('[main] auth no disponible aún'); return () => {}; }
+        if (!a) { console.error('[main] auth no disponible aún'); return () => { }; }
         const val = a[prop];
         return typeof val === 'function' ? val.bind(a) : val;
     }
 });
 
 // Bridge: si scripts/firebase-init.js ya inicializó Firebase, sincronizamos referencias y listeners aquí.
-(function bootstrapFirebaseBridge(){
+(function bootstrapFirebaseBridge() {
     const once = () => {
         try {
             if (window.__FIREBASE_READY__ && window.database && window.auth) {
@@ -173,7 +173,7 @@ let auth = new Proxy({}, {
                 }
                 return true;
             }
-        } catch {}
+        } catch { }
         return false;
     };
 
@@ -250,7 +250,7 @@ async function bindSession(user) {
             updatedAt: firebase.database.ServerValue.TIMESTAMP
         });
     } catch (e) {
-        
+
         // Aun si falla, seguimos (no bloquea login)
     }
 
@@ -265,7 +265,7 @@ async function enforceSessionBinding(user) {
         const snap = await database.ref(`users/${user.uid}/session/currentSessionId`).once('value');
         remoteSessionId = snap.val();
     } catch (e) {
-        
+
         // Si no podemos leer, no bloqueamos el acceso (fail-open)
         return true;
     }
@@ -281,7 +281,7 @@ async function enforceSessionBinding(user) {
     }
 
     if (localSessionId !== remoteSessionId) {
-        
+
         localStorage.setItem('ns_session_id', remoteSessionId);
         return true;
     }
@@ -291,9 +291,9 @@ async function enforceSessionBinding(user) {
 
 // 4) Logout "duro": borra sesión, cache y service worker (arregla estados corruptos)
 async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
-    try { await auth.signOut(); } catch {}
-    try { localStorage.removeItem('ns_session_id'); } catch {}
-    try { sessionStorage.clear(); } catch {}
+    try { await auth.signOut(); } catch { }
+    try { localStorage.removeItem('ns_session_id'); } catch { }
+    try { sessionStorage.clear(); } catch { }
 
     // Cache Storage
     try {
@@ -301,7 +301,7 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
             const keys = await caches.keys();
             await Promise.all(keys.map(k => caches.delete(k)));
         }
-    } catch {}
+    } catch { }
 
     // Service Worker
     try {
@@ -309,12 +309,12 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
             const regs = await navigator.serviceWorker.getRegistrations();
             await Promise.all(regs.map(r => r.unregister()));
         }
-    } catch {}
+    } catch { }
 
     if (typeof showNotification === 'function') {
         showNotification('warning', 'Sesión', message);
     } else {
-        window.toastInfo ? toastInfo(message,{title:'Notificación'}) : console.log(message);
+        window.toastInfo ? toastInfo(message, { title: 'Notificación' }) : console.log(message);
     }
 }
 
@@ -330,13 +330,13 @@ function initAuthListeners() {
     if (window.__NS_AUTH_LISTENERS_READY__) return;
     window.__NS_AUTH_LISTENERS_READY__ = true;
     // Sincronizar referencias locales desde window (asignadas por firebase-init.js)
-    if (!_auth)     _auth     = window.auth;
+    if (!_auth) _auth = window.auth;
     if (!_database) _database = window.database;
     if (!(_auth || window.auth) || !(_database || window.database)) {
         Logger.error('❌ FIREBASE NO INICIALIZADO CORRECTAMENTE');
         return;
     }
-    
+
     // Observer de autenticación
     auth.onAuthStateChanged(async (user) => {
         if (user) {
@@ -359,7 +359,7 @@ function initAuthListeners() {
                 database.ref(`users/${user.uid}/session`).update({
                     lastSeenAt: firebase.database.ServerValue.TIMESTAMP
                 });
-            } catch {}
+            } catch { }
 
             onUserLoggedIn(user);
         } else {
@@ -376,7 +376,7 @@ function showLogin() {
     const registerScreen = document.getElementById('registerScreen');
     const forgotScreen = document.getElementById('forgotPasswordScreen');
     const mainApp = document.getElementById('mainApp');
-    
+
     if (loginScreen) loginScreen.style.display = 'flex';
     if (registerScreen) registerScreen.style.display = 'none';
     if (forgotScreen) forgotScreen.style.display = 'none';
@@ -388,7 +388,7 @@ function showRegister() {
     const registerScreen = document.getElementById('registerScreen');
     const forgotScreen = document.getElementById('forgotPasswordScreen');
     const mainApp = document.getElementById('mainApp');
-    
+
     if (loginScreen) loginScreen.style.display = 'none';
     if (registerScreen) registerScreen.style.display = 'flex';
     if (forgotScreen) forgotScreen.style.display = 'none';
@@ -400,7 +400,7 @@ function showForgotPassword() {
     const registerScreen = document.getElementById('registerScreen');
     const forgotScreen = document.getElementById('forgotPasswordScreen');
     const mainApp = document.getElementById('mainApp');
-    
+
     if (loginScreen) loginScreen.style.display = 'none';
     if (registerScreen) registerScreen.style.display = 'none';
     if (forgotScreen) forgotScreen.style.display = 'flex';
@@ -412,43 +412,43 @@ function onUserLoggedIn(user) {
     // Cargar perfil del usuario
     database.ref(`users/${user.uid}/profile`).once('value').then((snapshot) => {
         const profile = snapshot.val();
-        
+
         if (profile) {
             const username = profile.username || profile.displayName || 'Usuario';
-            
+
             const navName = document.getElementById('userName');
             const navInitials = document.getElementById('userInitials');
-            
+
             if (navName) navName.textContent = username;
             if (navInitials) navInitials.textContent = username.substring(0, 1).toUpperCase();
         }
     }).catch(err => {
         Logger.error('❌ Error cargando perfil:', err);
     });
-    
+
     // Ocultar pantallas de auth y mostrar app
     const loginScreen = document.getElementById('loginScreen');
     const registerScreen = document.getElementById('registerScreen');
     const forgotScreen = document.getElementById('forgotPasswordScreen');
     const mainApp = document.getElementById('mainApp');
-    
+
     if (loginScreen) loginScreen.style.display = 'none';
     if (registerScreen) registerScreen.style.display = 'none';
     if (forgotScreen) forgotScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = 'block';
-    
+
     // Cargar datos del usuario
     loadUserData();
-    
+
     // Cargar datos de Firebase que requieren autenticación
     if (typeof loadBankrollFromFirebase === 'function') loadBankrollFromFirebase();
     if (typeof loadPicksFromFirebase === 'function') loadPicksFromFirebase();
-    
+
     // Renderizar vista inicial
     if (typeof render === 'function') {
         render();
     }
-    
+
     // Show mobile bottom nav
     const mobileNav = document.getElementById('mobileBottomNav');
     if (mobileNav) mobileNav.style.display = '';
@@ -466,20 +466,20 @@ function loadUserData() {
     if (!userId) {
         return;
     }
-    
-    database.ref(`users/${userId}/picks_totales`).on('value', (s) => { 
-        USER_PICKS_TOTALES = s.val() || {}; 
+
+    database.ref(`users/${userId}/picks_totales`).on('value', (s) => {
+        USER_PICKS_TOTALES = s.val() || {};
     });
-    database.ref(`users/${userId}/picks_ai`).on('value', (s) => { 
-        USER_PICKS_AI = s.val() || {}; 
+    database.ref(`users/${userId}/picks_ai`).on('value', (s) => {
+        USER_PICKS_AI = s.val() || {};
     });
-    
-    database.ref(`users/${userId}/picks_backtesting`).on('value', (s) => { 
-        USER_PICKS_BACKTESTING = s.val() || {}; 
+
+    database.ref(`users/${userId}/picks_backtesting`).on('value', (s) => {
+        USER_PICKS_BACKTESTING = s.val() || {};
     });
-    
-    database.ref(`users/${userId}/bankroll`).on('value', (s) => { 
-        USER_BANKROLL = s.val() || { current: 0, initial: 0, history: [] }; 
+
+    database.ref(`users/${userId}/bankroll`).on('value', (s) => {
+        USER_BANKROLL = s.val() || { current: 0, initial: 0, history: [] };
     });
 }
 
@@ -515,7 +515,7 @@ function logout() {
                 database.ref(`users/${userId}/h2h_games`).off();
                 database.ref(`users/${userId}/picks`).off();
                 database.ref(`users/${userId}/bankroll_data`).off();
-            } catch(e) { /* silent */ }
+            } catch (e) { /* silent */ }
         }
         auth.signOut().then(() => {
             showNotification('info', 'Sesión cerrada', 'Hasta pronto');
@@ -530,256 +530,273 @@ function logout() {
     }
 }
 
-        /* ══════════════════════════════════════════════════════════════════════
-           NIOSPORTS PRO v4.0 - SISTEMA DE PREDICCIONES NBA
-           ══════════════════════════════════════════════════════════════════════
-           
-           DESCRIPCIÓN:
-           Sistema profesional de análisis y predicciones NBA con inteligencia
-           artificial, multi-usuario, y módulos avanzados de tracking.
-           
-           MÓDULOS PRINCIPALES:
-           
-           1. SISTEMA DE AUTENTICACIÓN
-              - Login con email o username
-              - Registro con validación
-              - Recuperación de contraseña por email
-              - Multi-usuario con Firebase Auth
-              - Separación total de datos por usuario
-           
-           2. HOME DASHBOARD
-              - Vista personalizada con stats del usuario
-              - Resumen de bankroll, picks activos, win rate
-              - Acceso rápido a todos los módulos
-              - Interfaz intuitiva y responsive
-           
-           3. CALCULADORA DE TOTALES
-              - Predicción de puntos Q1, 1H, Full Game
-              - 30 equipos NBA con stats completos
-              - Ajuste automático por PACE
-              - Comparación vs líneas de casas de apuestas
-              - Guardado de picks con tracking
+/* ══════════════════════════════════════════════════════════════════════
+   NIOSPORTS PRO v4.0 - SISTEMA DE PREDICCIONES NBA
+   ══════════════════════════════════════════════════════════════════════
+   
+   DESCRIPCIÓN:
+   Sistema profesional de análisis y predicciones NBA con inteligencia
+   artificial, multi-usuario, y módulos avanzados de tracking.
+   
+   MÓDULOS PRINCIPALES:
+   
+   1. SISTEMA DE AUTENTICACIÓN
+      - Login con email o username
+      - Registro con validación
+      - Recuperación de contraseña por email
+      - Multi-usuario con Firebase Auth
+      - Separación total de datos por usuario
+   
+   2. HOME DASHBOARD
+      - Vista personalizada con stats del usuario
+      - Resumen de bankroll, picks activos, win rate
+      - Acceso rápido a todos los módulos
+      - Interfaz intuitiva y responsive
+   
+   3. CALCULADORA DE TOTALES
+      - Predicción de puntos Q1, 1H, Full Game
+      - 30 equipos NBA con stats completos
+      - Ajuste automático por PACE
+      - Comparación vs líneas de casas de apuestas
+      - Guardado de picks con tracking
 
-           
-           5. AI PICKS AUTOMÁTICAS
-              - Generación automática de picks con 75%+ probabilidad
-              - Análisis de todos los matchups posibles (NxN)
-              - Niveles de confianza: VERY HIGH, HIGH, GOOD
-              - Cache diario automático
-              - Sistema de tracking integrado
-           
-           6. MIS PICKS (UNIFICADO)
-              - Vista consolidada de TODOS los picks
-              - Filtros: Totales, Props, AI, Backtesting
-              - Estados: Pendientes, Ganadas, Perdidas
-              - Actualización de resultados en tiempo real
-              - Historial completo con stats
-           
-           7. BANKROLL MANAGEMENT
-              - Control profesional del capital
-              - Bankroll actual, inicial, ganancia/pérdida
-              - Botón "Actualizar Bankroll" para recargas
-              - Historial detallado de movimientos
-              - Cálculo automático de ROI
-              - Gráficos de evolución
-           
-           8. BACKTESTING SYSTEM
-              - Sistema de calibración del modelo
-              - Comparación predicción vs resultado real
-              - Métricas: Win Rate, ROI, Error del modelo
-              - Curva de calibración por rangos de probabilidad
-              - Stats por período (Q1, 1H, FULL)
-           
-           9. PROFILE & SETTINGS
-              - Información del usuario
-              - Configuración de preferencias
-              - Gestión de cuenta
-           
-           ARQUITECTURA FIREBASE:
-           
-           users/
-           ├── {userId}/
-           │   ├── profile/
-           │   │   ├── username
-           │   │   ├── email
-           │   │   ├── displayName
-           │   │   └── createdAt
-           │   ├── picks_totales/
-           │   │   └── {pickId} → picks de calculadora
-           │   ├── picks_ai/
-           │   │   └── {pickId} → AI picks agregados
-           │   ├── picks_backtesting/
-           │   │   └── {pickId} → picks para calibración
-           │   └── bankroll/
-           │       ├── current
-           │       ├── initial
-           │       └── history[]
-           
-           usernames/
-           └── {userId} → username (para login con username)
-           
-           TECNOLOGÍAS:
-           - Frontend: HTML5, CSS3 (Tailwind), JavaScript ES6+
-           - Backend: Firebase Realtime Database
-           - Auth: Firebase Authentication
-           - Librerías: Chart.js para gráficos
-           - Design: Sistema de diseño custom con variables CSS
-           
-           CARACTERÍSTICAS:
-           ✅ Responsive (Desktop, Tablet, Mobile)
-           ✅ PWA Ready (manifest.json + Service Worker)
-           ✅ Offline capable (Service Worker cache)
-           ✅ Real-time sync con Firebase
-           ✅ Multi-usuario seguro
-           ✅ Validaciones completas
-           ✅ Manejo de errores robusto
-           ✅ Notificaciones toast
-           ✅ Exportación a CSV
-           ✅ Sistema de navegación fluido
-           
-           DESARROLLADO POR:
-           NioSports Pro Team
-           Versión: 4.0
-           Última actualización: Febrero 2026
-           
-           ══════════════════════════════════════════════════════════════════════ */
+   
+   5. AI PICKS AUTOMÁTICAS
+      - Generación automática de picks con 75%+ probabilidad
+      - Análisis de todos los matchups posibles (NxN)
+      - Niveles de confianza: VERY HIGH, HIGH, GOOD
+      - Cache diario automático
+      - Sistema de tracking integrado
+   
+   6. MIS PICKS (UNIFICADO)
+      - Vista consolidada de TODOS los picks
+      - Filtros: Totales, Props, AI, Backtesting
+      - Estados: Pendientes, Ganadas, Perdidas
+      - Actualización de resultados en tiempo real
+      - Historial completo con stats
+   
+   7. BANKROLL MANAGEMENT
+      - Control profesional del capital
+      - Bankroll actual, inicial, ganancia/pérdida
+      - Botón "Actualizar Bankroll" para recargas
+      - Historial detallado de movimientos
+      - Cálculo automático de ROI
+      - Gráficos de evolución
+   
+   8. BACKTESTING SYSTEM
+      - Sistema de calibración del modelo
+      - Comparación predicción vs resultado real
+      - Métricas: Win Rate, ROI, Error del modelo
+      - Curva de calibración por rangos de probabilidad
+      - Stats por período (Q1, 1H, FULL)
+   
+   9. PROFILE & SETTINGS
+      - Información del usuario
+      - Configuración de preferencias
+      - Gestión de cuenta
+   
+   ARQUITECTURA FIREBASE:
+   
+   users/
+   ├── {userId}/
+   │   ├── profile/
+   │   │   ├── username
+   │   │   ├── email
+   │   │   ├── displayName
+   │   │   └── createdAt
+   │   ├── picks_totales/
+   │   │   └── {pickId} → picks de calculadora
+   │   ├── picks_ai/
+   │   │   └── {pickId} → AI picks agregados
+   │   ├── picks_backtesting/
+   │   │   └── {pickId} → picks para calibración
+   │   └── bankroll/
+   │       ├── current
+   │       ├── initial
+   │       └── history[]
+   
+   usernames/
+   └── {userId} → username (para login con username)
+   
+   TECNOLOGÍAS:
+   - Frontend: HTML5, CSS3 (Tailwind), JavaScript ES6+
+   - Backend: Firebase Realtime Database
+   - Auth: Firebase Authentication
+   - Librerías: Chart.js para gráficos
+   - Design: Sistema de diseño custom con variables CSS
+   
+   CARACTERÍSTICAS:
+   ✅ Responsive (Desktop, Tablet, Mobile)
+   ✅ PWA Ready (manifest.json + Service Worker)
+   ✅ Offline capable (Service Worker cache)
+   ✅ Real-time sync con Firebase
+   ✅ Multi-usuario seguro
+   ✅ Validaciones completas
+   ✅ Manejo de errores robusto
+   ✅ Notificaciones toast
+   ✅ Exportación a CSV
+   ✅ Sistema de navegación fluido
+   
+   DESARROLLADO POR:
+   NioSports Pro Team
+   Versión: 4.0
+   Última actualización: Febrero 2026
+   
+   ══════════════════════════════════════════════════════════════════════ */
 
-        
-        // ═══════════════════════════════════════════════════════════════
 
-    // ═══════════════════════════════════════════════════════════
-    // LANDING PAGE CONTROLLERS
-    // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 
-    // Theme Toggle
-    function toggleTheme() {
-        const html = document.documentElement;
-        const current = html.getAttribute('data-theme') || 'dark';
-        const next = current === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        const btn = document.getElementById('themeToggle');
-        btn.textContent = next === 'dark' ? '🌙' : '☀️';
-    }
+// ═══════════════════════════════════════════════════════════
+// LANDING PAGE CONTROLLERS
+// ═══════════════════════════════════════════════════════════
 
-    (function() {
-        const saved = localStorage.getItem('theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', saved);
-        setTimeout(() => {
-            const btn = document.getElementById('themeToggle');
-            if (btn) btn.textContent = saved === 'dark' ? '🌙' : '☀️';
-        }, 100);
-    })();
-
-    // Scroll effect for nav
-    window.addEventListener('scroll', () => {
-        const nav = document.getElementById('mainNav');
-        if (window.scrollY > 40) nav.classList.add('scrolled');
-        else nav.classList.remove('scrolled');
-    });
-
-    // Counter animation for stats
-    function animateCounters() {
-        const counters = document.querySelectorAll('.stat-number[data-count]');
-        counters.forEach(el => {
-            const target = parseInt(el.dataset.count);
-            const suffix = el.dataset.suffix || '';
-            const isPlus = target >= 100;
-            let current = 0;
-            const step = Math.max(1, Math.floor(target / 50));
-            const timer = setInterval(() => {
-                current += step;
-                if (current >= target) {
-                    current = target;
-                    clearInterval(timer);
-                }
-                el.textContent = current + (isPlus && current === target ? '+' : '') + suffix;
-            }, 30);
-        });
-    }
-
-    // Observe stats section for counter trigger
-    const statsObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animateCounters();
-                statsObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.3 });
-
-    setTimeout(() => {
-        const strip = document.querySelector('.stats-strip');
-        if (strip) statsObserver.observe(strip);
-    }, 500);
-
-    // Feature card mouse tracking
-    document.querySelectorAll('.feature-card').forEach(card => {
-        card.addEventListener('mousemove', e => {
-            const rect = card.getBoundingClientRect();
-            card.style.setProperty('--mouse-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
-            card.style.setProperty('--mouse-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
-        });
-    });
-
-    // View switching system
-    function switchView(view) {
-        // Track user action
-        if (window.trackAction) {
-            window.trackAction('switch_view', { view });
-        }
-        window.currentView = view;
-        
-        // Hide all views
-        document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
-        // Show target view
-        const target = document.getElementById('view-' + view);
-        if (target) target.classList.add('active');
-
-        // Update nav links
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        const activeLink = document.querySelector('.nav-link[data-view="' + view + '"]');
-        if (activeLink) activeLink.classList.add('active');
-
-        // Close mobile nav
-        document.querySelector('.nav-links')?.classList.remove('open');
-
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        // Load content if needed
-        if (view === 'totals') {
-            // Re-render the app if navigating to totals
-            if (typeof render === 'function') render();
-        }
-            if (view === 'picks') {
-            if (typeof window.loadPicksIA === 'function') window.loadPicksIA();
-        }
-        if (view === 'teams') {
-            if (typeof window.initTeamsView === 'function') window.initTeamsView();
-        }
+// Theme Toggle
+function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    const btn = document.getElementById('themeToggle');
+    btn.textContent = next === 'dark' ? '🌙' : '☀️';
 }
 
-    function showAuth() {
-        if (typeof currentUser !== 'undefined' && currentUser) {
-            // User is logged in — show account options
-            if (typeof logout === 'function') {
-                logout(); // logout() ya muestra modal pro
+(function () {
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    setTimeout(() => {
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = saved === 'dark' ? '🌙' : '☀️';
+    }, 100);
+})();
+
+// Scroll effect for nav
+window.addEventListener('scroll', () => {
+    const nav = document.getElementById('mainNav');
+    if (window.scrollY > 40) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+});
+
+// Counter animation for stats
+function animateCounters() {
+    const counters = document.querySelectorAll('.stat-number[data-count]');
+    counters.forEach(el => {
+        const target = parseInt(el.dataset.count);
+        const suffix = el.dataset.suffix || '';
+        const isPlus = target >= 100;
+        let current = 0;
+        const step = Math.max(1, Math.floor(target / 50));
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
             }
-        } else {
-            // User is not logged in — show login screen
-            if (typeof showLogin === 'function') {
-                showLogin();
-            } else {
-                const loginScreen = document.getElementById('loginScreen');
-                if (loginScreen) loginScreen.style.display = 'flex';
-            }
+            el.textContent = current + (isPlus && current === target ? '+' : '') + suffix;
+        }, 30);
+    });
+}
+
+// Observe stats section for counter trigger
+const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            animateCounters();
+            statsObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.3 });
+
+setTimeout(() => {
+    const strip = document.querySelector('.stats-strip');
+    if (strip) statsObserver.observe(strip);
+}, 500);
+
+// Feature card mouse tracking
+document.querySelectorAll('.feature-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
+        card.style.setProperty('--mouse-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+    });
+});
+
+// View switching system
+function switchView(view) {
+    // Track user action
+    if (window.trackAction) {
+        window.trackAction('switch_view', { view });
+    }
+    window.currentView = view;
+
+    // Hide all views
+    document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
+    // Show target view
+    const target = document.getElementById('view-' + view);
+    if (target) target.classList.add('active');
+
+    // Update nav links
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    const activeLink = document.querySelector('.nav-link[data-view="' + view + '"]');
+    if (activeLink) activeLink.classList.add('active');
+
+    // Close mobile nav
+    document.querySelector('.nav-links')?.classList.remove('open');
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Load content if needed
+    if (view === 'totals') {
+        // Re-render the app if navigating to totals
+        const app = document.getElementById('app');
+        window.currentView = 'totales';
+        if (app && typeof renderTendencia === 'function') {
+            app.innerHTML = renderTendencia();
+        } else if (typeof render === 'function') {
+            render();
         }
     }
+    if (view === 'picks') {
+        window.currentView = 'aipicks';
+        const picksContainer = document.getElementById('view-picks');
+        if (picksContainer && typeof renderAIPicks === 'function') {
+            picksContainer.innerHTML = renderAIPicks();
+        }
+        if (typeof window.loadPicksIA === 'function') window.loadPicksIA();
+    }
+    if (view === 'stats') {
+        if (typeof window.initTeamsView === 'function') window.initTeamsView();
+    }
+    if (view === 'bankroll') {
+        if (typeof window.renderBankrollView === 'function') window.renderBankrollView();
+    }
+    if (view === 'tracking') {
+        if (typeof window.renderTrackingView === 'function') window.renderTrackingView();
+    }
+}
 
-    // ═══════════════════════════════════════════════════════════
+function showAuth() {
+    if (typeof currentUser !== 'undefined' && currentUser) {
+        // User is logged in — show account options
+        if (typeof logout === 'function') {
+            logout(); // logout() ya muestra modal pro
+        }
+    } else {
+        // User is not logged in — show login screen
+        if (typeof showLogin === 'function') {
+            showLogin();
+        } else {
+            const loginScreen = document.getElementById('loginScreen');
+            if (loginScreen) loginScreen.style.display = 'flex';
+        }
+    }
+}
 
-    // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════
 
 // FIREBASE DATABASE FUNCTIONS
 // ═══════════════════════════════════════════════════════════════
@@ -818,14 +835,14 @@ function loadPicksFromFirebase() {
     if (!userId) { logger.warn('⚠️ loadPicks: sin userId'); return; }
     showLoading('Cargando historial de picks...');
     __picksLoadTimer = __startLoadingGuard('carga del historial', 12000);
-database.ref(`users/${userId}/picks`).on('value', (snapshot) => {
+    database.ref(`users/${userId}/picks`).on('value', (snapshot) => {
         if (snapshot.exists()) {
             PICKS_DATABASE = snapshot.val();
         } else {
             PICKS_DATABASE = {};
         }
         __stopTimer(__picksLoadTimer);
-      hideLoading();
+        hideLoading();
         render();
         checkForValuePicks();
     }, (error) => {
@@ -892,20 +909,20 @@ function getH2HData(team1, team2) {
         const t1Q3 = isT1L ? g.localQ3 : g.awayQ3, t1Q4 = isT1L ? g.localQ4 : g.awayQ4;
         const t2Q1 = isT1L ? g.awayQ1 : g.localQ1, t2Q2 = isT1L ? g.awayQ2 : g.localQ2;
         const t2Q3 = isT1L ? g.awayQ3 : g.localQ3, t2Q4 = isT1L ? g.awayQ4 : g.localQ4;
-        const t1OT = isT1L ? ((g.localOT1||0)+(g.localOT2||0)+(g.localOT3||0)) : ((g.awayOT1||0)+(g.awayOT2||0)+(g.awayOT3||0));
-        const t2OT = isT1L ? ((g.awayOT1||0)+(g.awayOT2||0)+(g.awayOT3||0)) : ((g.localOT1||0)+(g.localOT2||0)+(g.localOT3||0));
-        const t1T = t1Q1+t1Q2+t1Q3+t1Q4+t1OT, t2T = t2Q1+t2Q2+t2Q3+t2Q4+t2OT;
+        const t1OT = isT1L ? ((g.localOT1 || 0) + (g.localOT2 || 0) + (g.localOT3 || 0)) : ((g.awayOT1 || 0) + (g.awayOT2 || 0) + (g.awayOT3 || 0));
+        const t2OT = isT1L ? ((g.awayOT1 || 0) + (g.awayOT2 || 0) + (g.awayOT3 || 0)) : ((g.localOT1 || 0) + (g.localOT2 || 0) + (g.localOT3 || 0));
+        const t1T = t1Q1 + t1Q2 + t1Q3 + t1Q4 + t1OT, t2T = t2Q1 + t2Q2 + t2Q3 + t2Q4 + t2OT;
         t1Pts += t1T; t2Pts += t2T;
         if (t1T > t2T) t1W++; else t2W++;
-        return { date: g.date, localTeam: g.localTeam, awayTeam: g.awayTeam, t1Q1, t1Q2, t1Q3, t1Q4, t2Q1, t2Q2, t2Q3, t2Q4, t1Half: t1Q1+t1Q2, t2Half: t2Q1+t2Q2, t1Total: t1T, t2Total: t2T, totalPts: t1T+t2T, winner: t1T>t2T ? team1 : team2, overtimes: g.overtimes||0 };
+        return { date: g.date, localTeam: g.localTeam, awayTeam: g.awayTeam, t1Q1, t1Q2, t1Q3, t1Q4, t2Q1, t2Q2, t2Q3, t2Q4, t1Half: t1Q1 + t1Q2, t2Half: t2Q1 + t2Q2, t1Total: t1T, t2Total: t2T, totalPts: t1T + t2T, winner: t1T > t2T ? team1 : team2, overtimes: g.overtimes || 0 };
     });
     const n = proc.length;
     return {
         team1, team2,
         record: { team1Wins: t1W, team2Wins: t2W },
-        avgPts: { team1: n ? t1Pts/n : 0, team2: n ? t2Pts/n : 0 },
-        avgQ1: { team1: n ? proc.reduce((s,g) => s+g.t1Q1, 0)/n : 0, team2: n ? proc.reduce((s,g) => s+g.t2Q1, 0)/n : 0 },
-        avgHalf: { team1: n ? proc.reduce((s,g) => s+g.t1Half, 0)/n : 0, team2: n ? proc.reduce((s,g) => s+g.t2Half, 0)/n : 0 },
+        avgPts: { team1: n ? t1Pts / n : 0, team2: n ? t2Pts / n : 0 },
+        avgQ1: { team1: n ? proc.reduce((s, g) => s + g.t1Q1, 0) / n : 0, team2: n ? proc.reduce((s, g) => s + g.t2Q1, 0) / n : 0 },
+        avgHalf: { team1: n ? proc.reduce((s, g) => s + g.t1Half, 0) / n : 0, team2: n ? proc.reduce((s, g) => s + g.t2Half, 0) / n : 0 },
         games: proc,
         totalGames: games.length
     };
@@ -1012,9 +1029,11 @@ function getBacktestStats() {
     if (picks.length === 0) return null;
 
     // Stats por período
-    const byPeriod = { '1Q': { wins: 0, losses: 0, pushes: 0, totalError: 0, count: 0 },
-                       '1H': { wins: 0, losses: 0, pushes: 0, totalError: 0, count: 0 },
-                       'FULL': { wins: 0, losses: 0, pushes: 0, totalError: 0, count: 0 } };
+    const byPeriod = {
+        '1Q': { wins: 0, losses: 0, pushes: 0, totalError: 0, count: 0 },
+        '1H': { wins: 0, losses: 0, pushes: 0, totalError: 0, count: 0 },
+        'FULL': { wins: 0, losses: 0, pushes: 0, totalError: 0, count: 0 }
+    };
 
     // Stats por rango de probabilidad (para calibración)
     const byProbRange = {
@@ -1343,8 +1362,8 @@ function getBestPicks() {
                         const h2hAvg = period === 'q1'
                             ? h2h.avgQ1.team1 + h2h.avgQ1.team2
                             : period === 'half'
-                            ? h2h.avgHalf.team1 + h2h.avgHalf.team2
-                            : h2h.avgPts.team1 + h2h.avgPts.team2;
+                                ? h2h.avgHalf.team1 + h2h.avgHalf.team2
+                                : h2h.avgPts.team1 + h2h.avgPts.team2;
 
                         if (h2hAvg > suggestedLine) {
                             confidence += 5;
@@ -1957,8 +1976,8 @@ function calculateStreak(games, teamName) {
     for (const game of sortedGames.slice(0, 10)) {
         // Detectar si es home o away
         const isHome = game.home_team.full_name.includes(teamName) ||
-                       game.home_team.name === teamName ||
-                       TEAM_API_NAMES[teamName]?.includes(game.home_team.name);
+            game.home_team.name === teamName ||
+            TEAM_API_NAMES[teamName]?.includes(game.home_team.name);
 
         const teamScore = isHome ? game.home_team_score : game.visitor_team_score;
         const oppScore = isHome ? game.visitor_team_score : game.home_team_score;
@@ -2256,8 +2275,8 @@ function calculateAdvancedTrend(localTeamName, awayTeamName, period = 'full') {
 
     // 5. CÁLCULO FINAL
     const baseTotal = (components.offense * MODEL_CONFIG.weights.offense +
-                       components.defense * MODEL_CONFIG.weights.defense) /
-                      (MODEL_CONFIG.weights.offense + MODEL_CONFIG.weights.defense);
+        components.defense * MODEL_CONFIG.weights.defense) /
+        (MODEL_CONFIG.weights.offense + MODEL_CONFIG.weights.defense);
 
     let finalTrend = baseTotal + components.pace + components.context + b2bAdjust + restAdjust + injuryAdjust + streakAdjust + travelAdjust + scheduleAdjust + divisionAdjust + dayAdjust;
 
@@ -2525,12 +2544,12 @@ const ML_MODEL = {
     },
 
     // Entrenar modelo con datos históricos
-    train: function() {
+    train: function () {
         const picks = Object.values(PICKS_DATABASE).filter(p => p.status !== 'pending');
         if (picks.length < 10) return; // Necesitamos mínimo 10 picks
 
         // Calcular bias por período
-        const periodStats = { '1Q': {wins:0, total:0}, '1H': {wins:0, total:0}, 'FULL': {wins:0, total:0} };
+        const periodStats = { '1Q': { wins: 0, total: 0 }, '1H': { wins: 0, total: 0 }, 'FULL': { wins: 0, total: 0 } };
         picks.forEach(p => {
             if (periodStats[p.period]) {
                 periodStats[p.period].total++;
@@ -2547,7 +2566,7 @@ const ML_MODEL = {
         });
 
         // Calcular bias por tipo (Over/Under)
-        const typeStats = { 'OVER': {wins:0, total:0}, 'UNDER': {wins:0, total:0} };
+        const typeStats = { 'OVER': { wins: 0, total: 0 }, 'UNDER': { wins: 0, total: 0 } };
         picks.forEach(p => {
             if (typeStats[p.betType]) {
                 typeStats[p.betType].total++;
@@ -2565,7 +2584,7 @@ const ML_MODEL = {
     },
 
     // Predecir ajuste de probabilidad
-    predict: function(period, betType, baseProb, zScore, ev) {
+    predict: function (period, betType, baseProb, zScore, ev) {
         // Entrenar si no se ha hecho
         this.train();
 
@@ -2592,7 +2611,7 @@ const ML_MODEL = {
     },
 
     // Obtener score de confianza del modelo (0-100)
-    getConfidence: function() {
+    getConfidence: function () {
         const picks = Object.values(PICKS_DATABASE).filter(p => p.status !== 'pending');
         if (picks.length < 10) return 0;
         if (picks.length < 20) return 30;
@@ -2637,13 +2656,13 @@ function getScores() {
 
 function checkOT() {
     const s = getScores();
-    const lReg = s.lQ1+s.lQ2+s.lQ3+s.lQ4, aReg = s.aQ1+s.aQ2+s.aQ3+s.aQ4;
-    const filled = s.lQ1>0 && s.lQ2>0 && s.lQ3>0 && s.lQ4>0 && s.aQ1>0 && s.aQ2>0 && s.aQ3>0 && s.aQ4>0;
+    const lReg = s.lQ1 + s.lQ2 + s.lQ3 + s.lQ4, aReg = s.aQ1 + s.aQ2 + s.aQ3 + s.aQ4;
+    const filled = s.lQ1 > 0 && s.lQ2 > 0 && s.lQ3 > 0 && s.lQ4 > 0 && s.aQ1 > 0 && s.aQ2 > 0 && s.aQ3 > 0 && s.aQ4 > 0;
     const need1 = filled && lReg === aReg;
-    const lA1 = lReg+s.lOT1, aA1 = aReg+s.aOT1;
-    const need2 = need1 && s.lOT1>0 && s.aOT1>0 && lA1 === aA1;
-    const lA2 = lA1+s.lOT2, aA2 = aA1+s.aOT2;
-    const need3 = need2 && s.lOT2>0 && s.aOT2>0 && lA2 === aA2;
+    const lA1 = lReg + s.lOT1, aA1 = aReg + s.aOT1;
+    const need2 = need1 && s.lOT1 > 0 && s.aOT1 > 0 && lA1 === aA1;
+    const lA2 = lA1 + s.lOT2, aA2 = aA1 + s.aOT2;
+    const need3 = need2 && s.lOT2 > 0 && s.aOT2 > 0 && lA2 === aA2;
     return { needOT1: need1, needOT2: need2, needOT3: need3 };
 }
 
@@ -2679,7 +2698,7 @@ function render() {
 
 function renderAIPicks() {
     const picks = AI_PICKS_TODAY;
-    
+
     return `
         <div class="max-w-7xl mx-auto px-4 py-8">
             <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
@@ -2735,7 +2754,7 @@ function renderAIPicks() {
                         <div class="glass-card p-5 rounded-2xl">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="bg-gold/20 rounded-full w-10 h-10 flex items-center justify-center">
-                                    <span class="text-gold font-bold">#${i+1}</span>
+                                    <span class="text-gold font-bold">#${i + 1}</span>
                                 </div>
                                 <span class="badge ${pick.confidence === 'VERY HIGH' ? 'badge-info' : pick.confidence === 'HIGH' ? 'badge-warning' : 'badge-success'}">
                                     ${pick.confidence}
@@ -2787,9 +2806,9 @@ function renderAIPicks() {
 function addAIPickToTracking(pickId) {
     const pick = AI_PICKS_TODAY.find(p => p.id === pickId);
     if (!pick) return;
-    
+
     const userPickId = `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     database.ref(`users/${userId}/picks_ai/${userPickId}`).set({
         ...pick,
         id: userPickId,
@@ -2808,12 +2827,12 @@ function renderBacktesting() {
     const picks = Object.values(USER_PICKS_BACKTESTING);
     const resolved = picks.filter(p => p.status !== 'pending');
     const pending = picks.filter(p => p.status === 'pending');
-    
+
     const wins = resolved.filter(p => p.status === 'win').length;
     const losses = resolved.filter(p => p.status === 'loss').length;
     const pushes = resolved.filter(p => p.status === 'push').length;
     const winRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
-    
+
     return `
         <div class="max-w-6xl mx-auto px-4 py-8">
             <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
@@ -2891,8 +2910,8 @@ function renderBacktesting() {
                                         ${p.local} vs ${p.away}
                                     </div>
                                     ${p.status === 'win' ? '<span class="win-badge">WIN</span>' :
-                                      p.status === 'loss' ? '<span class="loss-badge">LOSS</span>' :
-                                      '<span class="pending-badge">PUSH</span>'}
+            p.status === 'loss' ? '<span class="loss-badge">LOSS</span>' :
+                '<span class="pending-badge">PUSH</span>'}
                                 </div>
                                 <div class="text-sm text-gray-400">
                                     ${p.betType} ${p.line} • Real: ${p.actualResult}
@@ -2909,24 +2928,24 @@ function renderBacktesting() {
 function resolveBacktestPick(pickId) {
     const input = document.getElementById(`bt_${pickId}`);
     if (!input) return;
-    
+
     const result = parseFloat(input.value);
     if (isNaN(result)) {
         showNotification('error', 'Error', 'Resultado inválido');
         return;
     }
-    
+
     database.ref(`users/${userId}/picks_backtesting/${pickId}`).once('value').then(snapshot => {
         const pick = snapshot.val();
         if (!pick) return;
-        
+
         const line = parseFloat(pick.line);
         let status = 'pending';
-        
+
         if (result === line) status = 'push';
         else if (pick.betType === 'OVER') status = result > line ? 'win' : 'loss';
         else status = result < line ? 'win' : 'loss';
-        
+
         database.ref(`users/${userId}/picks_backtesting/${pickId}`).update({
             status, actualResult: result, resolvedAt: new Date().toISOString()
         }).then(() => {
@@ -2941,19 +2960,19 @@ function resolveBacktestPick(pickId) {
 // ═══════════════════════════════════════════════════════════════════
 
 function renderHome() {
-    const totalPicks = Object.keys({...USER_PICKS_TOTALES, ...USER_PICKS_AI}).length;
+    const totalPicks = Object.keys({ ...USER_PICKS_TOTALES, ...USER_PICKS_AI }).length;
     const bankroll = USER_BANKROLL.current || 0;
     const initial = USER_BANKROLL.initial || 0;
     const profit = bankroll - initial;
     const profitPercent = initial > 0 ? ((profit / initial) * 100).toFixed(1) : '0.0';
-    
+
     // Stats de picks
     const allPicks = [...Object.values(USER_PICKS_TOTALES), ...Object.values(USER_PICKS_AI), ...Object.values(USER_PICKS_BACKTESTING)];
     const resolved = allPicks.filter(p => p.status && p.status !== 'pending');
     const wins = resolved.filter(p => p.status === 'win').length;
     const losses = resolved.filter(p => p.status === 'loss').length;
     const winRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
-    
+
     return `
         <div class="max-w-7xl mx-auto px-4 py-8">
             <!-- Welcome Header -->
@@ -3133,7 +3152,7 @@ function renderTendencia() {
                         <h1 class="text-2xl md:text-3xl font-bold text-white font-display tracking-wide">ANÁLISIS DE PARTIDO</h1>
                         <div class="flex items-center gap-3 justify-center mt-1">
                             <p class="text-yellow-400 text-sm font-semibold">🏀 Tendencia + H2H + Factores Contextuales</p>
-                            <span class="last-updated"><span class="pulse-dot"></span> <span id="lastUpdated">${new Date().toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'})}</span></span>
+                            <span class="last-updated"><span class="pulse-dot"></span> <span id="lastUpdated">${new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span></span>
                         </div>
                     </div>
                 </div>
@@ -3479,11 +3498,10 @@ function renderTendencia() {
                                 <div class="text-center bg-white/10 p-2 rounded-lg">
                                     <div class="font-bold text-white">PACE adj.</div>
                                     <div class="text-blue-400 text-lg font-bold">${advancedData.components?.full?.pace?.toFixed(2) || '0'}</div>
-                                    <div class="text-gray-400 text-xs mt-1">${
-                                        (advancedData.components?.full?.pace || 0) > 0.3 ? '↑ Rápido (+pts)' :
-                                        (advancedData.components?.full?.pace || 0) < -0.3 ? '↓ Lento (-pts)' :
-                                        '→ Normal'
-                                    }</div>
+                                    <div class="text-gray-400 text-xs mt-1">${(advancedData.components?.full?.pace || 0) > 0.3 ? '↑ Rápido (+pts)' :
+                    (advancedData.components?.full?.pace || 0) < -0.3 ? '↓ Lento (-pts)' :
+                        '→ Normal'
+                }</div>
                                 </div>
                                 <div class="text-center bg-white/10 p-2 rounded-lg">
                                     <div class="font-bold text-white">Contexto</div>
@@ -3689,38 +3707,38 @@ function renderTendencia() {
                 <h3 class="text-lg font-bold text-white mb-4 text-center">📝 Registrar Pick</h3>
                 <div class="grid grid-cols-3 gap-3">
                     ${lineQ1 && pQ1 ? (() => {
-                        const evQ1 = oddsQ1 ? calcEV(pQ1, oddsQ1) : null;
-                        const verdictQ1 = evVerdict(evQ1, pQ1, null);
-                        return `
+                const evQ1 = oddsQ1 ? calcEV(pQ1, oddsQ1) : null;
+                const verdictQ1 = evVerdict(evQ1, pQ1, null);
+                return `
                         <button onclick="registerPick('1Q', '${typeQ1}', '${lineQ1}', ${pQ1}, '${oddsQ1 || ''}')"
                             class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm ${evQ1 && parseFloat(evQ1) >= 3 ? 'ring-2 ring-green-400' : ''}">
                             <div class="font-bold">1Q ${typeQ1}</div>
                             <div class="text-xs">${lineQ1} (${pQ1}%)</div>
                             ${evQ1 ? `<div class="text-xs mt-1 ${parseFloat(evQ1) >= 0 ? 'text-green-300' : 'text-red-300'}">EV: ${parseFloat(evQ1) >= 0 ? '+' : ''}${evQ1}%</div>` : ''}
                         </button>`;
-                    })() : '<div></div>'}
+            })() : '<div></div>'}
                     ${lineHalf && pHalf ? (() => {
-                        const evHalf = oddsHalf ? calcEV(pHalf, oddsHalf) : null;
-                        const verdictHalf = evVerdict(evHalf, pHalf, null);
-                        return `
+                const evHalf = oddsHalf ? calcEV(pHalf, oddsHalf) : null;
+                const verdictHalf = evVerdict(evHalf, pHalf, null);
+                return `
                         <button onclick="registerPick('1H', '${typeHalf}', '${lineHalf}', ${pHalf}, '${oddsHalf || ''}')"
                             class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm ${evHalf && parseFloat(evHalf) >= 3 ? 'ring-2 ring-green-400' : ''}">
                             <div class="font-bold">1H ${typeHalf}</div>
                             <div class="text-xs">${lineHalf} (${pHalf}%)</div>
                             ${evHalf ? `<div class="text-xs mt-1 ${parseFloat(evHalf) >= 0 ? 'text-green-300' : 'text-red-300'}">EV: ${parseFloat(evHalf) >= 0 ? '+' : ''}${evHalf}%</div>` : ''}
                         </button>`;
-                    })() : '<div></div>'}
+            })() : '<div></div>'}
                     ${lineFull && pFull ? (() => {
-                        const evFull = oddsFull ? calcEV(pFull, oddsFull) : null;
-                        const verdictFull = evVerdict(evFull, pFull, null);
-                        return `
+                const evFull = oddsFull ? calcEV(pFull, oddsFull) : null;
+                const verdictFull = evVerdict(evFull, pFull, null);
+                return `
                         <button onclick="registerPick('FULL', '${typeFull}', '${lineFull}', ${pFull}, '${oddsFull || ''}')"
                             class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-sm ${evFull && parseFloat(evFull) >= 3 ? 'ring-2 ring-green-400' : ''}">
                             <div class="font-bold">FULL ${typeFull}</div>
                             <div class="text-xs">${lineFull} (${pFull}%)</div>
                             ${evFull ? `<div class="text-xs mt-1 ${parseFloat(evFull) >= 0 ? 'text-green-300' : 'text-red-300'}">EV: ${parseFloat(evFull) >= 0 ? '+' : ''}${evFull}%</div>` : ''}
                         </button>`;
-                    })() : '<div></div>'}
+            })() : '<div></div>'}
                 </div>
             </div>
         `;
@@ -3747,13 +3765,13 @@ function renderH2HSection() {
     }
 
     const t1W = h2h.record.team1Wins, t2W = h2h.record.team2Wins;
-    let gh = h2h.games.map((g,i) => `
-        <div class="grid grid-cols-5 gap-2 text-sm py-2 ${i%2===0?'bg-white/5':''} rounded">
-            <span class="text-gray-300 text-xs">${g.date}${g.overtimes>0?` <span class="text-yellow-400">(${g.overtimes}OT)</span>`:''}</span>
-            <span class="text-center text-yellow-400 font-bold">${g.t1Q1+g.t2Q1}</span>
-            <span class="text-center text-pink-400 font-bold">${g.t1Half+g.t2Half}</span>
+    let gh = h2h.games.map((g, i) => `
+        <div class="grid grid-cols-5 gap-2 text-sm py-2 ${i % 2 === 0 ? 'bg-white/5' : ''} rounded">
+            <span class="text-gray-300 text-xs">${g.date}${g.overtimes > 0 ? ` <span class="text-yellow-400">(${g.overtimes}OT)</span>` : ''}</span>
+            <span class="text-center text-yellow-400 font-bold">${g.t1Q1 + g.t2Q1}</span>
+            <span class="text-center text-pink-400 font-bold">${g.t1Half + g.t2Half}</span>
             <span class="text-center text-green-400 font-bold">${g.totalPts}</span>
-            <span class="text-center font-bold ${g.winner===localTeam?'text-cyan-400':'text-orange-400'}">${g.winner}</span>
+            <span class="text-center font-bold ${g.winner === localTeam ? 'text-cyan-400' : 'text-orange-400'}">${g.winner}</span>
         </div>
     `).join('');
 
@@ -3765,17 +3783,17 @@ function renderH2HSection() {
             </div>
 
             <div class="grid grid-cols-3 gap-3 mb-5">
-                <div class="bg-white/10 rounded-xl p-4 text-center ${t1W>t2W?'border-2 border-green-500/50':''}">
+                <div class="bg-white/10 rounded-xl p-4 text-center ${t1W > t2W ? 'border-2 border-green-500/50' : ''}">
                     <p class="text-white font-bold text-sm">${localTeam}</p>
-                    <p class="text-4xl font-black ${t1W>t2W?'text-green-400':'text-white'}">${t1W}</p>
+                    <p class="text-4xl font-black ${t1W > t2W ? 'text-green-400' : 'text-white'}">${t1W}</p>
                 </div>
                 <div class="bg-white/5 rounded-xl p-4 text-center flex flex-col justify-center">
                     <p class="text-yellow-400 font-bold">VS</p>
                     <p class="text-gray-300">${t1W}-${t2W}</p>
                 </div>
-                <div class="bg-white/10 rounded-xl p-4 text-center ${t2W>t1W?'border-2 border-green-500/50':''}">
+                <div class="bg-white/10 rounded-xl p-4 text-center ${t2W > t1W ? 'border-2 border-green-500/50' : ''}">
                     <p class="text-white font-bold text-sm">${visitingTeam}</p>
-                    <p class="text-4xl font-black ${t2W>t1W?'text-green-400':'text-white'}">${t2W}</p>
+                    <p class="text-4xl font-black ${t2W > t1W ? 'text-green-400' : 'text-white'}">${t2W}</p>
                 </div>
             </div>
 
@@ -3784,15 +3802,15 @@ function renderH2HSection() {
                 <div class="grid grid-cols-3 gap-2 text-center text-sm">
                     <div class="bg-white/5 rounded-lg p-2">
                         <p class="text-gray-400 text-xs">1er Cuarto</p>
-                        <p class="text-yellow-400 font-bold">${(h2h.avgQ1.team1+h2h.avgQ1.team2).toFixed(1)}</p>
+                        <p class="text-yellow-400 font-bold">${(h2h.avgQ1.team1 + h2h.avgQ1.team2).toFixed(1)}</p>
                     </div>
                     <div class="bg-white/5 rounded-lg p-2">
                         <p class="text-gray-400 text-xs">1er Tiempo</p>
-                        <p class="text-pink-400 font-bold">${(h2h.avgHalf.team1+h2h.avgHalf.team2).toFixed(1)}</p>
+                        <p class="text-pink-400 font-bold">${(h2h.avgHalf.team1 + h2h.avgHalf.team2).toFixed(1)}</p>
                     </div>
                     <div class="bg-white/5 rounded-lg p-2">
                         <p class="text-gray-400 text-xs">Full Game</p>
-                        <p class="text-green-400 font-bold">${(h2h.avgPts.team1+h2h.avgPts.team2).toFixed(1)}</p>
+                        <p class="text-green-400 font-bold">${(h2h.avgPts.team1 + h2h.avgPts.team2).toFixed(1)}</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 text-center mt-3">
@@ -3897,8 +3915,8 @@ function renderCalc(id, label, trend, prob, type, line, odds) {
 
             <!-- Selector Over/Under -->
             <div class="flex gap-1 my-2">
-                <button onclick="setType('${id}','OVER')" class="flex-1 py-2 text-xs rounded-lg font-bold transition-all ${type==='OVER'?'bg-green-600 text-white shadow-md':'bg-white/10 hover:bg-white/20 text-white'}">OVER</button>
-                <button onclick="setType('${id}','UNDER')" class="flex-1 py-2 text-xs rounded-lg font-bold transition-all ${type==='UNDER'?'bg-red-600 text-white shadow-md':'bg-white/10 hover:bg-white/20 text-white'}">UNDER</button>
+                <button onclick="setType('${id}','OVER')" class="flex-1 py-2 text-xs rounded-lg font-bold transition-all ${type === 'OVER' ? 'bg-green-600 text-white shadow-md' : 'bg-white/10 hover:bg-white/20 text-white'}">OVER</button>
+                <button onclick="setType('${id}','UNDER')" class="flex-1 py-2 text-xs rounded-lg font-bold transition-all ${type === 'UNDER' ? 'bg-red-600 text-white shadow-md' : 'bg-white/10 hover:bg-white/20 text-white'}">UNDER</button>
             </div>
 
             <!-- Input Línea -->
@@ -4364,89 +4382,89 @@ let teamChart = null;
 
 function renderDashboard() {
     try {
-    const stats = getPicksStats();
-    const picks = Object.values(PICKS_DATABASE).filter(p => p.status !== 'pending').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+        const stats = getPicksStats();
+        const picks = Object.values(PICKS_DATABASE).filter(p => p.status !== 'pending').sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-    // Calcular profit acumulado para el gráfico
-    let profitAcum = 0;
-    const profitData = picks.map(pick => {
-        if (pick.status === 'win') {
-            profitAcum += (pick.odds - 1);
-        } else if (pick.status === 'loss') {
-            profitAcum -= 1;
-        }
-        return {
-            date: new Date(pick.createdAt).toLocaleDateString('es-ES', {day:'2-digit', month:'short'}),
-            profit: parseFloat(profitAcum.toFixed(2)),
-            status: pick.status
-        };
-    });
-
-    // Calcular rendimiento por equipo
-    const teamStats = {};
-    picks.forEach(pick => {
-        const teams = [pick.localTeam, pick.awayTeam];
-        teams.forEach(team => {
-            if (!team) return;
-            if (!teamStats[team]) teamStats[team] = { wins: 0, losses: 0, profit: 0 };
+        // Calcular profit acumulado para el gráfico
+        let profitAcum = 0;
+        const profitData = picks.map(pick => {
             if (pick.status === 'win') {
-                teamStats[team].wins++;
-                teamStats[team].profit += (pick.odds - 1);
+                profitAcum += (pick.odds - 1);
             } else if (pick.status === 'loss') {
-                teamStats[team].losses++;
-                teamStats[team].profit -= 1;
+                profitAcum -= 1;
+            }
+            return {
+                date: new Date(pick.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
+                profit: parseFloat(profitAcum.toFixed(2)),
+                status: pick.status
+            };
+        });
+
+        // Calcular rendimiento por equipo
+        const teamStats = {};
+        picks.forEach(pick => {
+            const teams = [pick.localTeam, pick.awayTeam];
+            teams.forEach(team => {
+                if (!team) return;
+                if (!teamStats[team]) teamStats[team] = { wins: 0, losses: 0, profit: 0 };
+                if (pick.status === 'win') {
+                    teamStats[team].wins++;
+                    teamStats[team].profit += (pick.odds - 1);
+                } else if (pick.status === 'loss') {
+                    teamStats[team].losses++;
+                    teamStats[team].profit -= 1;
+                }
+            });
+        });
+
+        // Top 5 equipos más rentables
+        const topTeams = Object.entries(teamStats)
+            .map(([team, data]) => ({
+                team,
+                ...data,
+                winRate: data.wins + data.losses > 0 ? ((data.wins / (data.wins + data.losses)) * 100).toFixed(0) : 0,
+                total: data.wins + data.losses
+            }))
+            .filter(t => t.total >= 2)
+            .sort((a, b) => b.profit - a.profit)
+            .slice(0, 8);
+
+        // CLV Stats (si tenemos datos)
+        const picksWithCLV = Object.values(PICKS_DATABASE).filter(p => p.closingLine && p.line);
+        let avgCLV = 0;
+        if (picksWithCLV.length > 0) {
+            const totalCLV = picksWithCLV.reduce((sum, p) => {
+                const clv = parseFloat(p.line) - parseFloat(p.closingLine);
+                return sum + (p.betType === 'OVER' ? clv : -clv);
+            }, 0);
+            avgCLV = (totalCLV / picksWithCLV.length).toFixed(2);
+        }
+
+        // Análisis por cuartos extendido (Q2, Q3, Q4)
+        const quarterAnalysis = {
+            '1Q': { wins: 0, losses: 0, profit: 0 },
+            '2Q': { wins: 0, losses: 0, profit: 0 },
+            '3Q': { wins: 0, losses: 0, profit: 0 },
+            '4Q': { wins: 0, losses: 0, profit: 0 },
+            '1H': { wins: 0, losses: 0, profit: 0 },
+            '2H': { wins: 0, losses: 0, profit: 0 },
+            'FULL': { wins: 0, losses: 0, profit: 0 }
+        };
+
+        picks.forEach(pick => {
+            const period = pick.period;
+            if (quarterAnalysis[period]) {
+                if (pick.status === 'win') {
+                    quarterAnalysis[period].wins++;
+                    quarterAnalysis[period].profit += (pick.odds - 1);
+                } else {
+                    quarterAnalysis[period].losses++;
+                    quarterAnalysis[period].profit -= 1;
+                }
             }
         });
-    });
 
-    // Top 5 equipos más rentables
-    const topTeams = Object.entries(teamStats)
-        .map(([team, data]) => ({
-            team,
-            ...data,
-            winRate: data.wins + data.losses > 0 ? ((data.wins / (data.wins + data.losses)) * 100).toFixed(0) : 0,
-            total: data.wins + data.losses
-        }))
-        .filter(t => t.total >= 2)
-        .sort((a,b) => b.profit - a.profit)
-        .slice(0, 8);
-
-    // CLV Stats (si tenemos datos)
-    const picksWithCLV = Object.values(PICKS_DATABASE).filter(p => p.closingLine && p.line);
-    let avgCLV = 0;
-    if (picksWithCLV.length > 0) {
-        const totalCLV = picksWithCLV.reduce((sum, p) => {
-            const clv = parseFloat(p.line) - parseFloat(p.closingLine);
-            return sum + (p.betType === 'OVER' ? clv : -clv);
-        }, 0);
-        avgCLV = (totalCLV / picksWithCLV.length).toFixed(2);
-    }
-
-    // Análisis por cuartos extendido (Q2, Q3, Q4)
-    const quarterAnalysis = {
-        '1Q': { wins: 0, losses: 0, profit: 0 },
-        '2Q': { wins: 0, losses: 0, profit: 0 },
-        '3Q': { wins: 0, losses: 0, profit: 0 },
-        '4Q': { wins: 0, losses: 0, profit: 0 },
-        '1H': { wins: 0, losses: 0, profit: 0 },
-        '2H': { wins: 0, losses: 0, profit: 0 },
-        'FULL': { wins: 0, losses: 0, profit: 0 }
-    };
-
-    picks.forEach(pick => {
-        const period = pick.period;
-        if (quarterAnalysis[period]) {
-            if (pick.status === 'win') {
-                quarterAnalysis[period].wins++;
-                quarterAnalysis[period].profit += (pick.odds - 1);
-            } else {
-                quarterAnalysis[period].losses++;
-                quarterAnalysis[period].profit -= 1;
-            }
-        }
-    });
-
-    const teamStatsHtml = topTeams.length > 0 ? topTeams.map(t => `
+        const teamStatsHtml = topTeams.length > 0 ? topTeams.map(t => `
         <div class="flex justify-between items-center bg-white/5 rounded-lg p-3 mb-2">
             <div>
                 <span class="text-white font-bold">${t.team}</span>
@@ -4459,7 +4477,7 @@ function renderDashboard() {
         </div>
     `).join('') : '<p class="text-gray-400 text-center py-4">Necesitas más picks para ver estadísticas por equipo</p>';
 
-    return `
+        return `
         <div class="p-3 md:p-4 max-w-4xl mx-auto">
             <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4 text-sm md:text-base">← Volver</button>
 
@@ -4532,13 +4550,13 @@ function renderDashboard() {
                 <h3 class="text-base md:text-lg font-bold text-white mb-4">📊 Rendimiento por Período</h3>
                 <div class="grid grid-cols-3 gap-2 md:gap-3">
                     ${['1Q', '1H', 'FULL'].map(p => {
-                        const data = quarterAnalysis[p];
-                        const total = data.wins + data.losses;
-                        const wr = total > 0 ? ((data.wins / total) * 100).toFixed(0) : '-';
-                        const wrNum = total > 0 ? (data.wins / total) * 100 : 0;
-                        const colors = { '1Q': 'yellow', '1H': 'pink', 'FULL': 'green' };
-                        const color = colors[p];
-                        return `
+            const data = quarterAnalysis[p];
+            const total = data.wins + data.losses;
+            const wr = total > 0 ? ((data.wins / total) * 100).toFixed(0) : '-';
+            const wrNum = total > 0 ? (data.wins / total) * 100 : 0;
+            const colors = { '1Q': 'yellow', '1H': 'pink', 'FULL': 'green' };
+            const color = colors[p];
+            return `
                             <div class="bg-${color}-500/10 rounded-xl p-3 md:p-4 text-center border border-${color}-500/30">
                                 <p class="text-${color}-400 font-bold text-lg md:text-xl">${p}</p>
                                 <p class="text-white font-bold text-sm md:text-base">${data.wins}W-${data.losses}L</p>
@@ -4546,7 +4564,7 @@ function renderDashboard() {
                                 <p class="text-xs md:text-sm font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
             </div>
 
@@ -4655,9 +4673,9 @@ function renderDashboard() {
                         <p class="text-xs text-gray-400 mb-3">Cuando el modelo dice X%, ¿acierta X%? Una línea diagonal perfecta = modelo bien calibrado.</p>
                         <div class="space-y-2">
                             ${backtest.calibration.map(c => {
-                                const diff = c.actualHitRate - c.avgPredicted;
-                                const isCalibrated = Math.abs(diff) < 10;
-                                return `
+                    const diff = c.actualHitRate - c.avgPredicted;
+                    const isCalibrated = Math.abs(diff) < 10;
+                    return `
                                 <div class="flex items-center gap-3">
                                     <span class="text-white text-sm w-16">${c.range}%</span>
                                     <div class="flex-1 bg-gray-700 rounded-full h-4 relative">
@@ -4668,7 +4686,7 @@ function renderDashboard() {
                                         Real: ${c.actualHitRate.toFixed(0)}% (${c.count})
                                     </span>
                                 </div>`;
-                            }).join('')}
+                }).join('')}
                         </div>
                         <p class="text-xs text-gray-500 mt-2 text-center">🟡 = Predicción | Barra = Hit Rate Real | (n) = muestra</p>
                     </div>
@@ -4700,7 +4718,7 @@ function renderDashboard() {
 
 // Inicializar gráficos del Dashboard
 function initDashboardCharts() {
-    const picks = Object.values(PICKS_DATABASE).filter(p => p.status !== 'pending').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+    const picks = Object.values(PICKS_DATABASE).filter(p => p.status !== 'pending').sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
     if (picks.length < 3) return;
 
@@ -4757,7 +4775,7 @@ function initDashboardCharts() {
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return `Profit: ${context.raw >= 0 ? '+' : ''}${context.raw}u`;
                         }
                     }
@@ -4770,7 +4788,7 @@ function initDashboardCharts() {
                     },
                     ticks: {
                         color: 'rgba(255, 255, 255, 0.7)',
-                        callback: function(value) {
+                        callback: function (value) {
                             return value + 'u';
                         }
                     }
@@ -4798,8 +4816,8 @@ function renderIngesta() {
     let o1 = '<option value="">Seleccionar...</option>';
     let o2 = '<option value="">Seleccionar...</option>';
     teams.forEach(t => {
-        o1 += `<option value="${t}"${t===ingestTeam1?' selected':''}>${t}</option>`;
-        if (t !== ingestTeam1) o2 += `<option value="${t}"${t===ingestTeam2?' selected':''}>${t}</option>`;
+        o1 += `<option value="${t}"${t === ingestTeam1 ? ' selected' : ''}>${t}</option>`;
+        if (t !== ingestTeam1) o2 += `<option value="${t}"${t === ingestTeam2 ? ' selected' : ''}>${t}</option>`;
     });
 
     let html = `
@@ -4841,8 +4859,8 @@ function renderIngesta() {
                         <label class="text-gray-400 text-sm mb-1 block">¿Quién es LOCAL? 🏠</label>
                         <select id="ingestLocal" class="w-full p-3 font-bold rounded-lg text-white bg-white/10 border border-white/20">
                             <option value="">Seleccionar...</option>
-                            <option value="${ingestTeam1}"${ingestLocalTeam===ingestTeam1?' selected':''}>${ingestTeam1}</option>
-                            <option value="${ingestTeam2}"${ingestLocalTeam===ingestTeam2?' selected':''}>${ingestTeam2}</option>
+                            <option value="${ingestTeam1}"${ingestLocalTeam === ingestTeam1 ? ' selected' : ''}>${ingestTeam1}</option>
+                            <option value="${ingestTeam2}"${ingestLocalTeam === ingestTeam2 ? ' selected' : ''}>${ingestTeam2}</option>
                         </select>
                     </div>
                 </div>
@@ -4861,10 +4879,10 @@ function renderIngesta() {
         }
 
         if (existH2H) {
-            let gh = existH2H.games.map((g,i) => `
+            let gh = existH2H.games.map((g, i) => `
                 <div class="bg-slate-800/50 rounded-lg p-3 flex justify-between items-center">
                     <div>
-                        <p class="text-gray-400 text-xs">${g.date}${g.overtimes>0?` <span class="text-yellow-400">(${g.overtimes}OT)</span>`:''}</p>
+                        <p class="text-gray-400 text-xs">${g.date}${g.overtimes > 0 ? ` <span class="text-yellow-400">(${g.overtimes}OT)</span>` : ''}</p>
                         <p class="text-white font-bold">${g.localTeam} ${g.t1Total}-${g.t2Total} ${g.awayTeam}</p>
                         <p class="text-gray-500 text-xs">1H: ${g.t1Half}-${g.t2Half} | Total: ${g.totalPts}</p>
                     </div>
@@ -4880,9 +4898,9 @@ function renderIngesta() {
                     </div>
                     <div class="bg-purple-900/30 rounded-lg p-3 mb-4">
                         <div class="grid grid-cols-3 gap-2 text-center text-sm">
-                            <div><p class="text-gray-400">Prom 1Q</p><p class="text-white font-bold">${(existH2H.avgQ1.team1+existH2H.avgQ1.team2).toFixed(1)}</p></div>
-                            <div><p class="text-gray-400">Prom 1H</p><p class="text-white font-bold">${(existH2H.avgHalf.team1+existH2H.avgHalf.team2).toFixed(1)}</p></div>
-                            <div><p class="text-gray-400">Prom Full</p><p class="text-white font-bold">${(existH2H.avgPts.team1+existH2H.avgPts.team2).toFixed(1)}</p></div>
+                            <div><p class="text-gray-400">Prom 1Q</p><p class="text-white font-bold">${(existH2H.avgQ1.team1 + existH2H.avgQ1.team2).toFixed(1)}</p></div>
+                            <div><p class="text-gray-400">Prom 1H</p><p class="text-white font-bold">${(existH2H.avgHalf.team1 + existH2H.avgHalf.team2).toFixed(1)}</p></div>
+                            <div><p class="text-gray-400">Prom Full</p><p class="text-white font-bold">${(existH2H.avgPts.team1 + existH2H.avgPts.team2).toFixed(1)}</p></div>
                         </div>
                     </div>
                     <div class="space-y-2 max-h-64 overflow-y-auto">${gh}</div>
@@ -4905,7 +4923,7 @@ function renderScoreInputs() {
     if (ot.needOT2) cols++;
     if (ot.needOT3) cols++;
 
-    const gs = `display:grid;grid-template-columns:80px repeat(${cols-1},minmax(50px,1fr));gap:0.4rem;`;
+    const gs = `display:grid;grid-template-columns:80px repeat(${cols - 1},minmax(50px,1fr));gap:0.4rem;`;
 
     let h = `<div style="${gs}" class="mb-3 text-center items-center">
         <div class="text-gray-500 text-xs font-bold">EQUIPO</div>
@@ -4949,10 +4967,10 @@ function renderScoreInputs() {
 function renderTotals() {
     const s = getScores();
     const away = ingestLocalTeam === ingestTeam1 ? ingestTeam2 : ingestTeam1;
-    const lH = s.lQ1+s.lQ2, aH = s.aQ1+s.aQ2;
-    const lT = s.lQ1+s.lQ2+s.lQ3+s.lQ4+s.lOT1+s.lOT2+s.lOT3;
-    const aT = s.aQ1+s.aQ2+s.aQ3+s.aQ4+s.aOT1+s.aOT2+s.aOT3;
-    const hadOT = s.lOT1>0 || s.aOT1>0;
+    const lH = s.lQ1 + s.lQ2, aH = s.aQ1 + s.aQ2;
+    const lT = s.lQ1 + s.lQ2 + s.lQ3 + s.lQ4 + s.lOT1 + s.lOT2 + s.lOT3;
+    const aT = s.aQ1 + s.aQ2 + s.aQ3 + s.aQ4 + s.aOT1 + s.aOT2 + s.aOT3;
+    const hadOT = s.lOT1 > 0 || s.aOT1 > 0;
     let win = 'Empate', wc = 'text-gray-400';
     if (lT > aT) { win = ingestLocalTeam; wc = 'text-cyan-400'; }
     else if (aT > lT) { win = away; wc = 'text-orange-400'; }
@@ -4965,16 +4983,16 @@ function renderTotals() {
                     <p class="text-gray-400 text-xs">1er Tiempo</p>
                     <p class="text-cyan-400 font-bold">${ingestLocalTeam}: ${lH}</p>
                     <p class="text-orange-400 font-bold">${away}: ${aH}</p>
-                    <p class="text-yellow-400 font-black text-xl mt-1">Total: ${lH+aH}</p>
+                    <p class="text-yellow-400 font-black text-xl mt-1">Total: ${lH + aH}</p>
                 </div>
                 <div class="bg-purple-500/20 rounded-lg p-3 text-center">
-                    <p class="text-gray-400 text-xs">Tiempo Completo${hadOT?' + OT':''}</p>
+                    <p class="text-gray-400 text-xs">Tiempo Completo${hadOT ? ' + OT' : ''}</p>
                     <p class="text-cyan-400 font-bold">${ingestLocalTeam}: ${lT}</p>
                     <p class="text-orange-400 font-bold">${away}: ${aT}</p>
-                    <p class="text-purple-400 font-black text-xl mt-1">Total: ${lT+aT}</p>
+                    <p class="text-purple-400 font-black text-xl mt-1">Total: ${lT + aT}</p>
                 </div>
                 <div class="bg-green-500/20 rounded-lg p-3 text-center">
-                    <p class="text-gray-400 text-xs">Ganador${hadOT?' (OT)':''}</p>
+                    <p class="text-gray-400 text-xs">Ganador${hadOT ? ' (OT)' : ''}</p>
                     <p class="text-3xl font-black ${wc}">${win}</p>
                     <p class="text-white font-bold">${lT}-${aT}</p>
                 </div>
@@ -4991,14 +5009,14 @@ function renderTotals() {
 // ═══════════════════════════════════════════════════════════════════
 function renderMisPicks() {
     const allPicks = [
-        ...Object.values(USER_PICKS_TOTALES).map(p => ({...p, type: 'Totales'})),
-        ...Object.values(USER_PICKS_AI).map(p => ({...p, type: 'AI'})),
-        ...Object.values(USER_PICKS_BACKTESTING).map(p => ({...p, type: 'Backtesting'}))
+        ...Object.values(USER_PICKS_TOTALES).map(p => ({ ...p, type: 'Totales' })),
+        ...Object.values(USER_PICKS_AI).map(p => ({ ...p, type: 'AI' })),
+        ...Object.values(USER_PICKS_BACKTESTING).map(p => ({ ...p, type: 'Backtesting' }))
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
+
     const pending = allPicks.filter(p => p.status === 'pending');
     const resolved = allPicks.filter(p => p.status !== 'pending');
-    
+
     return `
         <div class="max-w-6xl mx-auto px-4 py-8">
             <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
@@ -5041,14 +5059,14 @@ function renderMisPicks() {
                                 <span class="badge ${pick.type === 'AI' ? 'badge-info' : pick.type === 'Totales' ? 'badge-warning' : 'badge-success'}">
                                     ${pick.type}
                                 </span>
-                                ${pick.status === 'pending' ? 
-                                    '<span class="pending-badge">Pendiente</span>' :
-                                    pick.status === 'win' ?
-                                    '<span class="win-badge">✅ WIN</span>' :
-                                    pick.status === 'loss' ?
-                                    '<span class="loss-badge">❌ LOSS</span>' :
-                                    '<span class="pending-badge">↔️ PUSH</span>'
-                                }
+                                ${pick.status === 'pending' ?
+            '<span class="pending-badge">Pendiente</span>' :
+            pick.status === 'win' ?
+                '<span class="win-badge">✅ WIN</span>' :
+                pick.status === 'loss' ?
+                    '<span class="loss-badge">❌ LOSS</span>' :
+                    '<span class="pending-badge">↔️ PUSH</span>'
+        }
                             </div>
                             <div class="text-sm text-gray-500">
                                 ${new Date(pick.createdAt).toLocaleDateString()}
@@ -5093,16 +5111,16 @@ function navigateTo(v) {
     }
     if (v === 'ingesta' && !ingestTeam1) {
         ingestTeam1 = ingestTeam2 = ingestLocalTeam = ingestDate = '';
-        ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
+        ingestScores = { localQ1: '', localQ2: '', localQ3: '', localQ4: '', awayQ1: '', awayQ2: '', awayQ3: '', awayQ4: '', localOT1: '', awayOT1: '', localOT2: '', awayOT2: '', localOT3: '', awayOT3: '' };
     }
     render();
-    
+
     // Sync mobile bottom nav
     if (typeof updateMobileNav === 'function') {
-        const navMap = { 'home':'home', 'totales':'totales', 'tendencia':'totales', 'bankroll':'bankroll', 'mispicks':'mispicks', 'picks':'mispicks' };
+        const navMap = { 'home': 'home', 'totales': 'totales', 'tendencia': 'totales', 'bankroll': 'bankroll', 'mispicks': 'mispicks', 'picks': 'mispicks' };
         updateMobileNav(navMap[v] || 'home');
     }
-    
+
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -5111,7 +5129,7 @@ function goToIngestWithTeams() {
     ingestTeam1 = localTeam;
     ingestTeam2 = visitingTeam;
     ingestLocalTeam = ingestDate = '';
-    ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
+    ingestScores = { localQ1: '', localQ2: '', localQ3: '', localQ4: '', awayQ1: '', awayQ2: '', awayQ3: '', awayQ4: '', localOT1: '', awayOT1: '', localOT2: '', awayOT2: '', localOT3: '', awayOT3: '' };
     navigateTo('ingesta');
 }
 
@@ -5130,10 +5148,10 @@ function updateScore(field, value) {
     if (td) {
         const s = getScores();
         const away = ingestLocalTeam === ingestTeam1 ? ingestTeam2 : ingestTeam1;
-        const lH = s.lQ1+s.lQ2, aH = s.aQ1+s.aQ2;
-        const lT = s.lQ1+s.lQ2+s.lQ3+s.lQ4+s.lOT1+s.lOT2+s.lOT3;
-        const aT = s.aQ1+s.aQ2+s.aQ3+s.aQ4+s.aOT1+s.aOT2+s.aOT3;
-        const hadOT = s.lOT1>0 || s.aOT1>0;
+        const lH = s.lQ1 + s.lQ2, aH = s.aQ1 + s.aQ2;
+        const lT = s.lQ1 + s.lQ2 + s.lQ3 + s.lQ4 + s.lOT1 + s.lOT2 + s.lOT3;
+        const aT = s.aQ1 + s.aQ2 + s.aQ3 + s.aQ4 + s.aOT1 + s.aOT2 + s.aOT3;
+        const hadOT = s.lOT1 > 0 || s.aOT1 > 0;
         let win = 'Empate', wc = 'text-gray-400';
         if (lT > aT) { win = ingestLocalTeam; wc = 'text-cyan-400'; }
         else if (aT > lT) { win = away; wc = 'text-orange-400'; }
@@ -5142,16 +5160,16 @@ function updateScore(field, value) {
                 <p class="text-gray-400 text-xs">1er Tiempo</p>
                 <p class="text-cyan-400 font-bold">${ingestLocalTeam}: ${lH}</p>
                 <p class="text-orange-400 font-bold">${away}: ${aH}</p>
-                <p class="text-yellow-400 font-black text-xl mt-1">Total: ${lH+aH}</p>
+                <p class="text-yellow-400 font-black text-xl mt-1">Total: ${lH + aH}</p>
             </div>
             <div class="bg-purple-500/20 rounded-lg p-3 text-center">
-                <p class="text-gray-400 text-xs">Tiempo Completo${hadOT?' + OT':''}</p>
+                <p class="text-gray-400 text-xs">Tiempo Completo${hadOT ? ' + OT' : ''}</p>
                 <p class="text-cyan-400 font-bold">${ingestLocalTeam}: ${lT}</p>
                 <p class="text-orange-400 font-bold">${away}: ${aT}</p>
-                <p class="text-purple-400 font-black text-xl mt-1">Total: ${lT+aT}</p>
+                <p class="text-purple-400 font-black text-xl mt-1">Total: ${lT + aT}</p>
             </div>
             <div class="bg-green-500/20 rounded-lg p-3 text-center">
-                <p class="text-gray-400 text-xs">Ganador${hadOT?' (OT)':''}</p>
+                <p class="text-gray-400 text-xs">Ganador${hadOT ? ' (OT)' : ''}</p>
                 <p class="text-3xl font-black ${wc}">${win}</p>
                 <p class="text-white font-bold">${lT}-${aT}</p>
             </div>
@@ -5167,7 +5185,7 @@ function saveGame() {
 
     const di = document.getElementById('ingestDate');
     if (di) ingestDate = di.value;
-    ['localQ1','localQ2','localQ3','localQ4','awayQ1','awayQ2','awayQ3','awayQ4','localOT1','awayOT1','localOT2','awayOT2','localOT3','awayOT3'].forEach(id => {
+    ['localQ1', 'localQ2', 'localQ3', 'localQ4', 'awayQ1', 'awayQ2', 'awayQ3', 'awayQ4', 'localOT1', 'awayOT1', 'localOT2', 'awayOT2', 'localOT3', 'awayOT3'].forEach(id => {
         const inp = document.getElementById(id);
         if (inp) ingestScores[id] = inp.value;
     });
@@ -5176,8 +5194,8 @@ function saveGame() {
         return;
     }
     const s = getScores();
-    const lT = s.lQ1+s.lQ2+s.lQ3+s.lQ4+s.lOT1+s.lOT2+s.lOT3;
-    const aT = s.aQ1+s.aQ2+s.aQ3+s.aQ4+s.aOT1+s.aOT2+s.aOT3;
+    const lT = s.lQ1 + s.lQ2 + s.lQ3 + s.lQ4 + s.lOT1 + s.lOT2 + s.lOT3;
+    const aT = s.aQ1 + s.aQ2 + s.aQ3 + s.aQ4 + s.aOT1 + s.aOT2 + s.aOT3;
     if (lT === 0 || aT === 0) {
         showNotification('⚠️ Ingresa los puntos', 'warning');
         return;
@@ -5187,13 +5205,13 @@ function saveGame() {
         return;
     }
     const away = ingestLocalTeam === ingestTeam1 ? ingestTeam2 : ingestTeam1;
-    const [y,m,d] = ingestDate.split('-');
-    const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const df = ms[parseInt(m)-1] + ' ' + parseInt(d) + ', ' + y;
+    const [y, m, d] = ingestDate.split('-');
+    const ms = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const df = ms[parseInt(m) - 1] + ' ' + parseInt(d) + ', ' + y;
     let ots = 0;
-    if (s.lOT1>0 || s.aOT1>0) ots = 1;
-    if (s.lOT2>0 || s.aOT2>0) ots = 2;
-    if (s.lOT3>0 || s.aOT3>0) ots = 3;
+    if (s.lOT1 > 0 || s.aOT1 > 0) ots = 1;
+    if (s.lOT2 > 0 || s.aOT2 > 0) ots = 2;
+    if (s.lOT3 > 0 || s.aOT3 > 0) ots = 3;
 
     addH2HGame(ingestTeam1, ingestTeam2, {
         date: df,
@@ -5207,7 +5225,7 @@ function saveGame() {
         overtimes: ots
     });
 
-    ingestScores = {localQ1:'',localQ2:'',localQ3:'',localQ4:'',awayQ1:'',awayQ2:'',awayQ3:'',awayQ4:'',localOT1:'',awayOT1:'',localOT2:'',awayOT2:'',localOT3:'',awayOT3:''};
+    ingestScores = { localQ1: '', localQ2: '', localQ3: '', localQ4: '', awayQ1: '', awayQ2: '', awayQ3: '', awayQ4: '', localOT1: '', awayOT1: '', localOT2: '', awayOT2: '', localOT3: '', awayOT3: '' };
     ingestDate = '';
     ingestLocalTeam = '';
     render();
@@ -5312,7 +5330,7 @@ function loadBankrollFromFirebase() {
 
 function saveBankrollToFirebase() {
     if (!firebaseConnected) {
-        toastWarning('No hay conexión con Firebase', {title:'Conexión'});
+        toastWarning('No hay conexión con Firebase', { title: 'Conexión' });
         return false;
     }
     if (!userId) return false;
@@ -5331,7 +5349,7 @@ function canSetDailyBank() {
 function setDailyBank(amount) {
     const today = getTodayDate();
     if (BANKROLL_DATA.dailyBanks[today]) {
-        toastWarning('Ya has registrado el bank de hoy', {title:'Bankroll'});
+        toastWarning('Ya has registrado el bank de hoy', { title: 'Bankroll' });
         return false;
     }
     BANKROLL_DATA.dailyBanks[today] = parseFloat(amount);
@@ -5381,19 +5399,19 @@ function addPickToBankroll(pickData) {
 function updateBankrollPickStatus(pickId, status) {
     const pick = BANKROLL_DATA.picks.find(p => p.id === pickId);
     if (!pick) return;
-    
+
     const prevStatus = pick.status;
     pick.status = status;
-    
+
     // Recalculate bankroll
     if (status === 'won' && prevStatus === 'pending') {
         BANKROLL_DATA.current = (BANKROLL_DATA.current || 0) + pick.profit;
     } else if (status === 'lost' && prevStatus === 'pending') {
         BANKROLL_DATA.current = (BANKROLL_DATA.current || 0) - pick.stake;
     }
-    
+
     saveBankrollToFirebase();
-    showNotification('success', 
+    showNotification('success',
         status === 'won' ? '✅ Pick GANADO' : '❌ Pick PERDIDO',
         `Stake: $${pick.stake.toFixed(2)} | ${status === 'won' ? 'Ganancia: $' + pick.profit.toFixed(2) : 'Pérdida: -$' + pick.stake.toFixed(2)}`
     );
@@ -5631,7 +5649,7 @@ function submitPickToBankroll() {
     const notes = document.getElementById('pickNotes').value;
 
     if (!odds || !stake || parseFloat(odds) <= 0 || parseFloat(stake) <= 0) {
-        toastWarning('Completa todos los campos correctamente', {title:'Validación'});
+        toastWarning('Completa todos los campos correctamente', { title: 'Validación' });
         return;
     }
 
@@ -5641,8 +5659,10 @@ function submitPickToBankroll() {
 function renderBankrollView() {
     const stats = calculateStats();
     const canSetBank = canSetDailyBank();
+    const container = document.getElementById('bankrollContainer');
+    if (!container) return;
 
-    return `
+    container.innerHTML = `
         <!-- Contenedor Principal Centralizado -->
         <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px;">
 
@@ -5691,13 +5711,13 @@ function renderBankrollView() {
 
             <!-- Filtros Compactos -->
             <div class="bankroll-filters rounded-xl p-3 mb-6 border border-white/10 flex items-center gap-3 flex-wrap" style="background: rgba(27, 38, 59, 0.6);">
-                <select onchange="filterPeriod=this.value;render()" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: rgba(13, 27, 42, 0.8); border: 2px solid rgba(255, 215, 0, 0.2);">
+                <select onchange="window.filterPeriod=this.value;renderBankrollView()" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: rgba(13, 27, 42, 0.8); border: 2px solid rgba(255, 215, 0, 0.2);">
                     <option value="all">📅 Todo</option>
                     <option value="today">📅 Hoy</option>
                     <option value="week">📅 Semana</option>
                     <option value="month">📅 Mes</option>
                 </select>
-                <select onchange="filterType=this.value;render()" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: rgba(13, 27, 42, 0.8); border: 2px solid rgba(255, 215, 0, 0.2);">
+                <select onchange="window.filterType=this.value;renderBankrollView()" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: rgba(13, 27, 42, 0.8); border: 2px solid rgba(255, 215, 0, 0.2);">
                     <option value="all">🎲 Todos</option>
                     <option value="single">🎯 Sencillas</option>
                     <option value="combo">🎲 Combinadas</option>
@@ -5710,13 +5730,13 @@ function renderBankrollView() {
             <!-- Grid de Métricas -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
                 ${[
-                    { label: 'ROI', value: stats.roi.toFixed(1) + '%', color: stats.roi >= 0 ? 'green' : 'red' },
-                    { label: 'Yield', value: stats.yield.toFixed(1) + '%', color: 'cyan' },
-                    { label: 'Strike Rate', value: stats.strikeRate.toFixed(1) + '%', color: 'purple' },
-                    { label: 'Cuota Avg', value: stats.avgOdds.toFixed(2), color: 'yellow' },
-                    { label: 'Racha', value: stats.currentStreak + (stats.streakType === 'won' ? 'W' : stats.streakType === 'lost' ? 'L' : '-'), color: stats.streakType === 'won' ? 'green' : 'red' },
-                    { label: 'Picks', value: stats.totalPicks, color: 'white' }
-                ].map(m => `
+            { label: 'ROI', value: stats.roi.toFixed(1) + '%', color: stats.roi >= 0 ? 'green' : 'red' },
+            { label: 'Yield', value: stats.yield.toFixed(1) + '%', color: 'cyan' },
+            { label: 'Strike Rate', value: stats.strikeRate.toFixed(1) + '%', color: 'purple' },
+            { label: 'Cuota Avg', value: stats.avgOdds.toFixed(2), color: 'yellow' },
+            { label: 'Racha', value: stats.currentStreak + (stats.streakType === 'won' ? 'W' : stats.streakType === 'lost' ? 'L' : '-'), color: stats.streakType === 'won' ? 'green' : 'red' },
+            { label: 'Picks', value: stats.totalPicks, color: 'white' }
+        ].map(m => `
                     <div class="rounded-xl p-4 shadow-lg hover:scale-105 transition-all border border-white/10" style="background: linear-gradient(135deg, rgba(13, 27, 42, 0.8) 0%, rgba(27, 38, 59, 0.8) 100%);">
                         <p class="text-gray-400 text-xs mb-1 uppercase tracking-wider">${m.label}</p>
                         <p class="text-2xl font-display text-${m.color}-400 font-bold">${m.value}</p>
@@ -5829,29 +5849,15 @@ function renderBankrollView() {
                                             <p class="text-green-400 font-bold">$${pick.profit.toFixed(2)}</p>
                                         </div>
                                     </div>
-                                    ${pick.notes ? `<p class="text-gray-400 text-xs mt-2">📝 ${pick.notes}</p>` : ''}
-                                </div>
-                                <div class="flex gap-2">
-                                    ${pick.status === 'pending' ? `
-                                        <button onclick="updateBankrollPickStatus(${pick.id}, 'won')" aria-label="Marcar pick como ganado" class="px-3 py-2 rounded-lg text-white font-bold hover:scale-110 transition-all text-sm" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">
-                                            ✅
-                                        </button>
-                                        <button onclick="updateBankrollPickStatus(${pick.id}, 'lost')" aria-label="Marcar pick como perdido" class="px-3 py-2 rounded-lg text-white font-bold hover:scale-110 transition-all text-sm" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
-                                            ❌
-                                        </button>
-                                    ` : ''}
-                                    <button aria-label="Eliminar pick" onclick="(window.NioModal?window.NioModal.confirm({title:'Confirmar',message:'¿Eliminar?',okText:'Eliminar',cancelText:'Cancelar'}):Promise.resolve(confirm('¿Eliminar?'))).then(ok=>{if(ok)deletePickFromBankroll(${pick.id}));})" class="px-3 py-2 rounded-lg text-white font-bold hover:scale-110 transition-all text-sm" style="background: rgba(107, 114, 128, 0.8);">
-                                        🗑️
-                                    </button>
                                 </div>
                             </div>
                         </div>
                     `).join('')}
                 </div>
             </div>
-
         </div>
     `;
+    setTimeout(() => createBankrollChart(), 100);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -5864,30 +5870,30 @@ let AI_PICKS_CACHE_DATE = null;
 function generateAIPicks() {
     logger.log('🤖 Generando AI Picks...');
     showNotification('info', 'AI Picks', 'Analizando todos los matchups posibles...');
-    
+
     const teams = getTeams();
     const aiPicks = [];
     const today = new Date().toDateString();
-    
+
     for (let i = 0; i < teams.length; i++) {
         for (let j = i + 1; j < teams.length; j++) {
             const local = teams[i];
             const away = teams[j];
-            
+
             const localStats = TEAM_STATS[local];
             const awayStats = TEAM_STATS[away];
-            
+
             if (!localStats || !awayStats) continue;
-            
+
             // Q1
             const q1Pred = ((localStats.q1Home + awayStats.q1Away) / 2);
             const q1Line = Math.round(q1Pred * 2) / 2;
             const q1Diff = Math.abs(q1Pred - q1Line);
             const q1Prob = Math.min(95, 50 + (q1Diff * 30));
-            
+
             if (q1Prob >= 75) {
                 aiPicks.push({
-                    id: `ai_q1_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+                    id: `ai_q1_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
                     local, away, period: 'Q1',
                     betType: q1Pred > q1Line ? 'OVER' : 'UNDER',
                     line: q1Line, trend: q1Pred.toFixed(1),
@@ -5896,16 +5902,16 @@ function generateAIPicks() {
                     generatedAt: new Date().toISOString()
                 });
             }
-            
+
             // 1H
             const halfPred = ((localStats.halfHome + awayStats.halfAway) / 2);
             const halfLine = Math.round(halfPred * 2) / 2;
             const halfDiff = Math.abs(halfPred - halfLine);
             const halfProb = Math.min(95, 50 + (halfDiff * 30));
-            
+
             if (halfProb >= 75) {
                 aiPicks.push({
-                    id: `ai_1h_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+                    id: `ai_1h_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
                     local, away, period: '1H',
                     betType: halfPred > halfLine ? 'OVER' : 'UNDER',
                     line: halfLine, trend: halfPred.toFixed(1),
@@ -5914,16 +5920,16 @@ function generateAIPicks() {
                     generatedAt: new Date().toISOString()
                 });
             }
-            
+
             // FULL
             const fullPred = ((localStats.fullHome + awayStats.fullAway) / 2);
             const fullLine = Math.round(fullPred * 2) / 2;
             const fullDiff = Math.abs(fullPred - fullLine);
             const fullProb = Math.min(95, 50 + (fullDiff * 30));
-            
+
             if (fullProb >= 75) {
                 aiPicks.push({
-                    id: `ai_full_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+                    id: `ai_full_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
                     local, away, period: 'FULL',
                     betType: fullPred > fullLine ? 'OVER' : 'UNDER',
                     line: fullLine, trend: fullPred.toFixed(1),
@@ -5934,17 +5940,17 @@ function generateAIPicks() {
             }
         }
     }
-    
+
     aiPicks.sort((a, b) => b.probability - a.probability);
     AI_PICKS_TODAY = aiPicks.slice(0, 30);
     AI_PICKS_CACHE_DATE = today;
-    
+
     localStorage.setItem('ai_picks_cache', JSON.stringify({
         picks: AI_PICKS_TODAY,
         date: today,
         generatedAt: new Date().toISOString()
     }));
-    
+
     showNotification('success', '¡Listo!', `${AI_PICKS_TODAY.length} AI Picks generados`);
     if (typeof render === 'function') render();
 }
@@ -5952,7 +5958,7 @@ function generateAIPicks() {
 function loadAIPicks() {
     const today = new Date().toDateString();
     const cached = localStorage.getItem('ai_picks_cache');
-    
+
     if (cached) {
         try {
             const data = JSON.parse(cached);
@@ -5966,7 +5972,7 @@ function loadAIPicks() {
             logger.warn('⚠️ Error leyendo cache de AI Picks:', e);
         }
     }
-    
+
     // Si no hay cache válido, generar cuando las stats estén listas
     if (typeof TEAM_STATS !== 'undefined' && Object.keys(TEAM_STATS).length > 0) {
         generateAIPicks();
@@ -5980,37 +5986,37 @@ function loadAIPicks() {
 // Soluciona pantallas vacías cuando TEAM_STATS no está disponible.
 // ═══════════════════════════════════════════════════════════════
 if (typeof window.loadTeamStatsFromAPI !== 'function') {
-  window.loadTeamStatsFromAPI = async function loadTeamStatsFromAPI() {
-    try {
-      if (typeof window.TEAM_STATS !== 'undefined' && window.TEAM_STATS && Object.keys(window.TEAM_STATS).length > 0) {
-        return window.TEAM_STATS;
-      }
-      const candidates = [
-        '/data/nba-stats.json',
-        '/data/nba-stats/nba-stats.json',
-        '/data/nba-stats/teams.json'
-      ];
-      let lastErr = null;
-      for (const url of candidates) {
+    window.loadTeamStatsFromAPI = async function loadTeamStatsFromAPI() {
         try {
-          const res = await fetch(url, { cache: 'no-store' });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
-          const teams = data.teams || data;
-          if (!teams || typeof teams !== 'object') throw new Error('Formato inválido');
-          window.TEAM_STATS = teams;
-          return teams;
+            if (typeof window.TEAM_STATS !== 'undefined' && window.TEAM_STATS && Object.keys(window.TEAM_STATS).length > 0) {
+                return window.TEAM_STATS;
+            }
+            const candidates = [
+                '/data/nba-stats.json',
+                '/data/nba-stats/nba-stats.json',
+                '/data/nba-stats/teams.json'
+            ];
+            let lastErr = null;
+            for (const url of candidates) {
+                try {
+                    const res = await fetch(url, { cache: 'no-store' });
+                    if (!res.ok) throw new Error(`HTTP ${res.status} `);
+                    const data = await res.json();
+                    const teams = data.teams || data;
+                    if (!teams || typeof teams !== 'object') throw new Error('Formato inválido');
+                    window.TEAM_STATS = teams;
+                    return teams;
+                } catch (e) {
+                    lastErr = e;
+                }
+            }
+            throw lastErr || new Error('No se pudo cargar TEAM_STATS');
         } catch (e) {
-          lastErr = e;
+            console.error('❌ loadTeamStatsFromAPI error:', e);
+            if (typeof window.toastError === 'function') window.toastError('No se pudieron cargar stats de equipos');
+            return {};
         }
-      }
-      throw lastErr || new Error('No se pudo cargar TEAM_STATS');
-    } catch (e) {
-      console.error('❌ loadTeamStatsFromAPI error:', e);
-      if (typeof window.toastError === 'function') window.toastError('No se pudieron cargar stats de equipos');
-      return {};
-    }
-  };
+    };
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -6018,657 +6024,657 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadValuePicksFromStorage();
     // Primero cargar estadísticas desde API (no requiere auth)
     await loadTeamStatsFromAPI();
-// Cargar AI Picks desde cache local
+    // Cargar AI Picks desde cache local
     loadAIPicks();
     logger.log('✅ NioSports Pro v4.0 - Datos públicos cargados. Esperando autenticación...');
 });
-    
 
-        
+
+
 // ═══════════════════════════════════════════════════════════════════
-        // ═══════════════════════════════════════════════════════════════
-        // FUNCIONES AUXILIARES ADICIONALES - NIOSPORTS PRO v4.0
-        // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// FUNCIONES AUXILIARES ADICIONALES - NIOSPORTS PRO v4.0
+// ═══════════════════════════════════════════════════════════
 
-        // Toggle dropdown de usuario
-        function toggleUserDropdown() {
-            const dropdown = document.getElementById('userDropdown');
-            if (dropdown) dropdown.classList.toggle('active');
-        }
-        
-        // Cerrar dropdown al hacer click fuera
-        document.addEventListener('click', (e) => {
-            const dropdown = document.getElementById('userDropdown');
-            if (dropdown && !dropdown.contains(e.target)) {
-                dropdown.classList.remove('active');
-            }
-        });
-        
-        // Función para actualizar Bankroll (modal)
-        function showUpdateBankrollModal() {
-            const modal = document.getElementById('updateBankrollModal');
-            if (modal) modal.style.display = 'flex';
-        }
-        
-        function closeUpdateBankrollModal() {
-            const modal = document.getElementById('updateBankrollModal');
-            if (modal) modal.style.display = 'none';
-        }
-        
-        function updateBankroll() {
-            const newAmountInput = document.getElementById('newBankrollAmount');
-            const reasonSelect = document.getElementById('bankrollReason');
-            
-            if (!newAmountInput || !reasonSelect) return;
-            
-            const newAmount = parseFloat(newAmountInput.value);
-            const reason = reasonSelect.value;
-            
-            if (isNaN(newAmount) || newAmount < 0) {
-                showNotification('error', 'Error', 'Monto inválido');
-                return;
-            }
-            
-            const currentBankroll = USER_BANKROLL.current || 0;
-            const difference = newAmount - currentBankroll;
-            
-            const newHistory = USER_BANKROLL.history || [];
-            newHistory.push({
-                amount: difference,
-                reason: reason,
-                date: new Date().toISOString(),
-                previousBalance: currentBankroll,
-                newBalance: newAmount
+// Toggle dropdown de usuario
+function toggleUserDropdown() {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) dropdown.classList.toggle('active');
+}
+
+// Cerrar dropdown al hacer click fuera
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('active');
+    }
+});
+
+// Función para actualizar Bankroll (modal)
+function showUpdateBankrollModal() {
+    const modal = document.getElementById('updateBankrollModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeUpdateBankrollModal() {
+    const modal = document.getElementById('updateBankrollModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function updateBankroll() {
+    const newAmountInput = document.getElementById('newBankrollAmount');
+    const reasonSelect = document.getElementById('bankrollReason');
+
+    if (!newAmountInput || !reasonSelect) return;
+
+    const newAmount = parseFloat(newAmountInput.value);
+    const reason = reasonSelect.value;
+
+    if (isNaN(newAmount) || newAmount < 0) {
+        showNotification('error', 'Error', 'Monto inválido');
+        return;
+    }
+
+    const currentBankroll = USER_BANKROLL.current || 0;
+    const difference = newAmount - currentBankroll;
+
+    const newHistory = USER_BANKROLL.history || [];
+    newHistory.push({
+        amount: difference,
+        reason: reason,
+        date: new Date().toISOString(),
+        previousBalance: currentBankroll,
+        newBalance: newAmount
+    });
+
+    database.ref(`users / ${userId}/bankroll`).update({
+        current: newAmount,
+        initial: USER_BANKROLL.initial || newAmount,
+        history: newHistory
+    }).then(() => {
+        showNotification('success', 'Bankroll Actualizado', `Nuevo saldo: $${newAmount.toFixed(2)}`);
+        closeUpdateBankrollModal();
+        render();
+    }).catch(err => {
+        Logger.error('Error:', err);
+        showNotification('error', 'Error', 'No se pudo actualizar');
+    });
+}
+
+// Función para exportar a CSV
+function exportToCSV(data, filename) {
+    if (!data || data.length === 0) {
+        showNotification('warning', 'Sin datos', 'No hay datos para exportar');
+        return;
+    }
+
+    try {
+        const headers = Object.keys(data[0]);
+        const csvRows = [headers.join(',')];
+
+        data.forEach(row => {
+            const values = headers.map(h => {
+                const v = row[h];
+                if (v === null || v === undefined) return '';
+                const s = String(v);
+                return (s.includes(',') || s.includes('"')) ? `"${s.replace(/"/g, '""')}"` : s;
             });
-            
-            database.ref(`users/${userId}/bankroll`).update({
-                current: newAmount,
-                initial: USER_BANKROLL.initial || newAmount,
-                history: newHistory
-            }).then(() => {
-                showNotification('success', 'Bankroll Actualizado', `Nuevo saldo: $${newAmount.toFixed(2)}`);
-                closeUpdateBankrollModal();
-                render();
-            }).catch(err => {
-                Logger.error('Error:', err);
-                showNotification('error', 'Error', 'No se pudo actualizar');
-            });
-        }
-        
-        // Función para exportar a CSV
-        function exportToCSV(data, filename) {
-            if (!data || data.length === 0) {
-                showNotification('warning', 'Sin datos', 'No hay datos para exportar');
-                return;
-            }
-            
-            try {
-                const headers = Object.keys(data[0]);
-                const csvRows = [headers.join(',')];
-                
-                data.forEach(row => {
-                    const values = headers.map(h => {
-                        const v = row[h];
-                        if (v === null || v === undefined) return '';
-                        const s = String(v);
-                        return (s.includes(',') || s.includes('"')) ? `"${s.replace(/"/g, '""')}"` : s;
-                    });
-                    csvRows.push(values.join(','));
-                });
-                
-                const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.setAttribute('href', URL.createObjectURL(blob));
-                link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                showNotification('success', 'Exportado', 'CSV descargado exitosamente');
-            } catch (error) {
-                Logger.error('Error:', error);
-                showNotification('error', 'Error', 'No se pudo exportar');
-            }
-        }
-        
-        // Función para actualizar status de pick
-        function updatePickStatus(pickId, type) {
-            const inputId = `result_${pickId}`;
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            
-            const result = parseFloat(input.value);
-            if (isNaN(result)) {
-                showNotification('error', 'Error', 'Ingresa un número válido');
-                return;
-            }
-            
-            const dbPath = type === 'Totales' ? 'picks_totales' :
-                                                      type === 'AI' ? 'picks_ai' :
-                           'picks_backtesting';
-            
-            database.ref(`users/${userId}/${dbPath}/${pickId}`).once('value').then(snapshot => {
-                const pick = snapshot.val();
-                if (!pick) return;
-                
-                const line = parseFloat(pick.line);
-                let status = 'pending';
-                
-                if (result === line) {
-                    status = 'push';
-                } else if (pick.betType === 'OVER') {
-                    status = result > line ? 'win' : 'loss';
-                } else {
-                    status = result < line ? 'win' : 'loss';
-                }
-                
-                database.ref(`users/${userId}/${dbPath}/${pickId}`).update({
-                    status: status,
-                    actualResult: result,
-                    resolvedAt: new Date().toISOString()
-                }).then(() => {
-                    const emoji = status === 'win' ? '✅' : status === 'push' ? '↔️' : '❌';
-                    showNotification('success', `${emoji} ${status.toUpperCase()}`, '');
-                    render();
-                }).catch(err => {
-                    Logger.error('Error:', err);
-                    showNotification('error', 'Error', 'No se pudo actualizar');
-                });
-            });
-        }
-        
-        // [REMOVED] Duplicate resolveBacktestPick — using original at line ~4710
-        
-        // Función para filtrar Mis Picks
-        function filterMisPicks(filter) {
-            // Esta función se puede expandir para filtrar la vista
-            logger.log('Filtro seleccionado:', filter);
-            // Por ahora solo logueamos, pero se puede implementar filtrado real
-        }
-        
-        // ═══════════════════════════════════════════════════════════════
-        // UTILIDADES GENERALES
-        // ═══════════════════════════════════════════════════════════
-
-        // Formatear fechas
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        }
-        
-        // Formatear dinero
-        function formatMoney(amount) {
-            if (amount === null || amount === undefined) return '$0.00';
-            return `$${parseFloat(amount).toFixed(2)}`;
-        }
-        
-        // Formatear porcentaje
-        function formatPercent(value) {
-            if (value === null || value === undefined) return '0.0%';
-            return `${parseFloat(value).toFixed(1)}%`;
-        }
-        
-        // Copiar al portapapeles
-        function copyToClipboard(text) {
-            if (!navigator.clipboard) {
-                // Fallback para navegadores antiguos
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    showNotification('success', 'Copiado', 'Texto copiado al portapapeles');
-                } catch (err) {
-                    Logger.error('Error al copiar:', err);
-                    showNotification('error', 'Error', 'No se pudo copiar');
-                }
-                document.body.removeChild(textArea);
-                return;
-            }
-            
-            navigator.clipboard.writeText(text).then(() => {
-                showNotification('success', 'Copiado', 'Texto copiado al portapapeles');
-            }).catch(err => {
-                Logger.error('Error al copiar:', err);
-                showNotification('error', 'Error', 'No se pudo copiar');
-            });
-        }
-        
-        // Debounce function
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-        
-        // Throttle function
-        function throttle(func, limit) {
-            let inThrottle;
-            return function(...args) {
-                if (!inThrottle) {
-                    func.apply(this, args);
-                    inThrottle = true;
-                    setTimeout(() => inThrottle = false, limit);
-                }
-            };
-        }
-
-    
-
-        // ═══════════════════════════════════════════════════════════════
-        // EVENT LISTENERS DE AUTENTICACIÓN - ULTRA DEBUG
-        // ═══════════════════════════════════════════════════════════
-
-        // Helpers para usernames (evita leer toda la colección /usernames)
-        const normalizeUsername = (u) => (u || '').trim().toLowerCase();
-
-        async function usernameIndexGetUid(username) {
-            const key = normalizeUsername(username);
-            if (!key) return null;
-            try {
-                const snap = await database.ref(`usernamesIndex/${key}`).once('value');
-                return snap.exists() ? snap.val() : null;
-            } catch (e) {
-                Logger.error('❌ Error leyendo usernamesIndex:', e?.message || e);
-                return null;
-            }
-        }
-
-        async function usernameIndexIsTaken(username) {
-            const uid = await usernameIndexGetUid(username);
-            return !!uid;
-        }
-
-        async function usernameIndexReserve(uid, username) {
-            const key = normalizeUsername(username);
-            if (!uid || !key) throw new Error('UID/username inválido');
-            // Escribe dos índices: uid->username y username->uid
-            await database.ref(`usernamesByUid/${uid}`).set(username);
-            await database.ref(`usernamesIndex/${key}`).set(uid);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            logger.log('🎬 DOM Cargado, configurando event listeners...');
-            
-            // ══════════ LOGIN FORM ══════════
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                logger.log('✅ Formulario de login encontrado');
-                
-                loginForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    logger.log('');
-                    logger.log('═══════════════════════════════════════════');
-                    logger.log('🔐 INTENTANDO LOGIN...');
-                    logger.log('═══════════════════════════════════════════');
-                    
-                    const emailOrUsername = document.getElementById('loginEmailOrUsername').value.trim();
-                    const password = document.getElementById('loginPassword').value;
-                    
-                    logger.log('📝 Datos ingresados:');
-                    logger.log('  - Email/Username:', emailOrUsername);
-                    logger.log('  - Password:', password ? '****** (' + password.length + ' caracteres)' : 'VACÍO');
-                    
-                    if (!emailOrUsername || !password) {
-                        Logger.error('❌ Campos vacíos');
-                        showNotification('error', 'Error', 'Por favor completa todos los campos');
-                        toastWarning('Completa todos los campos', {title:'Validación'});
-                        return;
-                    }
-                    
-                    try {
-                        let email = emailOrUsername;
-                        
-                        // Si no contiene @, es un username, buscar el email
-                        if (!emailOrUsername.includes('@')) {
-                            logger.log('🔍 Detectado username, buscando UID en índice...');
-                            const uid = await usernameIndexGetUid(emailOrUsername);
-
-                            if (uid) {
-                                logger.log('✅ Username encontrado, UID:', uid);
-
-                                const userRef = await database.ref(`users/${uid}/profile`).once('value');
-                                const userProfile = userRef.val();
-
-                                logger.log('👤 Perfil:', userProfile);
-
-                                if (userProfile && userProfile.email) {
-                                    email = userProfile.email;
-                                    logger.log('✅ Email encontrado:', email);
-                                } else {
-                                    throw new Error('Usuario no encontrado en la base de datos');
-                                }
-                            } else {
-                                Logger.error('❌ Username no encontrado en índice');
-                                throw new Error('Usuario no encontrado');
-                            }
-                        }
-
-                        logger.log('🔐 Intentando autenticar con Firebase...');
-                        logger.log('  - Email:', email);
-                        
-                        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                        await bindSession(userCredential.user);
-                        
-                        logger.log('✅✅✅ LOGIN EXITOSO ✅✅✅');
-                        logger.log('👤 Usuario:', userCredential.user.email);
-                        logger.log('🆔 UID:', userCredential.user.uid);
-                        
-                        showNotification('success', '¡Bienvenido!', 'Sesión iniciada correctamente');
-                        toastSuccess('¡Login exitoso!', {title:'Bienvenido'});
-                        
-                    } catch (error) {
-                        Logger.error('═══════════════════════════════════════════');
-                        Logger.error('❌ ERROR EN LOGIN');
-                        Logger.error('═══════════════════════════════════════════');
-                        Logger.error('Código:', error.code);
-                        Logger.error('Mensaje:', error.message);
-                        Logger.error('Stack:', error.stack);
-                        Logger.error('═══════════════════════════════════════════');
-                        
-                        let errorMsg = 'Error al iniciar sesión';
-                        
-                        if (error.code === 'auth/user-not-found') {
-                            errorMsg = 'Usuario no encontrado. Verifica tus credenciales.';
-                        } else if (error.code === 'auth/wrong-password') {
-                            errorMsg = 'Contraseña incorrecta. Intenta nuevamente.';
-                        } else if (error.code === 'auth/invalid-email') {
-                            errorMsg = 'Email inválido';
-                        } else if (error.code === 'auth/too-many-requests') {
-                            errorMsg = 'Demasiados intentos. Espera un momento.';
-                        } else if (error.message.includes('Usuario no encontrado')) {
-                            errorMsg = 'Usuario no existe. Verifica el username o email.';
-                        }
-                        
-                        showNotification('error', 'Error de Login', errorMsg);
-                        toastError(errorMsg, {title:'Error'});
-                    }
-                });
-            } else {
-                Logger.error('❌ Formulario de login NO encontrado');
-            }
-            
-            // ══════════ REGISTER FORM ══════════
-            const registerForm = document.getElementById('registerForm');
-            if (registerForm) {
-                logger.log('✅ Formulario de registro encontrado');
-                
-                registerForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    logger.log('');
-                    logger.log('═══════════════════════════════════════════');
-                    logger.log('📝 INTENTANDO REGISTRO...');
-                    logger.log('═══════════════════════════════════════════');
-                    
-                    const username = document.getElementById('registerUsername').value.trim();
-                    const email = document.getElementById('registerEmail').value.trim();
-                    const password = document.getElementById('registerPassword').value;
-                    const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
-                    
-                    logger.log('📝 Datos ingresados:');
-                    logger.log('  - Username:', username);
-                    logger.log('  - Email:', email);
-                    logger.log('  - Password:', password ? '****** (' + password.length + ' caracteres)' : 'VACÍO');
-                    logger.log('  - Confirmación:', passwordConfirm ? '****** (' + passwordConfirm.length + ' caracteres)' : 'VACÍO');
-                    
-                    // Validaciones
-                    if (!username || !email || !password || !passwordConfirm) {
-                        Logger.error('❌ Campos vacíos');
-                        showNotification('error', 'Error', 'Por favor completa todos los campos');
-                        toastWarning('Completa todos los campos', {title:'Validación'});
-                        return;
-                    }
-                    
-                    if (password !== passwordConfirm) {
-                        Logger.error('❌ Contraseñas no coinciden');
-                        showNotification('error', 'Error', 'Las contraseñas no coinciden');
-                        toastError('Las contraseñas no coinciden', {title:'Registro'});
-                        return;
-                    }
-                    
-                    if (password.length < 6) {
-                        Logger.error('❌ Contraseña muy corta');
-                        showNotification('error', 'Error', 'La contraseña debe tener mínimo 6 caracteres');
-                        toastError('La contraseña debe tener mínimo 6 caracteres', {title:'Registro'});
-                        return;
-                    }
-                    
-                    if (username.length < 3) {
-                        Logger.error('❌ Username muy corto');
-                        showNotification('error', 'Error', 'El username debe tener mínimo 3 caracteres');
-                        toastError('El username debe tener mínimo 3 caracteres', {title:'Registro'});
-                        return;
-                    }
-                    
-                    try {
-                        logger.log('🔍 Verificando si username ya existe...');
-
-                        const usernameExists = await usernameIndexIsTaken(username);
-
-                        if (usernameExists) {
-                            Logger.error('❌ Username ya existe:', username);
-                            showNotification('error', 'Username ocupado', 'Este username ya está en uso. Elige otro.');
-                            toastError('Username ya existe. Elige otro.', {title:'Registro'});
-                            return;
-                        }
-
-                        logger.log('✅ Username disponible');
-                        logger.log('🔐 Creando cuenta en Firebase Auth...');
-                        
-                        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                        const user = userCredential.user;
-                        
-                        logger.log('✅ Cuenta creada en Auth');
-                        logger.log('  - Email:', user.email);
-                        logger.log('  - UID:', user.uid);
-                        
-                        logger.log('💾 Guardando perfil en database...');
-                        
-                        await database.ref(`users/${user.uid}/profile`).set({
-                            username: username,
-                            email: email,
-                            createdAt: new Date().toISOString(),
-                            displayName: username
-                        });
-                        
-                        logger.log('✅ Perfil guardado');
-                        
-                        logger.log('💾 Registrando username...');
-                        
-                        await usernameIndexReserve(user.uid, username);
-                        
-                        logger.log('✅ Username registrado');
-                        
-                        logger.log('💾 Inicializando bankroll...');
-                        
-                        await database.ref(`users/${user.uid}/bankroll`).set({
-                            current: 0,
-                            initial: 0,
-                            history: []
-                        });
-                        
-                        logger.log('✅ Bankroll inicializado');
-                        
-                        logger.log('');
-                        logger.log('═══════════════════════════════════════════');
-                        logger.log('✅✅✅ REGISTRO COMPLETADO ✅✅✅');
-                        logger.log('═══════════════════════════════════════════');
-                        logger.log('👤 Usuario:', username);
-                        logger.log('📧 Email:', email);
-                        logger.log('🆔 UID:', user.uid);
-                        logger.log('═══════════════════════════════════════════');
-                        
-                        showNotification('success', '¡Cuenta creada!', 'Bienvenido a NioSports Pro');
-                        toastSuccess('¡Cuenta creada! Bienvenido ' + username, {title:'Registro'});
-                        
-                        // El onAuthStateChanged se encargará de mostrar la app
-                        
-                    } catch (error) {
-                        Logger.error('═══════════════════════════════════════════');
-                        Logger.error('❌ ERROR EN REGISTRO');
-                        Logger.error('═══════════════════════════════════════════');
-                        Logger.error('Código:', error.code);
-                        Logger.error('Mensaje:', error.message);
-                        Logger.error('Stack:', error.stack);
-                        Logger.error('═══════════════════════════════════════════');
-                        
-                        let errorMsg = 'Error al crear la cuenta';
-                        
-                        if (error.code === 'auth/email-already-in-use') {
-                            errorMsg = 'Este email ya está registrado. Intenta hacer login.';
-                        } else if (error.code === 'auth/invalid-email') {
-                            errorMsg = 'Email inválido';
-                        } else if (error.code === 'auth/weak-password') {
-                            errorMsg = 'Contraseña muy débil';
-                        } else if (error.code === 'auth/network-request-failed') {
-                            errorMsg = 'Error de conexión. Verifica tu internet.';
-                        }
-                        
-                        showNotification('error', 'Error de Registro', errorMsg);
-                        toastError(errorMsg, {title:'Error'});
-                    }
-                });
-            } else {
-                Logger.error('❌ Formulario de registro NO encontrado');
-            }
-            
-            // ══════════ FORGOT PASSWORD FORM ══════════
-            const forgotForm = document.getElementById('forgotPasswordForm');
-            if (forgotForm) {
-                logger.log('✅ Formulario de recuperación encontrado');
-                
-                forgotForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    logger.log('📧 Intentando recuperar contraseña...');
-                    
-                    const email = document.getElementById('forgotEmail').value.trim();
-                    
-                    logger.log('  - Email:', email);
-                    
-                    if (!email) {
-                        showNotification('error', 'Error', 'Ingresa tu email');
-                        toastWarning('Ingresa tu email', {title:'Recuperación'});
-                        return;
-                    }
-                    
-                    try {
-                        await auth.sendPasswordResetEmail(email);
-                        logger.log('✅ Email de recuperación enviado');
-                        showNotification('success', 'Email enviado', 'Revisa tu bandeja de entrada');
-                        toastSuccess('Email de recuperación enviado. Revisa tu correo.', {title:'Recuperación'});
-                        setTimeout(() => showLogin(), 2000);
-                    } catch (error) {
-                        Logger.error('❌ Error:', error);
-                        showNotification('error', 'Error', 'No se pudo enviar el email');
-                        toastError(error.message, {title:'Error'});
-                    }
-                });
-            } else {
-                Logger.error('❌ Formulario de recuperación NO encontrado');
-            }
-            
-            logger.log('✅ Event listeners configurados correctamente');
+            csvRows.push(values.join(','));
         });
 
-    
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.setAttribute('href', URL.createObjectURL(blob));
+        link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-        // ═══════════════════════════════════════════════════════════════
-        // GOOGLE SIGN-IN
-        // ═══════════════════════════════════════════════════════════
+        showNotification('success', 'Exportado', 'CSV descargado exitosamente');
+    } catch (error) {
+        Logger.error('Error:', error);
+        showNotification('error', 'Error', 'No se pudo exportar');
+    }
+}
 
-        async function loginWithGoogle() {
-            logger.log('🔐 Iniciando login con Google...');
-            
-            try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                provider.setCustomParameters({
-                    prompt: 'select_account'
-                });
-                
-                const result = await auth.signInWithPopup(provider);
-                const user = result.user;
-                await bindSession(user);
-                
-                logger.log('✅ Login con Google exitoso');
-                logger.log('Usuario:', user.displayName, user.email);
-                
-                // Verificar si es primera vez
-                const profileRef = database.ref(`users/${user.uid}/profile`);
-                const snapshot = await profileRef.once('value');
-                
-                if (!snapshot.exists()) {
-                    logger.log('Primera vez con Google, creando perfil...');
-                    
-                    // Generar username único
-                    const baseUsername = user.displayName.replace(/\s+/g, '').toLowerCase();
-                    let username = baseUsername;
-                    let counter = 1;
-                    
-                    // Verificar que no exista (índice)
-                    while (await usernameIndexIsTaken(username)) {
-                        username = baseUsername + counter;
-                        counter++;
-                    }
-// Crear perfil
-                    await profileRef.set({
-                        username: username,
-                        email: user.email,
-                        displayName: user.displayName,
-                        photoURL: user.photoURL || null,
-                        createdAt: new Date().toISOString(),
-                        provider: 'google'
-                    });
-                    
-                    await usernameIndexReserve(user.uid, username);
-                    await database.ref(`users/${user.uid}/bankroll`).set({
-                        current: 0, initial: 0, history: []
-                    });
-                    
-                    logger.log('✅ Perfil creado:', username);
-                }
-                
-                showNotification('success', '¡Bienvenido!', 'Sesión iniciada con Google');
-                
-            } catch (error) {
-                Logger.error('Error Google Sign-In:', error);
-                let msg = 'Error al iniciar sesión con Google';
-                if (error.code === 'auth/popup-blocked') msg = 'Popup bloqueado. Permite popups para este sitio.';
-                if (error.code === 'auth/popup-closed-by-user') msg = 'Popup cerrado';
-                if (error.code !== 'auth/popup-closed-by-user') {
-                    showNotification('error', 'Error', msg);
-                }
-            }
+// Función para actualizar status de pick
+function updatePickStatus(pickId, type) {
+    const inputId = `result_${pickId}`;
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    const result = parseFloat(input.value);
+    if (isNaN(result)) {
+        showNotification('error', 'Error', 'Ingresa un número válido');
+        return;
+    }
+
+    const dbPath = type === 'Totales' ? 'picks_totales' :
+        type === 'AI' ? 'picks_ai' :
+            'picks_backtesting';
+
+    database.ref(`users/${userId}/${dbPath}/${pickId}`).once('value').then(snapshot => {
+        const pick = snapshot.val();
+        if (!pick) return;
+
+        const line = parseFloat(pick.line);
+        let status = 'pending';
+
+        if (result === line) {
+            status = 'push';
+        } else if (pick.betType === 'OVER') {
+            status = result > line ? 'win' : 'loss';
+        } else {
+            status = result < line ? 'win' : 'loss';
         }
 
-        // Expose Google login handler to inline onclick attributes (global scope)
-        window.loginWithGoogle = loginWithGoogle;
+        database.ref(`users/${userId}/${dbPath}/${pickId}`).update({
+            status: status,
+            actualResult: result,
+            resolvedAt: new Date().toISOString()
+        }).then(() => {
+            const emoji = status === 'win' ? '✅' : status === 'push' ? '↔️' : '❌';
+            showNotification('success', `${emoji} ${status.toUpperCase()}`, '');
+            render();
+        }).catch(err => {
+            Logger.error('Error:', err);
+            showNotification('error', 'Error', 'No se pudo actualizar');
+        });
+    });
+}
+
+// [REMOVED] Duplicate resolveBacktestPick — using original at line ~4710
+
+// Función para filtrar Mis Picks
+function filterMisPicks(filter) {
+    // Esta función se puede expandir para filtrar la vista
+    logger.log('Filtro seleccionado:', filter);
+    // Por ahora solo logueamos, pero se puede implementar filtrado real
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILIDADES GENERALES
+// ═══════════════════════════════════════════════════════════
+
+// Formatear fechas
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+// Formatear dinero
+function formatMoney(amount) {
+    if (amount === null || amount === undefined) return '$0.00';
+    return `$${parseFloat(amount).toFixed(2)}`;
+}
+
+// Formatear porcentaje
+function formatPercent(value) {
+    if (value === null || value === undefined) return '0.0%';
+    return `${parseFloat(value).toFixed(1)}%`;
+}
+
+// Copiar al portapapeles
+function copyToClipboard(text) {
+    if (!navigator.clipboard) {
+        // Fallback para navegadores antiguos
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showNotification('success', 'Copiado', 'Texto copiado al portapapeles');
+        } catch (err) {
+            Logger.error('Error al copiar:', err);
+            showNotification('error', 'Error', 'No se pudo copiar');
+        }
+        document.body.removeChild(textArea);
+        return;
+    }
+
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('success', 'Copiado', 'Texto copiado al portapapeles');
+    }).catch(err => {
+        Logger.error('Error al copiar:', err);
+        showNotification('error', 'Error', 'No se pudo copiar');
+    });
+}
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Throttle function
+function throttle(func, limit) {
+    let inThrottle;
+    return function (...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
 
 
-    
+
+// ═══════════════════════════════════════════════════════════════
+// EVENT LISTENERS DE AUTENTICACIÓN - ULTRA DEBUG
+// ═══════════════════════════════════════════════════════════
+
+// Helpers para usernames (evita leer toda la colección /usernames)
+const normalizeUsername = (u) => (u || '').trim().toLowerCase();
+
+async function usernameIndexGetUid(username) {
+    const key = normalizeUsername(username);
+    if (!key) return null;
+    try {
+        const snap = await database.ref(`usernamesIndex/${key}`).once('value');
+        return snap.exists() ? snap.val() : null;
+    } catch (e) {
+        Logger.error('❌ Error leyendo usernamesIndex:', e?.message || e);
+        return null;
+    }
+}
+
+async function usernameIndexIsTaken(username) {
+    const uid = await usernameIndexGetUid(username);
+    return !!uid;
+}
+
+async function usernameIndexReserve(uid, username) {
+    const key = normalizeUsername(username);
+    if (!uid || !key) throw new Error('UID/username inválido');
+    // Escribe dos índices: uid->username y username->uid
+    await database.ref(`usernamesByUid/${uid}`).set(username);
+    await database.ref(`usernamesIndex/${key}`).set(uid);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    logger.log('🎬 DOM Cargado, configurando event listeners...');
+
+    // ══════════ LOGIN FORM ══════════
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        logger.log('✅ Formulario de login encontrado');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            logger.log('');
+            logger.log('═══════════════════════════════════════════');
+            logger.log('🔐 INTENTANDO LOGIN...');
+            logger.log('═══════════════════════════════════════════');
+
+            const emailOrUsername = document.getElementById('loginEmailOrUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            logger.log('📝 Datos ingresados:');
+            logger.log('  - Email/Username:', emailOrUsername);
+            logger.log('  - Password:', password ? '****** (' + password.length + ' caracteres)' : 'VACÍO');
+
+            if (!emailOrUsername || !password) {
+                Logger.error('❌ Campos vacíos');
+                showNotification('error', 'Error', 'Por favor completa todos los campos');
+                toastWarning('Completa todos los campos', { title: 'Validación' });
+                return;
+            }
+
+            try {
+                let email = emailOrUsername;
+
+                // Si no contiene @, es un username, buscar el email
+                if (!emailOrUsername.includes('@')) {
+                    logger.log('🔍 Detectado username, buscando UID en índice...');
+                    const uid = await usernameIndexGetUid(emailOrUsername);
+
+                    if (uid) {
+                        logger.log('✅ Username encontrado, UID:', uid);
+
+                        const userRef = await database.ref(`users/${uid}/profile`).once('value');
+                        const userProfile = userRef.val();
+
+                        logger.log('👤 Perfil:', userProfile);
+
+                        if (userProfile && userProfile.email) {
+                            email = userProfile.email;
+                            logger.log('✅ Email encontrado:', email);
+                        } else {
+                            throw new Error('Usuario no encontrado en la base de datos');
+                        }
+                    } else {
+                        Logger.error('❌ Username no encontrado en índice');
+                        throw new Error('Usuario no encontrado');
+                    }
+                }
+
+                logger.log('🔐 Intentando autenticar con Firebase...');
+                logger.log('  - Email:', email);
+
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                await bindSession(userCredential.user);
+
+                logger.log('✅✅✅ LOGIN EXITOSO ✅✅✅');
+                logger.log('👤 Usuario:', userCredential.user.email);
+                logger.log('🆔 UID:', userCredential.user.uid);
+
+                showNotification('success', '¡Bienvenido!', 'Sesión iniciada correctamente');
+                toastSuccess('¡Login exitoso!', { title: 'Bienvenido' });
+
+            } catch (error) {
+                Logger.error('═══════════════════════════════════════════');
+                Logger.error('❌ ERROR EN LOGIN');
+                Logger.error('═══════════════════════════════════════════');
+                Logger.error('Código:', error.code);
+                Logger.error('Mensaje:', error.message);
+                Logger.error('Stack:', error.stack);
+                Logger.error('═══════════════════════════════════════════');
+
+                let errorMsg = 'Error al iniciar sesión';
+
+                if (error.code === 'auth/user-not-found') {
+                    errorMsg = 'Usuario no encontrado. Verifica tus credenciales.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMsg = 'Contraseña incorrecta. Intenta nuevamente.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMsg = 'Email inválido';
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMsg = 'Demasiados intentos. Espera un momento.';
+                } else if (error.message.includes('Usuario no encontrado')) {
+                    errorMsg = 'Usuario no existe. Verifica el username o email.';
+                }
+
+                showNotification('error', 'Error de Login', errorMsg);
+                toastError(errorMsg, { title: 'Error' });
+            }
+        });
+    } else {
+        Logger.error('❌ Formulario de login NO encontrado');
+    }
+
+    // ══════════ REGISTER FORM ══════════
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        logger.log('✅ Formulario de registro encontrado');
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            logger.log('');
+            logger.log('═══════════════════════════════════════════');
+            logger.log('📝 INTENTANDO REGISTRO...');
+            logger.log('═══════════════════════════════════════════');
+
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+
+            logger.log('📝 Datos ingresados:');
+            logger.log('  - Username:', username);
+            logger.log('  - Email:', email);
+            logger.log('  - Password:', password ? '****** (' + password.length + ' caracteres)' : 'VACÍO');
+            logger.log('  - Confirmación:', passwordConfirm ? '****** (' + passwordConfirm.length + ' caracteres)' : 'VACÍO');
+
+            // Validaciones
+            if (!username || !email || !password || !passwordConfirm) {
+                Logger.error('❌ Campos vacíos');
+                showNotification('error', 'Error', 'Por favor completa todos los campos');
+                toastWarning('Completa todos los campos', { title: 'Validación' });
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                Logger.error('❌ Contraseñas no coinciden');
+                showNotification('error', 'Error', 'Las contraseñas no coinciden');
+                toastError('Las contraseñas no coinciden', { title: 'Registro' });
+                return;
+            }
+
+            if (password.length < 6) {
+                Logger.error('❌ Contraseña muy corta');
+                showNotification('error', 'Error', 'La contraseña debe tener mínimo 6 caracteres');
+                toastError('La contraseña debe tener mínimo 6 caracteres', { title: 'Registro' });
+                return;
+            }
+
+            if (username.length < 3) {
+                Logger.error('❌ Username muy corto');
+                showNotification('error', 'Error', 'El username debe tener mínimo 3 caracteres');
+                toastError('El username debe tener mínimo 3 caracteres', { title: 'Registro' });
+                return;
+            }
+
+            try {
+                logger.log('🔍 Verificando si username ya existe...');
+
+                const usernameExists = await usernameIndexIsTaken(username);
+
+                if (usernameExists) {
+                    Logger.error('❌ Username ya existe:', username);
+                    showNotification('error', 'Username ocupado', 'Este username ya está en uso. Elige otro.');
+                    toastError('Username ya existe. Elige otro.', { title: 'Registro' });
+                    return;
+                }
+
+                logger.log('✅ Username disponible');
+                logger.log('🔐 Creando cuenta en Firebase Auth...');
+
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                logger.log('✅ Cuenta creada en Auth');
+                logger.log('  - Email:', user.email);
+                logger.log('  - UID:', user.uid);
+
+                logger.log('💾 Guardando perfil en database...');
+
+                await database.ref(`users/${user.uid}/profile`).set({
+                    username: username,
+                    email: email,
+                    createdAt: new Date().toISOString(),
+                    displayName: username
+                });
+
+                logger.log('✅ Perfil guardado');
+
+                logger.log('💾 Registrando username...');
+
+                await usernameIndexReserve(user.uid, username);
+
+                logger.log('✅ Username registrado');
+
+                logger.log('💾 Inicializando bankroll...');
+
+                await database.ref(`users/${user.uid}/bankroll`).set({
+                    current: 0,
+                    initial: 0,
+                    history: []
+                });
+
+                logger.log('✅ Bankroll inicializado');
+
+                logger.log('');
+                logger.log('═══════════════════════════════════════════');
+                logger.log('✅✅✅ REGISTRO COMPLETADO ✅✅✅');
+                logger.log('═══════════════════════════════════════════');
+                logger.log('👤 Usuario:', username);
+                logger.log('📧 Email:', email);
+                logger.log('🆔 UID:', user.uid);
+                logger.log('═══════════════════════════════════════════');
+
+                showNotification('success', '¡Cuenta creada!', 'Bienvenido a NioSports Pro');
+                toastSuccess('¡Cuenta creada! Bienvenido ' + username, { title: 'Registro' });
+
+                // El onAuthStateChanged se encargará de mostrar la app
+
+            } catch (error) {
+                Logger.error('═══════════════════════════════════════════');
+                Logger.error('❌ ERROR EN REGISTRO');
+                Logger.error('═══════════════════════════════════════════');
+                Logger.error('Código:', error.code);
+                Logger.error('Mensaje:', error.message);
+                Logger.error('Stack:', error.stack);
+                Logger.error('═══════════════════════════════════════════');
+
+                let errorMsg = 'Error al crear la cuenta';
+
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMsg = 'Este email ya está registrado. Intenta hacer login.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMsg = 'Email inválido';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMsg = 'Contraseña muy débil';
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorMsg = 'Error de conexión. Verifica tu internet.';
+                }
+
+                showNotification('error', 'Error de Registro', errorMsg);
+                toastError(errorMsg, { title: 'Error' });
+            }
+        });
+    } else {
+        Logger.error('❌ Formulario de registro NO encontrado');
+    }
+
+    // ══════════ FORGOT PASSWORD FORM ══════════
+    const forgotForm = document.getElementById('forgotPasswordForm');
+    if (forgotForm) {
+        logger.log('✅ Formulario de recuperación encontrado');
+
+        forgotForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            logger.log('📧 Intentando recuperar contraseña...');
+
+            const email = document.getElementById('forgotEmail').value.trim();
+
+            logger.log('  - Email:', email);
+
+            if (!email) {
+                showNotification('error', 'Error', 'Ingresa tu email');
+                toastWarning('Ingresa tu email', { title: 'Recuperación' });
+                return;
+            }
+
+            try {
+                await auth.sendPasswordResetEmail(email);
+                logger.log('✅ Email de recuperación enviado');
+                showNotification('success', 'Email enviado', 'Revisa tu bandeja de entrada');
+                toastSuccess('Email de recuperación enviado. Revisa tu correo.', { title: 'Recuperación' });
+                setTimeout(() => showLogin(), 2000);
+            } catch (error) {
+                Logger.error('❌ Error:', error);
+                showNotification('error', 'Error', 'No se pudo enviar el email');
+                toastError(error.message, { title: 'Error' });
+            }
+        });
+    } else {
+        Logger.error('❌ Formulario de recuperación NO encontrado');
+    }
+
+    logger.log('✅ Event listeners configurados correctamente');
+});
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// GOOGLE SIGN-IN
+// ═══════════════════════════════════════════════════════════
+
+async function loginWithGoogle() {
+    logger.log('🔐 Iniciando login con Google...');
+
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+        await bindSession(user);
+
+        logger.log('✅ Login con Google exitoso');
+        logger.log('Usuario:', user.displayName, user.email);
+
+        // Verificar si es primera vez
+        const profileRef = database.ref(`users/${user.uid}/profile`);
+        const snapshot = await profileRef.once('value');
+
+        if (!snapshot.exists()) {
+            logger.log('Primera vez con Google, creando perfil...');
+
+            // Generar username único
+            const baseUsername = user.displayName.replace(/\s+/g, '').toLowerCase();
+            let username = baseUsername;
+            let counter = 1;
+
+            // Verificar que no exista (índice)
+            while (await usernameIndexIsTaken(username)) {
+                username = baseUsername + counter;
+                counter++;
+            }
+            // Crear perfil
+            await profileRef.set({
+                username: username,
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL || null,
+                createdAt: new Date().toISOString(),
+                provider: 'google'
+            });
+
+            await usernameIndexReserve(user.uid, username);
+            await database.ref(`users/${user.uid}/bankroll`).set({
+                current: 0, initial: 0, history: []
+            });
+
+            logger.log('✅ Perfil creado:', username);
+        }
+
+        showNotification('success', '¡Bienvenido!', 'Sesión iniciada con Google');
+
+    } catch (error) {
+        Logger.error('Error Google Sign-In:', error);
+        let msg = 'Error al iniciar sesión con Google';
+        if (error.code === 'auth/popup-blocked') msg = 'Popup bloqueado. Permite popups para este sitio.';
+        if (error.code === 'auth/popup-closed-by-user') msg = 'Popup cerrado';
+        if (error.code !== 'auth/popup-closed-by-user') {
+            showNotification('error', 'Error', msg);
+        }
+    }
+}
+
+// Expose Google login handler to inline onclick attributes (global scope)
+window.loginWithGoogle = loginWithGoogle;
+
+
+
 // ═══════════════════════════════════════════════════════════════
 
 // Keyboard shortcuts for power users
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
     // Only when no input is focused
     if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA') return;
-    
+
     if (e.key === 'h' || e.key === 'H') { if (typeof navigateTo === 'function') navigateTo('home'); }
     else if (e.key === 't' || e.key === 'T') { if (typeof navigateTo === 'function') navigateTo('totales'); }
     else if (e.key === 'b' || e.key === 'B') { if (typeof navigateTo === 'function') navigateTo('bankroll'); }
-else if (e.key === 'r' || e.key === 'R') { if (typeof refreshData === 'function') refreshData(); }
+    else if (e.key === 'r' || e.key === 'R') { if (typeof refreshData === 'function') refreshData(); }
 });
 // MOBILE BOTTOM NAV + REFRESH
 // ═══════════════════════════════════════════════════════════════
@@ -6677,19 +6683,19 @@ function mobileNav(view) {
     const viewMap = {
         'home': 'home',
         'totales': 'totales',
-'bankroll': 'bankroll',
+        'bankroll': 'bankroll',
         'mispicks': 'mispicks'
     };
-    
+
     const target = viewMap[view] || view;
-    
+
     // Check if we're in the landing page system or app system
     if (typeof navigateTo === 'function' && typeof currentView !== 'undefined') {
         navigateTo(target);
     } else if (typeof switchView === 'function') {
         switchView(target === 'totales' ? 'totals' : target);
     }
-    
+
     // Update active state
     updateMobileNav(view);
 }
@@ -6713,14 +6719,14 @@ function refreshData() {
         btn.classList.add('spinning');
         setTimeout(() => btn.classList.remove('spinning'), 800);
     }
-    
+
     // Reload data from Firebase
     if (typeof loadBankrollFromFirebase === 'function') loadBankrollFromFirebase();
     if (typeof loadPicksFromFirebase === 'function') loadPicksFromFirebase();
-    
+
     // Update timestamp
     updateLastUpdated();
-    
+
     showNotification('✅ Datos actualizados', 'success');
 }
 
@@ -6733,7 +6739,7 @@ function updateLastUpdated() {
 }
 
 // Close mobile nav when clicking outside
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
     const navLinks = document.querySelector('.nav-links.open');
     const toggle = document.querySelector('.nav-mobile-toggle');
     if (navLinks && !navLinks.contains(e.target) && !toggle.contains(e.target)) {
@@ -6746,9 +6752,9 @@ document.addEventListener('click', function(e) {
 // firebase-init.js gestiona la inicialización de Firebase.
 // main.js solo registra el SW.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => Logger.log('SW registered:', reg.scope))
-      .catch(err => Logger.warn('SW failed:', err));
-  });
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => Logger.log('SW registered:', reg.scope))
+            .catch(err => Logger.warn('SW failed:', err));
+    });
 }
