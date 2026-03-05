@@ -410,7 +410,7 @@ window.initPicksIa = async function (container) {
       return;
     }
     try {
-      await window.firebase.database()
+      await window.database
         .ref(`users/${window.currentUser.uid}/picks/${gameId}`)
         .set({ gameId, homeTeam: home, awayTeam: away, market, direction: dir, timestamp: Date.now(), status: 'pending' });
       window.toastSuccess?.(`✅ Trackeado: ${dir} ${market} — ${home} vs ${away}`);
