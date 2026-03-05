@@ -131,7 +131,7 @@ async function initFirebase() {
     
     // Notificar al usuario si está disponible showNotification
     if (typeof showNotification === 'function') {
-      showNotification('Error', 'No se pudo conectar a Firebase: ' + error.message, 'error');
+      showNotification('error', 'Error Firebase', 'No se pudo conectar a Firebase: ' + error.message);
     }
     
     // Trackear el error con Sentry si está disponible
