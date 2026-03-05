@@ -110,76 +110,10 @@ function showNotification(type, title, message) {
 // FIREBASE CONFIGURATION (Segura - desde endpoint)
 // ═══════════════════════════════════════════════════════════════
 
-let firebaseConfig = null;
+// ── NOTA: Firebase es inicializado EXCLUSIVAMENTE por /scripts/firebase-init.js ──
+// main.js usa window.database y window.auth una vez que firebase-init.js termina.
 let database = null;
 let auth = null;
-
-async function initFirebaseInline() {
-    try {
-        // Obtener config desde endpoint seguro
-        const response = await fetch('/api/firebase-config');
-        if (!response.ok) throw new Error('No se pudo obtener Firebase config');
-        
-        firebaseConfig = await response.json();
-        
-        // Validar que tenemos config
-        if (!firebaseConfig.apiKey) {
-            throw new Error('Firebase config incompleta');
-        }
-        
-        // Inicializar Firebase (solo si no está inicializado)
-        if (!firebase.apps || firebase.apps.length === 0) {
-            firebase.initializeApp(firebaseConfig);
-            Logger.log('✅ Firebase inicializado correctamente');
-        } else {
-            Logger.log('⚠️ Firebase ya estaba inicializado, usando instancia existente');
-        }
-        
-        // SIEMPRE crear referencias (aunque Firebase ya esté inicializado)
-        database = firebase.database();
-        auth = firebase.auth();
-        
-        // Verificar que se crearon correctamente
-        if (!database || !auth) {
-            throw new Error('No se pudieron crear referencias de database/auth');
-        }
-        
-        Logger.log('✅ Database y Auth creados correctamente');
-        
-        // Configurar persistencia
-        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((e) => {
-            Logger.warn('Auth persistence error:', e);
-        });
-        
-        // Iniciar listeners de auth
-        initAuthListeners();
-        
-    } catch (error) {
-        Logger.error('❌ Error inicializando Firebase:', error);
-        showNotification('Error de configuración. Por favor recarga la página.', 'error');
-        
-        // Intentar recuperarse si Firebase ya existe
-        try {
-            if (firebase.apps && firebase.apps.length > 0) {
-                database = firebase.database();
-                auth = firebase.auth();
-                Logger.log('✅ Recuperado usando Firebase existente');
-                initAuthListeners();
-            }
-        } catch (recoveryError) {
-            Logger.error('❌ No se pudo recuperar:', recoveryError);
-        }
-    }
-}
-
-// Esperar a que Firebase SDK esté disponible y ejecutar
-(function waitForFirebase() {
-    if (typeof firebase !== 'undefined') {
-        initFirebaseInline();
-    } else {
-        setTimeout(waitForFirebase, 50);
-    }
-})();
 
 // Bridge: si scripts/firebase-init.js ya inicializó Firebase, sincronizamos referencias y listeners aquí.
 (function bootstrapFirebaseBridge(){
@@ -354,6 +288,9 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
 function initAuthListeners() {
     if (window.__NS_AUTH_LISTENERS_READY__) return;
     window.__NS_AUTH_LISTENERS_READY__ = true;
+    // Sincronizar referencias locales desde window (asignadas por firebase-init.js)
+    if (!auth)     auth     = window.auth;
+    if (!database) database = window.database;
     if (!auth || !database) {
         Logger.error('❌ FIREBASE NO INICIALIZADO CORRECTAMENTE');
         return;
@@ -6764,7 +6701,9 @@ document.addEventListener('click', function(e) {
 });
 
 
-// ── FINAL: Service Worker Registration ──
+// ── Service Worker Registration ──
+// firebase-init.js gestiona la inicialización de Firebase.
+// main.js solo registra el SW.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
@@ -6772,27 +6711,3 @@ if ('serviceWorker' in navigator) {
       .catch(err => Logger.warn('SW failed:', err));
   });
 }
-
-// ── AUTO-EJECUTAR AL CARGAR ──
-(function() {
-  let attempts = 0;
-  const maxAttempts = 100;
-
-  function tryInit() {
-    attempts++;
-    if (typeof firebase !== 'undefined' && typeof initFirebase === 'function') {
-      Logger.log('🚀 Ejecutando initFirebase automáticamente...');
-      initFirebase();
-    } else if (attempts < maxAttempts) {
-      setTimeout(tryInit, 50);
-    } else {
-      Logger.error('❌ No se pudo auto-ejecutar initFirebase después de 5 segundos');
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', tryInit);
-  } else {
-    tryInit();
-  }
-})();
