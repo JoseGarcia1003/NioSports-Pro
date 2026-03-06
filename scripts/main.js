@@ -4,7 +4,9 @@
 // corrección de errores de inicialización.
 // ═══════════════════════════════════════════════════════════════
 
-var currentView = window.currentView || 'home';
+// ── VARIABLES GLOBALES DE VISTA (BLINDADAS) ──
+window.currentView = window.currentView || 'home';
+var currentView = window.currentView;
 
 // ── 0. ALERT OVERRIDE (lo antes posible, antes de cualquier librería) ──
 window.alert = function (msg) {
