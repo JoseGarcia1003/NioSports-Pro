@@ -2685,7 +2685,23 @@ function checkOT() {
 // RENDER PRINCIPAL
 // ═══════════════════════════════════════════════════════════════
 function render() {
+    // 🛡️ INICIO DEL ESCUDO DE SEGURIDAD 🛡️
+    let activeView = window.currentView || currentView || 'home';
+
+    // Limpieza de huérfanos: Si quedó un rastro de 'props' en la caché, redirigir al inicio
+    if (activeView === 'props') {
+        activeView = 'home';
+        window.currentView = 'home';
+        currentView = 'home';
+    }
+
+    // Sincronizamos la variable global con la vista validada
+    currentView = activeView;
+    // 🛡️ FIN DEL ESCUDO DE SEGURIDAD 🛡️
+
     const app = document.getElementById('app');
+    
+    // Rutas de la aplicación
     if (currentView === 'home') app.innerHTML = renderHome();
     else if (currentView === 'aipicks') app.innerHTML = renderAIPicks();
     else if (currentView === 'backtesting') app.innerHTML = renderBacktesting();
@@ -2699,6 +2715,7 @@ function render() {
         app.innerHTML = renderBankrollView();
         setTimeout(() => createBankrollChart(), 100);
     }
+    
     attachEvents();
 
     // Inicializar gráficos si estamos en dashboard
