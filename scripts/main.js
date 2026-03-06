@@ -24,6 +24,10 @@ function fetchWithTimeout(resource, options = {}, timeoutMs = 10000) {
     return fetch(resource, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
 }
 
+// ── VARIABLES DE BANKROLL (RESTAURADAS) ──
+window.USER_BANKROLL = window.USER_BANKROLL || 0;
+var USER_BANKROLL = window.USER_BANKROLL;
+
 // Evitar ReferenceErrors si otros módulos dependen de estas variables
 window._pendingNotifications = window._pendingNotifications || [];
 window.__niosports = window.__niosports || {};
@@ -2925,7 +2929,7 @@ function resolveBacktestPick(pickId) {
 
 function renderHome() {
     const totalPicks = Object.keys({ ...USER_PICKS_TOTALES, ...USER_PICKS_AI }).length;
-    const bankroll = USER_BANKROLL.current || 0;
+    const bankroll = .current || 0;
     const initial = USER_BANKROLL.initial || 0;
     const profit = bankroll - initial;
     const profitPercent = initial > 0 ? ((profit / initial) * 100).toFixed(1) : '0.0';
