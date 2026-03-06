@@ -207,7 +207,7 @@ async function validateCurrentSession(user) {
 
         const isNetwork = offline || /network-request-failed|timeout|Failed to fetch|NetworkError/i.test(code + ' ' + msg);
         if (isNetwork) {
-            Logger.warn('⚠️ Token refresh falló por red/offline. Manteniendo sesión.');
+            logger.warn('⚠️ Token refresh falló por red/offline. Manteniendo sesión.');
             return true;
         }
 
@@ -216,7 +216,7 @@ async function validateCurrentSession(user) {
         if (mustLogout) return false;
 
         // Por defecto: fail-open para evitar expulsar al usuario por errores intermitentes
-        Logger.warn('⚠️ Token refresh falló (no crítico). Manteniendo sesión.', code);
+        logger.warn('⚠️ Token refresh falló (no crítico). Manteniendo sesión.', code);
         return true;
     }
 }
@@ -333,7 +333,7 @@ function initAuthListeners() {
     if (!_auth) _auth = window.auth;
     if (!_database) _database = window.database;
     if (!(_auth || window.auth) || !(_database || window.database)) {
-        Logger.error('❌ FIREBASE NO INICIALIZADO CORRECTAMENTE');
+        logger.error('❌ FIREBASE NO INICIALIZADO CORRECTAMENTE');
         return;
     }
 
@@ -382,6 +382,8 @@ function showLogin() {
     if (forgotScreen) forgotScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = 'none';
     if (mainNav) mainNav.style.display = 'none';
+
+    if (typeof hideLoading === 'function') hideLoading();
 }
 
 function showRegister() {
@@ -396,6 +398,8 @@ function showRegister() {
     if (forgotScreen) forgotScreen.style.display = 'none';
     if (mainApp) mainApp.style.display = 'none';
     if (mainNav) mainNav.style.display = 'none';
+
+    if (typeof hideLoading === 'function') hideLoading();
 }
 
 function showForgotPassword() {
@@ -410,6 +414,8 @@ function showForgotPassword() {
     if (forgotScreen) forgotScreen.style.display = 'flex';
     if (mainApp) mainApp.style.display = 'none';
     if (mainNav) mainNav.style.display = 'none';
+
+    if (typeof hideLoading === 'function') hideLoading();
 }
 
 // Cuando el usuario se loguea exitosamente
@@ -428,7 +434,7 @@ function onUserLoggedIn(user) {
             if (navInitials) navInitials.textContent = username.substring(0, 1).toUpperCase();
         }
     }).catch(err => {
-        Logger.error('❌ Error cargando perfil:', err);
+        logger.error('❌ Error cargando perfil:', err);
     });
 
     // Ocultar pantallas de auth y mostrar app
@@ -530,7 +536,7 @@ function logout() {
             const refreshBtn = document.getElementById('refreshBtn');
             if (refreshBtn) refreshBtn.style.display = 'none';
         }).catch(err => {
-            Logger.error('Error al cerrar sesión:', err);
+            logger.error('Error al cerrar sesión:', err);
         });
     }
 }
@@ -830,7 +836,7 @@ function attachFirebaseConnectionListener() {
             updateFirebaseStatus(snap.val() ? 'connected' : 'disconnected');
         });
     } catch (e) {
-        Logger.warn('⚠️ No se pudo adjuntar listener de conexión Firebase:', e?.message || e);
+        logger.warn('⚠️ No se pudo adjuntar listener de conexión Firebase:', e?.message || e);
     }
 }
 
@@ -851,7 +857,7 @@ function loadPicksFromFirebase() {
         render();
         checkForValuePicks();
     }, (error) => {
-        Logger.error('Error cargando picks:', error);
+        logger.error('Error cargando picks:', error);
         __stopTimer(__picksLoadTimer);
         hideLoading();
         render();
@@ -860,18 +866,18 @@ function loadPicksFromFirebase() {
 
 // Guardar H2H en Firebase
 function saveH2HToFirebase() {
-    if (!userId) { showNotification('❌ Debes iniciar sesión', 'error'); return; }
+    if (!userId) { showNotification('error', 'Error', 'Debes iniciar sesión'); return; }
     showLoading('Guardando en Firebase...');
     database.ref(`users/${userId}/h2h_games`).set(H2H_DATABASE)
         .then(() => {
 
             hideLoading();
-            showNotification('✅ Partido guardado correctamente', 'success');
+            showNotification('success', 'Guardado', 'Partido guardado correctamente');
         })
         .catch((error) => {
-            Logger.error('Error guardando:', error);
+            logger.error('Error guardando:', error);
             hideLoading();
-            showNotification('❌ Error guardando: ' + error.message, 'warning');
+            showNotification('warning', 'Error', 'Error guardando: ' + error.message);
         });
 }
 
@@ -880,7 +886,7 @@ function savePicksToFirebase() {
     if (!userId) return;
     database.ref(`users/${userId}/picks`).set(PICKS_DATABASE)
 
-        .catch((error) => Logger.error('Error guardando picks:', error));
+        .catch((error) => logger.error('Error guardando picks:', error));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -960,7 +966,7 @@ function addPick(pickData) {
         vegasLine: pickData.vegasLine || null // Línea de Vegas para comparación
     };
     savePicksToFirebase();
-    showNotification('📝 Pick registrado correctamente', 'success');
+    showNotification('success', 'Pick registrado', 'Pick registrado correctamente');
     render();
 }
 
@@ -974,7 +980,7 @@ function registerActualResult(pickId) {
 
     const actual = parseFloat(actualTotal);
     if (isNaN(actual) || actual < 0) {
-        showNotification('⚠️ Ingresa un número válido', 'warning');
+        showNotification('warning', 'Error', 'Ingresa un número válido');
         return;
     }
 
@@ -1000,7 +1006,7 @@ function registerActualResult(pickId) {
 
     const status = PICKS_DATABASE[pickId].status;
     const emoji = status === 'win' ? '✅' : status === 'push' ? '↔️' : '❌';
-    showNotification(`${emoji} Resultado registrado: ${actual} pts (${status.toUpperCase()})`, status === 'win' ? 'success' : 'info');
+    showNotification(status === 'win' ? 'success' : 'info', 'Resultado', `Resultado registrado: ${actual} pts (${status.toUpperCase()})`);
     render();
 }
 
@@ -1009,7 +1015,7 @@ function updatePickResult(pickId, result) {
         PICKS_DATABASE[pickId].status = result;
         PICKS_DATABASE[pickId].resolvedAt = new Date().toISOString();
         savePicksToFirebase();
-        showNotification(result === 'win' ? '✅ ¡Pick ganado!' : result === 'push' ? '↔️ Push' : '❌ Pick perdido', result === 'win' ? 'success' : 'warning');
+        showNotification(result === 'win' ? 'success' : 'warning', 'Resultado', result === 'win' ? '¡Pick ganado!' : result === 'push' ? 'Push' : 'Pick perdido');
         render();
     }
 }
@@ -1018,7 +1024,7 @@ function deletePick(pickId) {
     if (PICKS_DATABASE[pickId]) {
         delete PICKS_DATABASE[pickId];
         savePicksToFirebase();
-        showNotification('🗑️ Pick eliminado', 'info');
+        showNotification('info', 'Eliminado', 'Pick eliminado');
         render();
     }
 }
@@ -1130,7 +1136,7 @@ function getBacktestStats() {
 function exportPicksToCSV() {
     const picks = Object.values(PICKS_DATABASE);
     if (picks.length === 0) {
-        showNotification('⚠️ No hay picks para exportar', 'warning');
+        showNotification('warning', 'Sin datos', 'No hay picks para exportar');
         return;
     }
 
@@ -1161,7 +1167,7 @@ function exportPicksToCSV() {
     link.click();
     URL.revokeObjectURL(url);
 
-    showNotification('📥 CSV exportado correctamente', 'success');
+    showNotification('success', 'Exportado', 'CSV exportado correctamente');
 }
 
 // Agregar línea de cierre para CLV
@@ -1171,7 +1177,7 @@ function addClosingLine(pickId, originalLine) {
 
     const closing = parseFloat(closingLine);
     if (isNaN(closing)) {
-        showNotification('⚠️ Ingresa un número válido', 'warning');
+        showNotification('warning', 'Error', 'Ingresa un número válido');
         return;
     }
 
@@ -1496,7 +1502,7 @@ function removeValuePick(pickId) {
     VALUE_PICKS = VALUE_PICKS.filter(p => p.id !== pickId);
     saveValuePicksToStorage();
     render();
-    showNotification('🗑️ Pick descartado', 'info');
+    showNotification('info', 'Descartado', 'Pick descartado');
 }
 
 function registerFromValuePick(pickId) {
@@ -1511,7 +1517,7 @@ function registerFromValuePick(pickId) {
         if (oddsInput === null) return;
         odds = parseFloat(oddsInput) || null;
         if (!odds || odds <= 1) {
-            showNotification('⚠️ Cuota inválida', 'warning');
+            showNotification('warning', 'Error', 'Cuota inválida');
             return;
         }
     }
@@ -1566,7 +1572,7 @@ function clearAllValuePicks() {
         VALUE_PICKS = [];
         saveValuePicksToStorage();
         render();
-        showNotification('🗑️ Todos los picks eliminados', 'info');
+        showNotification('info', 'Eliminados', 'Todos los picks eliminados');
     };
 
     if (window.NioModal && typeof window.NioModal.confirm === 'function') {
@@ -2071,7 +2077,7 @@ async function autoDetectContextualFactors(homeTeam, awayTeam) {
         awayTravel = autoDetectTravel(homeTeam, awayTeam);
 
         // 4. OBTENER DATOS DE API PARA AMBOS EQUIPOS
-        showNotification('🔄 Cargando datos contextuales...', 'info');
+        showNotification('info', 'Cargando', 'Cargando datos contextuales...');
 
         const [homeGames, awayGames] = await Promise.all([
             fetchTeamRecentGames(homeTeam),
@@ -2104,11 +2110,11 @@ async function autoDetectContextualFactors(homeTeam, awayTeam) {
             awayScheduleDensity = calculateScheduleDensity(awayGames, awayTeam);
         }
 
-        showNotification('✅ Factores contextuales detectados automáticamente', 'success');
+        showNotification('success', 'Contexto', 'Factores contextuales detectados automáticamente');
 
     } catch (error) {
-        Logger.error('Error en auto-detección:', error);
-        showNotification('⚠️ Auto-detección parcial - algunos datos manuales requeridos', 'warning');
+        logger.error('Error en auto-detección:', error);
+        showNotification('warning', 'Parcial', 'Auto-detección parcial - algunos datos manuales requeridos');
     }
 }
 
@@ -3022,8 +3028,7 @@ function renderHome() {
 // MÓDULO: TOTALES (Calculadora Reconstruida)
 // ═══════════════════════════════════════════════════════════════════
 
-let selectedLocalTeam = '';
-let selectedAwayTeam = '';
+
 
 function renderTendencia() {
     const teams = getTeams();
@@ -4220,7 +4225,7 @@ function registerPick(period, betType, line, probability, oddsFromForm) {
 function registerBetBuilder() {
     const comboOdds = document.getElementById('combo_odds')?.value;
     if (!comboOdds || parseFloat(comboOdds) <= 1) {
-        showNotification('⚠️ Ingresa la cuota combinada del Bet Builder', 'warning');
+        showNotification('warning', 'Error', 'Ingresa la cuota combinada del Bet Builder');
         return;
     }
 
@@ -4270,7 +4275,7 @@ function registerBetBuilder() {
     }
 
     if (legs.length < 2) {
-        showNotification('⚠️ Selecciona al menos 2 picks para el Bet Builder', 'warning');
+        showNotification('warning', 'Error', 'Selecciona al menos 2 picks para el Bet Builder');
         return;
     }
 
@@ -4301,7 +4306,6 @@ function registerBetBuilder() {
 // DASHBOARD PRO - GRÁFICOS Y ANÁLISIS AVANZADO
 // ═══════════════════════════════════════════════════════════════
 let profitChart = null;
-let teamChart = null;
 
 function renderDashboard() {
     try {
@@ -4626,7 +4630,7 @@ function renderDashboard() {
         </div>
     `;
     } catch (error) {
-        Logger.error('Error en renderDashboard:', error);
+        logger.error('Error en renderDashboard:', error);
         return `
             <div class="p-4 max-w-4xl mx-auto">
                 <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
@@ -5102,7 +5106,7 @@ function updateScore(field, value) {
 
 function saveGame() {
     if (!firebaseConnected) {
-        showNotification('⚠️ No hay conexión con Firebase', 'warning');
+        showNotification('warning', 'Sin conexión', 'No hay conexión con Firebase');
         return;
     }
 
@@ -5113,18 +5117,18 @@ function saveGame() {
         if (inp) ingestScores[id] = inp.value;
     });
     if (!ingestTeam1 || !ingestTeam2 || !ingestLocalTeam || !ingestDate) {
-        showNotification('⚠️ Completa todos los campos', 'warning');
+        showNotification('warning', 'Error', 'Completa todos los campos');
         return;
     }
     const s = getScores();
     const lT = s.lQ1 + s.lQ2 + s.lQ3 + s.lQ4 + s.lOT1 + s.lOT2 + s.lOT3;
     const aT = s.aQ1 + s.aQ2 + s.aQ3 + s.aQ4 + s.aOT1 + s.aOT2 + s.aOT3;
     if (lT === 0 || aT === 0) {
-        showNotification('⚠️ Ingresa los puntos', 'warning');
+        showNotification('warning', 'Error', 'Ingresa los puntos');
         return;
     }
     if (lT === aT) {
-        showNotification('⚠️ Empate. Ingresa Overtime', 'warning');
+        showNotification('warning', 'Empate', 'Empate. Ingresa Overtime');
         return;
     }
     const away = ingestLocalTeam === ingestTeam1 ? ingestTeam2 : ingestTeam1;
@@ -5250,14 +5254,14 @@ function generateAIPicks() {
             if (!localStats || !awayStats) continue;
 
             // Q1
-            const q1Pred = ((localStats.q1Home + awayStats.q1Away) / 2);
+            const q1Pred = localStats.q1Home + awayStats.q1Away;
             const q1Line = Math.round(q1Pred * 2) / 2;
             const q1Diff = Math.abs(q1Pred - q1Line);
             const q1Prob = Math.min(95, 50 + (q1Diff * 30));
 
             if (q1Prob >= 75) {
                 aiPicks.push({
-                    id: `ai_q1_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
+                    id: `ai_q1_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                     local, away, period: 'Q1',
                     betType: q1Pred > q1Line ? 'OVER' : 'UNDER',
                     line: q1Line, trend: q1Pred.toFixed(1),
@@ -5268,14 +5272,14 @@ function generateAIPicks() {
             }
 
             // 1H
-            const halfPred = ((localStats.halfHome + awayStats.halfAway) / 2);
+            const halfPred = localStats.halfHome + awayStats.halfAway;
             const halfLine = Math.round(halfPred * 2) / 2;
             const halfDiff = Math.abs(halfPred - halfLine);
             const halfProb = Math.min(95, 50 + (halfDiff * 30));
 
             if (halfProb >= 75) {
                 aiPicks.push({
-                    id: `ai_1h_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
+                    id: `ai_1h_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                     local, away, period: '1H',
                     betType: halfPred > halfLine ? 'OVER' : 'UNDER',
                     line: halfLine, trend: halfPred.toFixed(1),
@@ -5286,14 +5290,14 @@ function generateAIPicks() {
             }
 
             // FULL
-            const fullPred = ((localStats.fullHome + awayStats.fullAway) / 2);
+            const fullPred = localStats.fullHome + awayStats.fullAway;
             const fullLine = Math.round(fullPred * 2) / 2;
             const fullDiff = Math.abs(fullPred - fullLine);
             const fullProb = Math.min(95, 50 + (fullDiff * 30));
 
             if (fullProb >= 75) {
                 aiPicks.push({
-                    id: `ai_full_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2, 5)} `,
+                    id: `ai_full_${local}_${away}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                     local, away, period: 'FULL',
                     betType: fullPred > fullLine ? 'OVER' : 'UNDER',
                     line: fullLine, trend: fullPred.toFixed(1),
@@ -5451,7 +5455,7 @@ function updateBankroll() {
         newBalance: newAmount
     });
 
-    database.ref(`users / ${userId}/bankroll`).update({
+    database.ref(`users/${userId}/bankroll`).update({
         current: newAmount,
         initial: USER_BANKROLL.initial || newAmount,
         history: newHistory
@@ -5460,7 +5464,7 @@ function updateBankroll() {
         closeUpdateBankrollModal();
         render();
     }).catch(err => {
-        Logger.error('Error:', err);
+        logger.error('Error:', err);
         showNotification('error', 'Error', 'No se pudo actualizar');
     });
 }
@@ -5497,7 +5501,7 @@ function exportToCSV(data, filename) {
 
         showNotification('success', 'Exportado', 'CSV descargado exitosamente');
     } catch (error) {
-        Logger.error('Error:', error);
+        logger.error('Error:', error);
         showNotification('error', 'Error', 'No se pudo exportar');
     }
 }
@@ -5542,7 +5546,7 @@ function updatePickStatus(pickId, type) {
             showNotification('success', `${emoji} ${status.toUpperCase()}`, '');
             render();
         }).catch(err => {
-            Logger.error('Error:', err);
+            logger.error('Error:', err);
             showNotification('error', 'Error', 'No se pudo actualizar');
         });
     });
@@ -5552,9 +5556,37 @@ function updatePickStatus(pickId, type) {
 
 // Función para filtrar Mis Picks
 function filterMisPicks(filter) {
-    // Esta función se puede expandir para filtrar la vista
-    logger.log('Filtro seleccionado:', filter);
-    // Por ahora solo logueamos, pero se puede implementar filtrado real
+    const list = document.getElementById('misPicksList');
+    if (!list) return;
+
+    // Update active tab styles
+    const tabs = list.parentElement.querySelectorAll('.flex.gap-4.mb-6 button');
+    tabs.forEach(btn => {
+        btn.classList.remove('text-gold', 'border-b-2', 'border-gold');
+        btn.classList.add('text-gray-400');
+    });
+    const activeTab = [...tabs].find(btn => btn.textContent.toLowerCase().includes(
+        filter === 'all' ? 'todos' : filter === 'pending' ? 'pendiente' : 'resuelto'
+    ));
+    if (activeTab) {
+        activeTab.classList.add('text-gold', 'border-b-2', 'border-gold');
+        activeTab.classList.remove('text-gray-400');
+    }
+
+    // Show/hide picks based on filter
+    const cards = list.querySelectorAll('.glass-card');
+    cards.forEach(card => {
+        const hasPending = card.querySelector('.pending-badge');
+        const isResolved = card.querySelector('.win-badge') || card.querySelector('.loss-badge');
+
+        if (filter === 'all') {
+            card.style.display = '';
+        } else if (filter === 'pending') {
+            card.style.display = hasPending ? '' : 'none';
+        } else if (filter === 'resolved') {
+            card.style.display = isResolved ? '' : 'none';
+        }
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5596,7 +5628,7 @@ function copyToClipboard(text) {
             document.execCommand('copy');
             showNotification('success', 'Copiado', 'Texto copiado al portapapeles');
         } catch (err) {
-            Logger.error('Error al copiar:', err);
+            logger.error('Error al copiar:', err);
             showNotification('error', 'Error', 'No se pudo copiar');
         }
         document.body.removeChild(textArea);
@@ -5606,7 +5638,7 @@ function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
         showNotification('success', 'Copiado', 'Texto copiado al portapapeles');
     }).catch(err => {
-        Logger.error('Error al copiar:', err);
+        logger.error('Error al copiar:', err);
         showNotification('error', 'Error', 'No se pudo copiar');
     });
 }
@@ -5652,7 +5684,7 @@ async function usernameIndexGetUid(username) {
         const snap = await database.ref(`usernamesIndex/${key}`).once('value');
         return snap.exists() ? snap.val() : null;
     } catch (e) {
-        Logger.error('❌ Error leyendo usernamesIndex:', e?.message || e);
+        logger.error('❌ Error leyendo usernamesIndex:', e?.message || e);
         return null;
     }
 }
@@ -5693,7 +5725,7 @@ document.addEventListener('DOMContentLoaded', () => {
             logger.log('  - Password:', password ? '****** (' + password.length + ' caracteres)' : 'VACÍO');
 
             if (!emailOrUsername || !password) {
-                Logger.error('❌ Campos vacíos');
+                logger.error('❌ Campos vacíos');
                 showNotification('error', 'Error', 'Por favor completa todos los campos');
                 toastWarning('Completa todos los campos', { title: 'Validación' });
                 return;
@@ -5722,7 +5754,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             throw new Error('Usuario no encontrado en la base de datos');
                         }
                     } else {
-                        Logger.error('❌ Username no encontrado en índice');
+                        logger.error('❌ Username no encontrado en índice');
                         throw new Error('Usuario no encontrado');
                     }
                 }
@@ -5741,13 +5773,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 toastSuccess('¡Login exitoso!', { title: 'Bienvenido' });
 
             } catch (error) {
-                Logger.error('═══════════════════════════════════════════');
-                Logger.error('❌ ERROR EN LOGIN');
-                Logger.error('═══════════════════════════════════════════');
-                Logger.error('Código:', error.code);
-                Logger.error('Mensaje:', error.message);
-                Logger.error('Stack:', error.stack);
-                Logger.error('═══════════════════════════════════════════');
+                logger.error('═══════════════════════════════════════════');
+                logger.error('❌ ERROR EN LOGIN');
+                logger.error('═══════════════════════════════════════════');
+                logger.error('Código:', error.code);
+                logger.error('Mensaje:', error.message);
+                logger.error('Stack:', error.stack);
+                logger.error('═══════════════════════════════════════════');
 
                 let errorMsg = 'Error al iniciar sesión';
 
@@ -5768,7 +5800,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     } else {
-        Logger.error('❌ Formulario de login NO encontrado');
+        logger.error('❌ Formulario de login NO encontrado');
     }
 
     // ══════════ REGISTER FORM ══════════
@@ -5796,28 +5828,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Validaciones
             if (!username || !email || !password || !passwordConfirm) {
-                Logger.error('❌ Campos vacíos');
+                logger.error('❌ Campos vacíos');
                 showNotification('error', 'Error', 'Por favor completa todos los campos');
                 toastWarning('Completa todos los campos', { title: 'Validación' });
                 return;
             }
 
             if (password !== passwordConfirm) {
-                Logger.error('❌ Contraseñas no coinciden');
+                logger.error('❌ Contraseñas no coinciden');
                 showNotification('error', 'Error', 'Las contraseñas no coinciden');
                 toastError('Las contraseñas no coinciden', { title: 'Registro' });
                 return;
             }
 
             if (password.length < 6) {
-                Logger.error('❌ Contraseña muy corta');
+                logger.error('❌ Contraseña muy corta');
                 showNotification('error', 'Error', 'La contraseña debe tener mínimo 6 caracteres');
                 toastError('La contraseña debe tener mínimo 6 caracteres', { title: 'Registro' });
                 return;
             }
 
             if (username.length < 3) {
-                Logger.error('❌ Username muy corto');
+                logger.error('❌ Username muy corto');
                 showNotification('error', 'Error', 'El username debe tener mínimo 3 caracteres');
                 toastError('El username debe tener mínimo 3 caracteres', { title: 'Registro' });
                 return;
@@ -5829,7 +5861,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const usernameExists = await usernameIndexIsTaken(username);
 
                 if (usernameExists) {
-                    Logger.error('❌ Username ya existe:', username);
+                    logger.error('❌ Username ya existe:', username);
                     showNotification('error', 'Username ocupado', 'Este username ya está en uso. Elige otro.');
                     toastError('Username ya existe. Elige otro.', { title: 'Registro' });
                     return;
@@ -5887,13 +5919,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 // El onAuthStateChanged se encargará de mostrar la app
 
             } catch (error) {
-                Logger.error('═══════════════════════════════════════════');
-                Logger.error('❌ ERROR EN REGISTRO');
-                Logger.error('═══════════════════════════════════════════');
-                Logger.error('Código:', error.code);
-                Logger.error('Mensaje:', error.message);
-                Logger.error('Stack:', error.stack);
-                Logger.error('═══════════════════════════════════════════');
+                logger.error('═══════════════════════════════════════════');
+                logger.error('❌ ERROR EN REGISTRO');
+                logger.error('═══════════════════════════════════════════');
+                logger.error('Código:', error.code);
+                logger.error('Mensaje:', error.message);
+                logger.error('Stack:', error.stack);
+                logger.error('═══════════════════════════════════════════');
 
                 let errorMsg = 'Error al crear la cuenta';
 
@@ -5912,7 +5944,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     } else {
-        Logger.error('❌ Formulario de registro NO encontrado');
+        logger.error('❌ Formulario de registro NO encontrado');
     }
 
     // ══════════ FORGOT PASSWORD FORM ══════════
@@ -5941,13 +5973,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 toastSuccess('Email de recuperación enviado. Revisa tu correo.', { title: 'Recuperación' });
                 setTimeout(() => showLogin(), 2000);
             } catch (error) {
-                Logger.error('❌ Error:', error);
+                logger.error('❌ Error:', error);
                 showNotification('error', 'Error', 'No se pudo enviar el email');
                 toastError(error.message, { title: 'Error' });
             }
         });
     } else {
-        Logger.error('❌ Formulario de recuperación NO encontrado');
+        logger.error('❌ Formulario de recuperación NO encontrado');
     }
 
     logger.log('✅ Event listeners configurados correctamente');
@@ -6013,7 +6045,7 @@ async function loginWithGoogle() {
         showNotification('success', '¡Bienvenido!', 'Sesión iniciada con Google');
 
     } catch (error) {
-        Logger.error('Error Google Sign-In:', error);
+        logger.error('Error Google Sign-In:', error);
         let msg = 'Error al iniciar sesión con Google';
         if (error.code === 'auth/popup-blocked') msg = 'Popup bloqueado. Permite popups para este sitio.';
         if (error.code === 'auth/popup-closed-by-user') msg = 'Popup cerrado';
@@ -6075,7 +6107,6 @@ function updateMobileNav(active) {
 }
 
 // Keep mobile nav in sync with currentView
-const _origNavigateTo = typeof navigateTo === 'function' ? navigateTo : null;
 
 function refreshData() {
     const btn = document.getElementById('refreshBtn');
@@ -6091,7 +6122,7 @@ function refreshData() {
     // Update timestamp
     updateLastUpdated();
 
-    showNotification('✅ Datos actualizados', 'success');
+    showNotification('success', 'Actualizado', 'Datos actualizados correctamente');
 }
 
 function updateLastUpdated() {
@@ -6118,8 +6149,8 @@ document.addEventListener('click', function (e) {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-            .then(reg => Logger.log('SW registered:', reg.scope))
-            .catch(err => Logger.warn('SW failed:', err));
+            .then(reg => logger.log('SW registered:', reg.scope))
+            .catch(err => logger.warn('SW failed:', err));
     });
 }
 
