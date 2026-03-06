@@ -24,9 +24,45 @@ function fetchWithTimeout(resource, options = {}, timeoutMs = 10000) {
     return fetch(resource, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
 }
 
-// ── VARIABLES DE BANKROLL (RESTAURADAS) ──
-window.USER_BANKROLL = window.USER_BANKROLL || 0;
+// ── VARIABLES DE BANKROLL Y GLOBALES (BLINDADAS) ──
+window.USER_BANKROLL = window.USER_BANKROLL || { current: 0, initial: 0, history: [] };
 var USER_BANKROLL = window.USER_BANKROLL;
+
+window.PICKS_DATABASE = window.PICKS_DATABASE || {};
+var PICKS_DATABASE = window.PICKS_DATABASE;
+
+window.H2H_DATABASE = window.H2H_DATABASE || {};
+var H2H_DATABASE = window.H2H_DATABASE;
+
+window.VALUE_PICKS = window.VALUE_PICKS || [];
+var VALUE_PICKS = window.VALUE_PICKS;
+
+window.TEAM_GAMES_CACHE = window.TEAM_GAMES_CACHE || {};
+var TEAM_GAMES_CACHE = window.TEAM_GAMES_CACHE;
+
+// Variables de la Calculadora de Totales
+var localTeam = '';
+var visitingTeam = '';
+var lineQ1 = '', lineHalf = '', lineFull = '';
+var typeQ1 = 'OVER', typeHalf = 'OVER', typeFull = 'OVER';
+var oddsQ1 = '', oddsHalf = '', oddsFull = '';
+
+// Variables de Factores Contextuales
+var autoDetectEnabled = true;
+var localB2B = false, awayB2B = false;
+var localRestDays = 1, awayRestDays = 1;
+var localInjury = false, awayInjury = false;
+var localStreak = 0, awayStreak = 0;
+var awayTravel = 'none';
+var localScheduleDensity = 'normal', awayScheduleDensity = 'normal';
+var isDivisionRivalry = false;
+var gameDay = 'weekday';
+
+// Variables de Ingesta de Datos
+var ingestTeam1 = '', ingestTeam2 = '', ingestLocalTeam = '', ingestDate = '';
+var ingestScores = { localQ1:'', localQ2:'', localQ3:'', localQ4:'', awayQ1:'', awayQ2:'', awayQ3:'', awayQ4:'', localOT1:'', awayOT1:'', localOT2:'', awayOT2:'', localOT3:'', awayOT3:'' };
+
+var firebaseConnected = false;
 
 // Evitar ReferenceErrors si otros módulos dependen de estas variables
 window._pendingNotifications = window._pendingNotifications || [];
@@ -68,7 +104,6 @@ function hideLoading() {
         if (overlay) overlay.classList.add('hidden');
     } catch (e) { }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 // LOGGER CONDICIONAL (Solo en desarrollo)
