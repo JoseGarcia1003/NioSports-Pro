@@ -4,6 +4,8 @@
 // corrección de errores de inicialización.
 // ═══════════════════════════════════════════════════════════════
 
+var currentView = window.currentView || 'home';
+
 // ── 0. ALERT OVERRIDE (lo antes posible, antes de cualquier librería) ──
 window.alert = function (msg) {
     try {
@@ -739,7 +741,7 @@ function switchView(view) {
     if (window.trackAction) {
         window.trackAction('switch_view', { view });
     }
-    window.currentView = view;
+    currentView = window.currentView = view;
 
     // Hide all views
     document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
@@ -762,7 +764,7 @@ function switchView(view) {
     if (view === 'totals') {
         // Re-render the app if navigating to totals
         const app = document.getElementById('app');
-        window.currentView = 'totales';
+        currentView = window.currentView = 'totales';
         if (app && typeof renderTendencia === 'function') {
             app.innerHTML = renderTendencia();
         } else if (typeof render === 'function') {
@@ -770,7 +772,7 @@ function switchView(view) {
         }
     }
     if (view === 'picks') {
-        window.currentView = 'aipicks';
+        currentView = window.currentView = 'aipicks';
         const picksContainer = document.getElementById('view-picks');
         if (picksContainer && typeof renderAIPicks === 'function') {
             picksContainer.innerHTML = renderAIPicks();
