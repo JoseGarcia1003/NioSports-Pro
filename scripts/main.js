@@ -4925,21 +4925,21 @@ function renderTotals() {
     return `
         <div class="nio-divider"></div>
         <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #fff; text-align: center; margin-bottom: 16px;">📊 TOTALES CALCULADOS</h3>
-        <div id="totalsDisplay" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
-            <div class="nio-stat" style="border-color: rgba(255, 215, 0, 0.15);">
-                <div class="nio-stat-label" style="margin-bottom: 10px;">1er Tiempo</div>
-                <div style="font-size: 14px; font-weight: 700; color: var(--cyan); margin-bottom: 4px;">${ingestLocalTeam}: ${lH}</div>
-                <div style="font-size: 14px; font-weight: 700; color: var(--amber); margin-bottom: 8px;">${away}: ${aH}</div>
-                <div class="nio-stat-value text-gold" style="font-size: 24px;">${lH + aH}</div>
+        <div id="totalsDisplay" class="nio-scoreboard">
+            <div class="nio-score-cell" style="border-color: rgba(255, 215, 0, 0.15);">
+                <div class="nio-score-label">1er Tiempo</div>
+                <div class="nio-score-team" style="color: var(--cyan);">${ingestLocalTeam}: ${lH}</div>
+                <div class="nio-score-team" style="color: var(--amber);">${away}: ${aH}</div>
+                <div class="nio-score-total text-gold">${lH + aH}</div>
             </div>
-            <div class="nio-stat" style="border-color: rgba(167, 139, 250, 0.15);">
-                <div class="nio-stat-label" style="margin-bottom: 10px;">Full${hadOT ? ' + OT' : ''}</div>
-                <div style="font-size: 14px; font-weight: 700; color: var(--cyan); margin-bottom: 4px;">${ingestLocalTeam}: ${lT}</div>
-                <div style="font-size: 14px; font-weight: 700; color: var(--amber); margin-bottom: 8px;">${away}: ${aT}</div>
-                <div class="nio-stat-value text-violet" style="font-size: 24px;">${lT + aT}</div>
+            <div class="nio-score-cell" style="border-color: rgba(167, 139, 250, 0.15);">
+                <div class="nio-score-label">Full${hadOT ? ' + OT' : ''}</div>
+                <div class="nio-score-team" style="color: var(--cyan);">${ingestLocalTeam}: ${lT}</div>
+                <div class="nio-score-team" style="color: var(--amber);">${away}: ${aT}</div>
+                <div class="nio-score-total text-violet">${lT + aT}</div>
             </div>
-            <div class="nio-stat" style="border-color: rgba(52, 211, 153, 0.15);">
-                <div class="nio-stat-label" style="margin-bottom: 10px;">Ganador${hadOT ? '' : ''}</div>
+            <div class="nio-score-cell ${hadOT ? 'nio-ot-glow' : ''}" style="border-color: rgba(52, 211, 153, 0.15);">
+                <div class="nio-score-label">Ganador</div>
                 ${hadOT ? '<span class="nio-badge nio-badge-warning" style="margin-bottom: 8px; font-size: 10px;">⏱️ OT</span>' : ''}
                 <div style="font-size: 24px; font-weight: 800; font-family: var(--font-display); ${wc};">${win}</div>
                 <div style="font-size: 16px; font-weight: 800; font-family: var(--font-mono); color: #fff; margin-top: 4px;">${lT}−${aT}</div>
@@ -4978,15 +4978,15 @@ function renderMisPicks() {
                 </div>
             </div>
             
-            <!-- Filter Chips -->
-            <div style="display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
-                <button onclick="filterMisPicks('all')" class="nio-btn nio-btn-gold nio-btn-sm" style="border-radius: 50px;">
-                    Todos (${allPicks.length})
+            <!-- Filter Tabs -->
+            <div class="nio-tabs">
+                <button onclick="filterMisPicks('all')" class="nio-tab active" id="tab-all">
+                    📋 Todos (${allPicks.length})
                 </button>
-                <button onclick="filterMisPicks('pending')" class="nio-btn nio-btn-ghost nio-btn-sm" style="border-radius: 50px;">
+                <button onclick="filterMisPicks('pending')" class="nio-tab" id="tab-pending">
                     ⏳ Pendientes (${pending.length})
                 </button>
-                <button onclick="filterMisPicks('resolved')" class="nio-btn nio-btn-ghost nio-btn-sm" style="border-radius: 50px;">
+                <button onclick="filterMisPicks('resolved')" class="nio-tab" id="tab-resolved">
                     ✅ Resueltos (${resolved.length})
                 </button>
             </div>
