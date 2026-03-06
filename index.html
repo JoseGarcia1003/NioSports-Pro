@@ -88,6 +88,13 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Google Fonts: Bricolage Grotesque + DM Sans + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
+        rel="stylesheet">
+
     <!-- Tailwind CSS (Build local optimizado) -->
     <link rel="stylesheet" href="/dist/output.css">
 
@@ -2030,6 +2037,801 @@
             left: 0 !important;
             top: 0;
             z-index: 9999;
+        }
+
+        /* ═══════════ NIO DESIGN SYSTEM — UTILITY CLASSES v1.0 ═══════════ */
+
+        /* ── .nio-card — Glassmorphic universal card ── */
+        .nio-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(150%);
+            -webkit-backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--r-md);
+            padding: 24px;
+            transition: all 0.35s var(--ease-out);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nio-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: radial-gradient(ellipse at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 215, 0, 0.06) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+
+        .nio-card:hover {
+            border-color: rgba(255, 215, 0, 0.25);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 24px rgba(255, 215, 0, 0.06);
+        }
+
+        .nio-card:hover::before {
+            opacity: 1;
+        }
+
+        /* ── .nio-section — Section container ── */
+        .nio-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            animation: nioSlideUp 0.5s var(--ease-out) both;
+        }
+
+        @media (min-width: 768px) {
+            .nio-section {
+                padding: 40px 32px;
+            }
+        }
+
+        /* ── .nio-header — Section header ── */
+        .nio-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .nio-header-icon {
+            font-size: 40px;
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.3));
+            animation: nioFadeScale 0.6s var(--ease-spring) both;
+        }
+
+        .nio-header-content {
+            flex: 1;
+        }
+
+        .nio-header-title {
+            font-family: var(--font-display);
+            font-size: clamp(24px, 4vw, 36px);
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, var(--gold) 50%, var(--gold-warm) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .nio-header-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.45);
+            margin: 4px 0 0;
+        }
+
+        /* ── .nio-grid — Responsive auto-fill grid ── */
+        .nio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .nio-grid-2 {
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        }
+
+        .nio-grid-4 {
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        }
+
+        @media (max-width: 640px) {
+
+            .nio-grid,
+            .nio-grid-2,
+            .nio-grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ── .nio-stat — Mini stat card ── */
+        .nio-stat {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--r-md);
+            padding: 20px;
+            transition: all 0.35s var(--ease-out);
+            text-align: center;
+        }
+
+        .nio-stat:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+        }
+
+        .nio-stat-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .nio-stat-value {
+            font-family: var(--font-mono);
+            font-size: clamp(22px, 3vw, 32px);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .nio-stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.45);
+            font-weight: 600;
+        }
+
+        /* ── .nio-badge — Badge variants ── */
+        .nio-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .nio-badge-success {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--emerald);
+        }
+
+        .nio-badge-danger {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--rose);
+        }
+
+        .nio-badge-warning {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--amber);
+        }
+
+        .nio-badge-info {
+            background: rgba(34, 211, 238, 0.15);
+            color: var(--cyan);
+        }
+
+        .nio-badge-pro {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 170, 0, 0.15));
+            color: var(--gold);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .nio-badge-success .nio-badge-dot {
+            background: var(--emerald);
+        }
+
+        .nio-badge-danger .nio-badge-dot {
+            background: var(--rose);
+        }
+
+        .nio-badge-warning .nio-badge-dot {
+            background: var(--amber);
+        }
+
+        .nio-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: pulse 1.5s ease infinite;
+        }
+
+        /* ── .nio-progress — Progress bar with glow ── */
+        .nio-progress {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .nio-progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s var(--ease-out);
+            position: relative;
+        }
+
+        .nio-progress-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 4px;
+            box-shadow: 0 0 12px currentColor;
+            opacity: 0.5;
+        }
+
+        .nio-progress-emerald {
+            background: linear-gradient(90deg, #059669, var(--emerald));
+            color: var(--emerald);
+        }
+
+        .nio-progress-gold {
+            background: linear-gradient(90deg, var(--gold-warm), var(--gold));
+            color: var(--gold);
+        }
+
+        .nio-progress-rose {
+            background: linear-gradient(90deg, #e11d48, var(--rose));
+            color: var(--rose);
+        }
+
+        .nio-progress-cyan {
+            background: linear-gradient(90deg, #0891b2, var(--cyan));
+            color: var(--cyan);
+        }
+
+        /* ── .nio-divider — Gradient separator ── */
+        .nio-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+            border: none;
+            margin: 28px 0;
+        }
+
+        /* ── .nio-chip — Small pill tag ── */
+        .nio-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            white-space: nowrap;
+        }
+
+        /* ── .nio-table — Styled table ── */
+        .nio-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .nio-table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .nio-table td {
+            padding: 14px 16px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.85);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .nio-table tr:nth-child(even) td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .nio-table tr:hover td {
+            background: rgba(255, 215, 0, 0.04);
+        }
+
+        /* ── .nio-btn — Button system ── */
+        .nio-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: var(--r-sm);
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s var(--ease-out);
+            border: none;
+            text-decoration: none;
+        }
+
+        .nio-btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-warm));
+            color: var(--bg-abyss);
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.25);
+        }
+
+        .nio-btn-gold:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.35);
+        }
+
+        .nio-btn-ghost {
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nio-btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 215, 0, 0.3);
+            color: var(--gold);
+            transform: translateY(-1px);
+        }
+
+        .nio-btn-danger {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--rose);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .nio-btn-danger:hover {
+            background: rgba(244, 63, 94, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .nio-btn-success {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--emerald);
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        .nio-btn-success:hover {
+            background: rgba(52, 211, 153, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .nio-btn-sm {
+            padding: 6px 14px;
+            font-size: 12px;
+        }
+
+        /* ── Link-style back button ── */
+        .nio-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--gold);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            margin-bottom: 24px;
+            transition: all 0.25s ease;
+        }
+
+        .nio-back:hover {
+            color: var(--gold-vivid);
+            transform: translateX(-4px);
+        }
+
+        /* ── Colors for stats ── */
+        .text-gold {
+            color: var(--gold) !important;
+        }
+
+        .text-emerald {
+            color: var(--emerald) !important;
+        }
+
+        .text-rose {
+            color: var(--rose) !important;
+        }
+
+        .text-cyan {
+            color: var(--cyan) !important;
+        }
+
+        .text-violet {
+            color: var(--violet) !important;
+        }
+
+        .text-amber {
+            color: var(--amber) !important;
+        }
+
+        /* ── Entry animations ── */
+        @keyframes nioSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes nioFadeScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes nioStaggerIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nio-stagger>* {
+            animation: nioStaggerIn 0.4s var(--ease-out) both;
+        }
+
+        .nio-stagger>*:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .nio-stagger>*:nth-child(2) {
+            animation-delay: 0.06s;
+        }
+
+        .nio-stagger>*:nth-child(3) {
+            animation-delay: 0.12s;
+        }
+
+        .nio-stagger>*:nth-child(4) {
+            animation-delay: 0.18s;
+        }
+
+        .nio-stagger>*:nth-child(5) {
+            animation-delay: 0.24s;
+        }
+
+        .nio-stagger>*:nth-child(6) {
+            animation-delay: 0.30s;
+        }
+
+        .nio-stagger>*:nth-child(7) {
+            animation-delay: 0.36s;
+        }
+
+        .nio-stagger>*:nth-child(8) {
+            animation-delay: 0.42s;
+        }
+
+        /* ── Feature card (quick access) ── */
+        .nio-feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--r-lg);
+            padding: 28px;
+            cursor: pointer;
+            transition: all 0.4s var(--ease-out);
+            text-decoration: none;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nio-feature-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 80% 20%, var(--glow-color, rgba(255, 215, 0, 0.06)) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .nio-feature-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+        }
+
+        .nio-feature-card:hover::after {
+            opacity: 1;
+        }
+
+        .nio-feature-card>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Empty state ── */
+        .nio-empty {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .nio-empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            animation: nioFadeScale 0.8s var(--ease-spring) both;
+            display: block;
+        }
+
+        .nio-empty-title {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+        }
+
+        .nio-empty-desc {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.4);
+            max-width: 400px;
+            margin: 0 auto 24px;
+            line-height: 1.6;
+        }
+
+        /* ── Scoreboard style (for totals) ── */
+        .nio-scoreboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .nio-score-cell {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--r-md);
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s var(--ease-out);
+        }
+
+        .nio-score-cell:hover {
+            border-color: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nio-score-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .nio-score-team {
+            font-family: var(--font-mono);
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .nio-score-total {
+            font-family: var(--font-mono);
+            font-size: 28px;
+            font-weight: 800;
+            margin-top: 8px;
+        }
+
+        .nio-ot-glow {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        @media (max-width: 640px) {
+            .nio-scoreboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Filter tabs ── */
+        .nio-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: var(--r-sm);
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        .nio-tab {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.25s var(--ease-out);
+            white-space: nowrap;
+            background: transparent;
+            border: none;
+        }
+
+        .nio-tab:hover {
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .nio-tab.active {
+            background: linear-gradient(135deg, var(--gold), var(--gold-warm));
+            color: var(--bg-abyss);
+            box-shadow: 0 2px 12px rgba(255, 215, 0, 0.25);
+        }
+
+        /* ═══════════ AUTHENTICATION SCREENS ═══════════ */
+        .auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 24px 16px;
+            position: relative;
+            z-index: 10;
+            overflow-y: auto;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 20%, rgba(255, 215, 0, 0.05) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 80%, rgba(34, 211, 238, 0.03) 0%, transparent 60%),
+                linear-gradient(180deg, var(--bg-abyss) 0%, var(--bg-deep) 50%, var(--bg-base) 100%);
+        }
+
+        .auth-box {
+            width: 100%;
+            max-width: 440px;
+            animation: viewFadeIn 0.6s var(--ease-out);
+        }
+
+        .auth-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            display: block;
+            margin: 0 auto 20px;
+            filter: drop-shadow(0 0 24px rgba(255, 215, 0, 0.35));
+            animation: logoBreath 4s ease-in-out infinite;
+            object-fit: cover;
+        }
+
+        .auth-title {
+            font-family: var(--font-display);
+            font-size: clamp(22px, 5vw, 28px);
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-vivid) 50%, var(--gold-warm) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 13px 16px;
+            background: rgba(13, 27, 42, 0.85);
+            border: 1px solid rgba(255, 215, 0, 0.12);
+            border-radius: var(--r-sm);
+            color: #fff;
+            font-family: var(--font-body);
+            font-size: 14px;
+            transition: all 0.3s var(--ease-out);
+            outline: none;
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .input-field:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 16px rgba(255, 215, 0, 0.12);
+            background: rgba(13, 27, 42, 0.95);
+        }
+
+        .btn-primary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-warm));
+            color: var(--bg-abyss);
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 15px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s var(--ease-out);
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(255, 215, 0, 0.35);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s var(--ease-out);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 215, 0, 0.2);
+            color: var(--gold-vivid);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 16px 12px;
+            }
+
+            .auth-logo {
+                width: 56px;
+                height: 56px;
+            }
         }
     </style>
 
