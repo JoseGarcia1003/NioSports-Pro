@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════════════════
-   NIOSPORTS PRO - COMPONENT STYLES v3.0 PREMIUM
-   Glassmorphic redesign for Picks IA, Tracking, and Dashboard
+   NIOSPORTS PRO - COMPONENT STYLES v3.5 PREMIUM
+   Glassmorphic redesign with micro-animations & glow effects
    ════════════════════════════════════════════════════════════════ */
 
 /* ════════════════════════════════════════════════════════════════
@@ -14,24 +14,24 @@
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   --color-info: #3b82f6;
-  
+
   --bg-dark: #0a0f1e;
   --bg-dark-lighter: #1a2332;
   --bg-card: rgba(10, 22, 40, 0.55);
   --bg-card-hover: rgba(10, 22, 40, 0.75);
-  
+
   --border-color: rgba(255, 215, 0, 0.12);
   --border-color-hover: rgba(255, 215, 0, 0.35);
-  
+
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.7);
   --text-muted: rgba(255, 255, 255, 0.45);
-  
+
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.35);
   --shadow-glow: 0 0 20px rgba(255, 215, 0, 0.08);
-  
+
   --transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -103,7 +103,7 @@
   box-shadow: 0 4px 16px rgba(255, 215, 0, 0.15);
 }
 
-/* Filters — Premium Pills */
+/* Filters — Premium Pills with smooth transition */
 .picks-filters {
   display: flex;
   gap: 10px;
@@ -120,14 +120,32 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+
+.filter-btn>* {
+  position: relative;
+  z-index: 1;
 }
 
 .filter-btn:hover {
   background: rgba(255, 215, 0, 0.08);
   border-color: rgba(255, 215, 0, 0.2);
   color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
 .filter-btn.active {
@@ -136,6 +154,7 @@
   border-color: transparent;
   box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
   font-weight: 700;
+  transform: translateY(-1px);
 }
 
 /* Picks Grid */
@@ -178,7 +197,7 @@
   inset: 0;
   border-radius: inherit;
   background: radial-gradient(ellipse at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(255, 215, 0, 0.06) 0%, transparent 60%);
+      rgba(255, 215, 0, 0.06) 0%, transparent 60%);
   opacity: 0;
   transition: opacity 0.5s;
   pointer-events: none;
@@ -263,7 +282,8 @@
   margin-bottom: 4px;
 }
 
-.home-badge, .away-badge {
+.home-badge,
+.away-badge {
   display: inline-block;
   padding: 2px 10px;
   border-radius: 50px;
@@ -298,7 +318,7 @@
   letter-spacing: 1px;
 }
 
-/* Confidence Badge — Premium Glow */
+/* Confidence Badge — Premium Glow + Pulse */
 .pick-confidence-badge {
   display: flex;
   justify-content: center;
@@ -307,6 +327,19 @@
 
 .confidence-ring {
   filter: drop-shadow(0 0 12px currentColor);
+  animation: confidencePulse 3s ease-in-out infinite;
+}
+
+@keyframes confidencePulse {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 12px currentColor);
+  }
+
+  50% {
+    filter: drop-shadow(0 0 20px currentColor) drop-shadow(0 0 6px currentColor);
+  }
 }
 
 .confidence-value {
@@ -410,7 +443,7 @@
   line-height: 1.6;
 }
 
-/* ─── Betting Lines — Chip Style with Glow ─── */
+/* ─── Betting Lines — Chip Style with Luminous Borders ─── */
 .betting-lines {
   display: flex;
   gap: 10px;
@@ -424,12 +457,30 @@
   background: rgba(10, 22, 40, 0.6);
   border-radius: 12px;
   border: 1px solid rgba(255, 215, 0, 0.08);
-  transition: var(--transition);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.betting-line::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 170, 0, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+  z-index: -1;
 }
 
 .betting-line:hover {
-  border-color: rgba(255, 215, 0, 0.2);
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.05);
+  border-color: rgba(255, 215, 0, 0.25);
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.08), inset 0 0 16px rgba(255, 215, 0, 0.02);
+  transform: translateY(-2px);
+}
+
+.betting-line:hover::before {
+  opacity: 1;
 }
 
 .line-label {
@@ -510,7 +561,7 @@
   position: relative;
 }
 
-/* Animated glow on factor bars */
+/* Animated glow on factor bars — enhanced per level */
 .factor-fill::after {
   content: '';
   position: absolute;
@@ -518,21 +569,37 @@
   border-radius: 3px;
   box-shadow: 0 0 8px currentColor;
   opacity: 0.4;
+  animation: factorGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes factorGlow {
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .factor-fill.high {
   background: linear-gradient(90deg, #059669, var(--color-success));
   color: var(--color-success);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
 }
 
 .factor-fill.medium {
   background: linear-gradient(90deg, #d97706, var(--color-warning));
   color: var(--color-warning);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
 }
 
 .factor-fill.low {
   background: linear-gradient(90deg, #dc2626, var(--color-danger));
   color: var(--color-danger);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
 }
 
 /* Reasoning */
@@ -577,7 +644,8 @@
   gap: 10px;
 }
 
-.btn-track, .btn-details {
+.btn-track,
+.btn-details {
   flex: 1;
   padding: 12px 18px;
   border-radius: 10px;
@@ -733,12 +801,10 @@
 }
 
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.03) 25%,
-    rgba(255, 215, 0, 0.06) 50%,
-    rgba(255, 255, 255, 0.03) 75%
-  );
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.03) 25%,
+      rgba(255, 215, 0, 0.06) 50%,
+      rgba(255, 255, 255, 0.03) 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.8s ease-in-out infinite;
   border-radius: 6px;
@@ -756,6 +822,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -772,12 +839,19 @@
 .tracking-login-required {
   text-align: center;
   padding: 60px 20px;
-  animation: fadeIn 0.5s ease both;
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .error-icon,
@@ -790,8 +864,15 @@
 }
 
 @keyframes iconBounce {
-  from { opacity: 0; transform: scale(0.7); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .error-title,
@@ -1128,8 +1209,15 @@
 }
 
 @keyframes pendingPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .pick-team {
@@ -1371,7 +1459,10 @@
    STATUS BADGES (Win/Loss/Push) — Used across views
    ════════════════════════════════════════════════════════════════ */
 
-.win-badge, .loss-badge, .push-badge, .pending-badge {
+.win-badge,
+.loss-badge,
+.push-badge,
+.pending-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1431,10 +1522,53 @@
 }
 
 /* ════════════════════════════════════════════════════════════════
+   PREMIUM EXTRAS — Stats gradient, mouse glow, mobile grid
+   ════════════════════════════════════════════════════════════════ */
+
+/* Gold gradient text for stat numbers */
+.stat-value-gradient {
+  background: linear-gradient(135deg, #fff 0%, var(--color-primary) 60%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Mobile-friendly 2-col stats grid */
+.stats-grid-mobile {
+  display: grid;
+}
+
+@media (max-width: 640px) {
+  .stats-grid-mobile {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .stats-grid-mobile .nio-stat {
+    padding: 14px 10px;
+  }
+
+  .stats-grid-mobile .nio-stat-value {
+    font-size: 20px !important;
+  }
+
+  .stats-grid-mobile .nio-stat-icon {
+    font-size: 22px;
+  }
+}
+
+/* Pick card interactive mouse glow tracking */
+.pick-card {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+}
+
+/* ════════════════════════════════════════════════════════════════
    RESPONSIVE — PREMIUM
    ════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
+
   .picks-grid,
   .picks-skeleton-grid,
   .tracking-skeleton {
@@ -1511,6 +1645,7 @@
 }
 
 @media (max-width: 480px) {
+
   .picks-title,
   .tracking-title {
     font-size: 22px;
@@ -1552,6 +1687,7 @@
    ════════════════════════════════════════════════════════════════ */
 
 @media print {
+
   .btn-refresh,
   .btn-track,
   .btn-details,
