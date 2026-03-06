@@ -2763,63 +2763,74 @@ function renderBacktesting() {
     const winRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
 
     return `
-        <div class="max-w-6xl mx-auto px-4 py-8">
-            <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
+        <div class="nio-section">
+            <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="nio-back">
                 ← Volver al Home
             </button>
             
-            <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
-                📊 Backtesting
-            </h1>
-            <p class="text-gray-400 mb-8">Sistema de calibración y validación del modelo</p>
+            <div class="nio-header">
+                <div class="nio-header-icon">📊</div>
+                <div class="nio-header-content">
+                    <h1 class="nio-header-title">Backtesting</h1>
+                    <p class="nio-header-subtitle">Sistema de calibración y validación del modelo</p>
+                </div>
+            </div>
             
             ${resolved.length > 0 ? `
                 <!-- Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                    <div class="glass-card p-4 rounded-xl text-center">
-                        <div class="text-3xl font-bold text-white">${resolved.length}</div>
-                        <div class="text-xs text-gray-400">Total</div>
+                <div class="nio-grid nio-grid-4 nio-stagger" style="margin-bottom: 32px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));">
+                    <div class="nio-stat">
+                        <span class="nio-stat-icon">📋</span>
+                        <div class="nio-stat-value" style="color: #fff;">${resolved.length}</div>
+                        <div class="nio-stat-label">Total</div>
                     </div>
-                    <div class="glass-card p-4 rounded-xl text-center">
-                        <div class="text-3xl font-bold text-emerald">${wins}</div>
-                        <div class="text-xs text-gray-400">Wins</div>
+                    <div class="nio-stat">
+                        <span class="nio-stat-icon">✅</span>
+                        <div class="nio-stat-value text-emerald">${wins}</div>
+                        <div class="nio-stat-label">Wins</div>
                     </div>
-                    <div class="glass-card p-4 rounded-xl text-center">
-                        <div class="text-3xl font-bold text-rose">${losses}</div>
-                        <div class="text-xs text-gray-400">Losses</div>
+                    <div class="nio-stat">
+                        <span class="nio-stat-icon">❌</span>
+                        <div class="nio-stat-value text-rose">${losses}</div>
+                        <div class="nio-stat-label">Losses</div>
                     </div>
-                    <div class="glass-card p-4 rounded-xl text-center">
-                        <div class="text-3xl font-bold text-gold">${winRate}%</div>
-                        <div class="text-xs text-gray-400">Win Rate</div>
+                    <div class="nio-stat">
+                        <span class="nio-stat-icon">🎯</span>
+                        <div class="nio-stat-value text-gold">${winRate}%</div>
+                        <div class="nio-stat-label">Win Rate</div>
                     </div>
-                    <div class="glass-card p-4 rounded-xl text-center">
-                        <div class="text-3xl font-bold text-cyan">${pushes}</div>
-                        <div class="text-xs text-gray-400">Pushes</div>
+                    <div class="nio-stat">
+                        <span class="nio-stat-icon">↔️</span>
+                        <div class="nio-stat-value text-cyan">${pushes}</div>
+                        <div class="nio-stat-label">Pushes</div>
                     </div>
                 </div>
             ` : ''}
             
             <!-- Lists -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="nio-grid nio-grid-2">
                 <!-- Pending -->
-                <div class="glass-card p-6 rounded-2xl">
-                    <h3 class="text-xl font-bold text-white mb-4">⏳ Pendientes (${pending.length})</h3>
-                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                <div class="nio-card">
+                    <h3 style="font-family: var(--font-display); font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 20px;">⏳ Pendientes (${pending.length})</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
                         ${pending.length === 0 ? `
-                            <div class="text-center py-8 text-gray-400">No hay picks pendientes</div>
+                            <div class="nio-empty" style="padding: 32px 0;">
+                                <span class="nio-empty-icon" style="font-size: 40px;">📭</span>
+                                <p class="nio-empty-desc">No hay picks pendientes</p>
+                            </div>
                         ` : pending.map(p => `
-                            <div class="bg-white/5 rounded-lg p-4">
-                                <div class="font-medium text-white mb-2">
-                                    ${p.local} vs ${p.away} • ${p.period}
+                            <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                                <div style="font-weight: 700; color: #fff; margin-bottom: 8px;">
+                                    ${p.local} vs ${p.away} <span class="nio-chip">${p.period}</span>
                                 </div>
-                                <div class="text-sm text-gray-400 mb-3">
+                                <div style="font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 12px;">
                                     ${p.betType} ${p.line} • Trend: ${p.trend}
                                 </div>
-                                <div class="flex gap-2">
+                                <div style="display: flex; gap: 8px;">
                                     <input type="number" step="0.5" placeholder="Resultado" 
-                                           class="input-field flex-1 !py-2 text-sm" id="bt_${p.id}">
+                                           class="input-field" style="flex: 1; padding: 8px 12px; font-size: 14px;" id="bt_${p.id}">
                                     <button onclick="resolveBacktestPick('${p.id}')" 
-                                            class="btn-secondary !py-2 !px-4">✓</button>
+                                            class="nio-btn nio-btn-gold nio-btn-sm">✓</button>
                                 </div>
                             </div>
                         `).join('')}
@@ -2827,22 +2838,25 @@ function renderBacktesting() {
                 </div>
                 
                 <!-- Resolved -->
-                <div class="glass-card p-6 rounded-2xl">
-                    <h3 class="text-xl font-bold text-white mb-4">✅ Resueltos (${resolved.length})</h3>
-                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                <div class="nio-card">
+                    <h3 style="font-family: var(--font-display); font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 20px;">✅ Resueltos (${resolved.length})</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
                         ${resolved.length === 0 ? `
-                            <div class="text-center py-8 text-gray-400">No hay picks resueltos</div>
+                            <div class="nio-empty" style="padding: 32px 0;">
+                                <span class="nio-empty-icon" style="font-size: 40px;">📊</span>
+                                <p class="nio-empty-desc">No hay picks resueltos</p>
+                            </div>
                         ` : resolved.slice(0, 10).map(p => `
-                            <div class="bg-white/5 rounded-lg p-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div class="font-medium text-white">
+                            <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                    <div style="font-weight: 700; color: #fff;">
                                         ${p.local} vs ${p.away}
                                     </div>
                                     ${p.status === 'win' ? '<span class="win-badge">WIN</span>' :
             p.status === 'loss' ? '<span class="loss-badge">LOSS</span>' :
-                '<span class="pending-badge">PUSH</span>'}
+                '<span class="push-badge">PUSH</span>'}
                                 </div>
-                                <div class="text-sm text-gray-400">
+                                <div style="font-size: 13px; color: rgba(255,255,255,0.45);">
                                     ${p.betType} ${p.line} • Real: ${p.actualResult}
                                 </div>
                             </div>
@@ -2903,118 +2917,121 @@ function renderHome() {
     const winRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
 
     return `
-        <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="nio-section" style="max-width: 1280px;">
             <!-- Welcome Header -->
-            <div class="mb-8">
-                <h1 class="text-4xl md:text-5xl font-bold text-white mb-2" style="font-family: var(--font-display);">
-                    ¡Bienvenido de vuelta! 🏀
-                </h1>
-                <p class="text-gray-400 text-lg">
-                    Tu centro de comando NBA profesional
-                </p>
+            <div class="nio-header" style="margin-bottom: 36px;">
+                <div class="nio-header-icon" style="font-size: 52px;">🏀</div>
+                <div class="nio-header-content">
+                    <h1 class="nio-header-title" style="font-size: clamp(28px, 5vw, 44px);">¡Bienvenido de vuelta!</h1>
+                    <p class="nio-header-subtitle" style="font-size: 16px; margin-top: 6px;">Tu centro de comando NBA profesional</p>
+                </div>
             </div>
             
             <!-- Stats Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8 stats-grid-mobile">
-                <div class="glass-card p-6 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-gray-400 text-sm">Bankroll</span>
-                        <span class="text-2xl">💰</span>
-                    </div>
-                    <div class="text-3xl font-bold text-gold">$${bankroll.toFixed(2)}</div>
-                    <div class="text-sm ${profit >= 0 ? 'text-emerald' : 'text-rose'} mt-1">
+            <div class="nio-grid nio-grid-4 nio-stagger stats-grid-mobile" style="margin-bottom: 36px;">
+                <div class="nio-stat">
+                    <span class="nio-stat-icon">💰</span>
+                    <div class="nio-stat-value text-gold">$${bankroll.toFixed(2)}</div>
+                    <div class="nio-stat-label">Bankroll</div>
+                    <div style="font-size: 13px; margin-top: 6px;" class="${profit >= 0 ? 'text-emerald' : 'text-rose'}">
                         ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)} (${profitPercent}%)
                     </div>
                 </div>
                 
-                <div class="glass-card p-6 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-gray-400 text-sm">Picks Activos</span>
-                        <span class="text-2xl">📊</span>
-                    </div>
-                    <div class="text-3xl font-bold text-white">${totalPicks}</div>
-                    <div class="text-sm text-gray-400 mt-1">En seguimiento</div>
+                <div class="nio-stat">
+                    <span class="nio-stat-icon">📊</span>
+                    <div class="nio-stat-value" style="color: #fff;">${totalPicks}</div>
+                    <div class="nio-stat-label">Picks Activos</div>
+                    <div style="font-size: 12px; margin-top: 6px; color: rgba(255,255,255,0.35);">En seguimiento</div>
                 </div>
                 
-                <div class="glass-card p-6 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-gray-400 text-sm">Win Rate</span>
-                        <span class="text-2xl">🎯</span>
-                    </div>
-                    <div class="text-3xl font-bold text-cyan">${winRate}%</div>
-                    <div class="text-sm text-gray-400 mt-1">${wins}W - ${losses}L</div>
+                <div class="nio-stat">
+                    <span class="nio-stat-icon">🎯</span>
+                    <div class="nio-stat-value text-cyan">${winRate}%</div>
+                    <div class="nio-stat-label">Win Rate</div>
+                    <div style="font-size: 12px; margin-top: 6px; color: rgba(255,255,255,0.35);">${wins}W - ${losses}L</div>
                 </div>
                 
-                <div class="glass-card p-6 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-gray-400 text-sm">Total Jugadas</span>
-                        <span class="text-2xl">📈</span>
-                    </div>
-                    <div class="text-3xl font-bold text-violet">${resolved.length}</div>
-                    <div class="text-sm text-gray-400 mt-1">Resueltas</div>
+                <div class="nio-stat">
+                    <span class="nio-stat-icon">📈</span>
+                    <div class="nio-stat-value text-violet">${resolved.length}</div>
+                    <div class="nio-stat-label">Total Jugadas</div>
+                    <div style="font-size: 12px; margin-top: 6px; color: rgba(255,255,255,0.35);">Resueltas</div>
                 </div>
             </div>
             
             <!-- Quick Access Modules -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="nio-grid nio-grid-2 nio-stagger" style="margin-bottom: 36px;">
                 <!-- Totales -->
-                <button onclick="navigateTo('totales')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left bg-gradient-to-br from-amber-600/10 to-yellow-600/10 border border-yellow-500/20 hover:border-yellow-400/40" style="box-shadow: 0 0 20px rgba(255,215,0,0.03);">
-                    <div class="flex items-center justify-between mb-4">
+                <button onclick="navigateTo('totales')" class="nio-feature-card" style="--glow-color: rgba(255, 215, 0, 0.08); border-color: rgba(255, 215, 0, 0.12);">
+                    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px;">
                         <div>
-                            <h3 class="text-2xl font-bold text-white mb-2">📊 Calculadora de Totales</h3>
-                            <p class="text-yellow-200/70">Sistema de predicción Q1, 1H y Full</p>
+                            <h3 style="font-family: var(--font-display); font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px;">📊 Calculadora de Totales</h3>
+                            <p style="font-size: 14px; color: rgba(255, 215, 0, 0.6);">Sistema de predicción Q1, 1H y Full</p>
                         </div>
-                        <div class="text-5xl opacity-50" style="color: #FFD700;">→</div>
+                        <span style="font-size: 36px; color: rgba(255, 215, 0, 0.25);">→</span>
                     </div>
-                    <div class="text-sm text-yellow-400/60">Click para analizar partidos NBA</div>
+                    <div class="nio-chip" style="border-color: rgba(255, 215, 0, 0.15); color: rgba(255, 215, 0, 0.5);">Click para analizar partidos NBA</div>
                 </button>
                 
                 <!-- AI Picks -->
-                <button onclick="navigateTo('aipicks')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left bg-gradient-to-br from-purple-600/10 to-pink-600/10 border border-purple-500/20 hover:border-purple-400/40" style="box-shadow: 0 0 20px rgba(147,51,234,0.03);">
-                    <div class="flex items-center justify-between mb-4">
+                <button onclick="navigateTo('aipicks')" class="nio-feature-card" style="--glow-color: rgba(167, 139, 250, 0.08); border-color: rgba(167, 139, 250, 0.12);">
+                    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px;">
                         <div>
-                            <h3 class="text-2xl font-bold text-white mb-2">🤖 AI Picks Automáticas</h3>
-                            <p class="text-purple-200/70">Picks generadas por inteligencia artificial</p>
+                            <h3 style="font-family: var(--font-display); font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px;">🤖 AI Picks Automáticas</h3>
+                            <p style="font-size: 14px; color: rgba(167, 139, 250, 0.6);">Picks generadas por inteligencia artificial</p>
                         </div>
-                        <div class="text-5xl opacity-50" style="color: #a855f7;">→</div>
+                        <span style="font-size: 36px; color: rgba(167, 139, 250, 0.25);">→</span>
                     </div>
-                    <div class="text-sm text-purple-400/60">${Object.keys(USER_PICKS_AI).length} picks activas • 75%+ probabilidad</div>
+                    <div class="nio-chip" style="border-color: rgba(167, 139, 250, 0.15); color: rgba(167, 139, 250, 0.5);">${Object.keys(USER_PICKS_AI).length} picks activas • 75%+ probabilidad</div>
                 </button>
                 
                 <!-- Mis Picks -->
-                <button onclick="navigateTo('mispicks')" class="glass-card p-6 rounded-2xl hover:scale-[1.02] transition-all text-left bg-gradient-to-br from-cyan-600/10 to-blue-600/10 border border-cyan-500/20 hover:border-cyan-400/40" style="box-shadow: 0 0 20px rgba(6,182,212,0.03);">
-                    <div class="flex items-center justify-between mb-4">
+                <button onclick="navigateTo('mispicks')" class="nio-feature-card" style="--glow-color: rgba(34, 211, 238, 0.08); border-color: rgba(34, 211, 238, 0.12);">
+                    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px;">
                         <div>
-                            <h3 class="text-2xl font-bold text-white mb-2">📋 Mis Picks</h3>
-                            <p class="text-cyan-200/70">Todas tus jugadas en un solo lugar</p>
+                            <h3 style="font-family: var(--font-display); font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px;">📋 Mis Picks</h3>
+                            <p style="font-size: 14px; color: rgba(34, 211, 238, 0.6);">Todas tus jugadas en un solo lugar</p>
                         </div>
-                        <div class="text-5xl opacity-50" style="color: #22d3ee;">→</div>
+                        <span style="font-size: 36px; color: rgba(34, 211, 238, 0.25);">→</span>
                     </div>
-                    <div class="text-sm text-cyan-400/60">${totalPicks} picks totales en seguimiento</div>
+                    <div class="nio-chip" style="border-color: rgba(34, 211, 238, 0.15); color: rgba(34, 211, 238, 0.5);">${totalPicks} picks totales en seguimiento</div>
+                </button>
+                
+                <!-- Dashboard -->
+                <button onclick="navigateTo('dashboard')" class="nio-feature-card" style="--glow-color: rgba(52, 211, 153, 0.08); border-color: rgba(52, 211, 153, 0.12);">
+                    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px;">
+                        <div>
+                            <h3 style="font-family: var(--font-display); font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px;">📉 Dashboard Pro</h3>
+                            <p style="font-size: 14px; color: rgba(52, 211, 153, 0.6);">Analytics avanzado de rendimiento</p>
+                        </div>
+                        <span style="font-size: 36px; color: rgba(52, 211, 153, 0.25);">→</span>
+                    </div>
+                    <div class="nio-chip" style="border-color: rgba(52, 211, 153, 0.15); color: rgba(52, 211, 153, 0.5);">Gráficos, ROI y métricas por equipo</div>
                 </button>
             </div>
             
             <!-- Bankroll Section -->
-            <div class="glass-card p-6 rounded-2xl mb-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-bold text-white">💰 Gestión de Bankroll</h3>
-                    <button onclick="navigateTo('bankroll')" class="btn-secondary">
+            <div class="nio-card" style="animation-delay: 0.3s;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+                    <h3 style="font-family: var(--font-display); font-size: 22px; font-weight: 800; color: #fff;">💰 Gestión de Bankroll</h3>
+                    <button onclick="navigateTo('bankroll')" class="nio-btn nio-btn-ghost nio-btn-sm">
                         Ver Detalles →
                     </button>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white/5 p-4 rounded-xl">
-                        <div class="text-sm text-gray-400 mb-1">Bankroll Actual</div>
-                        <div class="text-2xl font-bold text-gold">$${bankroll.toFixed(2)}</div>
+                <div class="nio-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div style="background: rgba(255,255,255,0.03); padding: 18px; border-radius: var(--r-sm); border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Bankroll Actual</div>
+                        <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono);" class="text-gold">$${bankroll.toFixed(2)}</div>
                     </div>
-                    <div class="bg-white/5 p-4 rounded-xl">
-                        <div class="text-sm text-gray-400 mb-1">Bankroll Inicial</div>
-                        <div class="text-2xl font-bold text-white">$${initial.toFixed(2)}</div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 18px; border-radius: var(--r-sm); border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Bankroll Inicial</div>
+                        <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono); color: #fff;">$${initial.toFixed(2)}</div>
                     </div>
-                    <div class="bg-white/5 p-4 rounded-xl">
-                        <div class="text-sm text-gray-400 mb-1">Ganancia/Pérdida</div>
-                        <div class="text-2xl font-bold ${profit >= 0 ? 'text-emerald' : 'text-rose'}">
+                    <div style="background: rgba(255,255,255,0.03); padding: 18px; border-radius: var(--r-sm); border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Ganancia/Pérdida</div>
+                        <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono);" class="${profit >= 0 ? 'text-emerald' : 'text-rose'}">
                             ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
                         </div>
                     </div>
@@ -4392,103 +4409,105 @@ function renderDashboard() {
         });
 
         const teamStatsHtml = topTeams.length > 0 ? topTeams.map(t => `
-        <div class="flex justify-between items-center bg-white/5 rounded-lg p-3 mb-2">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05);">
             <div>
-                <span class="text-white font-bold">${t.team}</span>
-                <span class="text-gray-400 text-xs ml-2">(${t.total} picks)</span>
+                <span style="font-weight: 800; color: #fff;">${t.team}</span>
+                <span style="color: rgba(255,255,255,0.35); font-size: 12px; margin-left: 8px;">(${t.total} picks)</span>
             </div>
-            <div class="flex items-center gap-4">
-                <span class="text-sm ${parseFloat(t.winRate) >= 55 ? 'text-green-400' : parseFloat(t.winRate) >= 45 ? 'text-yellow-400' : 'text-red-400'}">${t.winRate}%</span>
-                <span class="font-bold ${t.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${t.profit >= 0 ? '+' : ''}${t.profit.toFixed(2)}u</span>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span style="font-size: 13px; font-weight: 700; color: ${parseFloat(t.winRate) >= 55 ? 'var(--emerald)' : parseFloat(t.winRate) >= 45 ? 'var(--amber)' : 'var(--rose)'};">${t.winRate}%</span>
+                <span style="font-weight: 800; font-family: var(--font-mono); color: ${t.profit >= 0 ? 'var(--emerald)' : 'var(--rose)'};">${t.profit >= 0 ? '+' : ''}${t.profit.toFixed(2)}u</span>
             </div>
         </div>
-    `).join('') : '<p class="text-gray-400 text-center py-4">Necesitas más picks para ver estadísticas por equipo</p>';
+    `).join('') : '<p style="color: rgba(255,255,255,0.4); text-align: center; padding: 16px 0;">Necesitas más picks para ver estadísticas por equipo</p>';
 
         return `
-        <div class="p-3 md:p-4 max-w-4xl mx-auto">
-            <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4 text-sm md:text-base">← Volver</button>
+        <div class="nio-section">
+            <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="nio-back">← Volver</button>
 
-            <div class="text-center mb-6">
-                <div class="logo-container justify-center mb-2">
-                    ${LOGO_SVG}
-                    <h1 class="text-2xl md:text-3xl font-bold text-white font-orbitron">📉 DASHBOARD PRO</h1>
+            <div class="nio-header">
+                <div class="nio-header-icon">📉</div>
+                <div class="nio-header-content">
+                    <h1 class="nio-header-title">Dashboard Pro</h1>
+                    <p class="nio-header-subtitle">Análisis avanzado de rendimiento</p>
                 </div>
-                <p class="text-cyan-400 text-xs md:text-sm">Análisis avanzado de rendimiento</p>
             </div>
 
             <!-- RESUMEN RÁPIDO -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-6">
-                <div class="bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl p-3 md:p-4 text-center border border-green-500/30">
-                    <p class="text-2xl md:text-3xl font-black text-green-400">${stats.winRate}%</p>
-                    <p class="text-gray-300 text-xs font-semibold">Win Rate</p>
+            <div class="nio-grid nio-grid-4 nio-stagger" style="margin-bottom: 28px;">
+                <div class="nio-stat" style="border-color: rgba(52, 211, 153, 0.15);">
+                    <span class="nio-stat-icon">🎯</span>
+                    <div class="nio-stat-value text-emerald">${stats.winRate}%</div>
+                    <div class="nio-stat-label">Win Rate</div>
                 </div>
-                <div class="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-xl p-3 md:p-4 text-center border border-cyan-500/30">
-                    <p class="text-2xl md:text-3xl font-black ${parseFloat(stats.profit) >= 0 ? 'text-cyan-400' : 'text-red-400'}">${parseFloat(stats.profit) >= 0 ? '+' : ''}${stats.profit}u</p>
-                    <p class="text-gray-300 text-xs font-semibold">Profit</p>
+                <div class="nio-stat" style="border-color: rgba(34, 211, 238, 0.15);">
+                    <span class="nio-stat-icon">💰</span>
+                    <div class="nio-stat-value" style="color: ${parseFloat(stats.profit) >= 0 ? 'var(--cyan)' : 'var(--rose)'};">${parseFloat(stats.profit) >= 0 ? '+' : ''}${stats.profit}u</div>
+                    <div class="nio-stat-label">Profit</div>
                 </div>
-                <div class="bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-xl p-3 md:p-4 text-center border border-purple-500/30">
-                    <p class="text-2xl md:text-3xl font-black ${parseFloat(stats.roi) >= 0 ? 'text-purple-400' : 'text-red-400'}">${parseFloat(stats.roi) >= 0 ? '+' : ''}${stats.roi}%</p>
-                    <p class="text-gray-300 text-xs font-semibold">ROI</p>
+                <div class="nio-stat" style="border-color: rgba(167, 139, 250, 0.15);">
+                    <span class="nio-stat-icon">📊</span>
+                    <div class="nio-stat-value" style="color: ${parseFloat(stats.roi) >= 0 ? 'var(--violet)' : 'var(--rose)'};">${parseFloat(stats.roi) >= 0 ? '+' : ''}${stats.roi}%</div>
+                    <div class="nio-stat-label">ROI</div>
                 </div>
-                <div class="bg-gradient-to-br from-yellow-500/20 to-orange-600/20 rounded-xl p-3 md:p-4 text-center border border-yellow-500/30">
-                    <p class="text-2xl md:text-3xl font-black text-yellow-400">${picks.length}</p>
-                    <p class="text-gray-300 text-xs font-semibold">Picks</p>
+                <div class="nio-stat" style="border-color: rgba(255, 215, 0, 0.15);">
+                    <span class="nio-stat-icon">📋</span>
+                    <div class="nio-stat-value text-gold">${picks.length}</div>
+                    <div class="nio-stat-label">Picks</div>
                 </div>
             </div>
 
             <!-- GRÁFICO DE PROFIT ACUMULADO -->
-            <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-3 md:p-5 mb-6 border border-gray-700">
-                <h3 class="text-base md:text-lg font-bold text-white mb-4">📈 Evolución de Profit</h3>
-                <div style="height: 200px;" class="md:h-[250px]">
+            <div class="nio-card" style="margin-bottom: 24px;">
+                <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 16px;">📈 Evolución de Profit</h3>
+                <div style="height: 220px;">
                     <canvas id="profitChart"></canvas>
                 </div>
-                ${picks.length < 3 ? '<p class="text-gray-400 text-center text-xs md:text-sm mt-2">Necesitas al menos 3 picks resueltos para ver el gráfico</p>' : ''}
+                ${picks.length < 3 ? '<p style="color: rgba(255,255,255,0.4); text-align: center; font-size: 13px; margin-top: 8px;">Necesitas al menos 3 picks resueltos para ver el gráfico</p>' : ''}
             </div>
 
             <!-- CLV TRACKER -->
-            <div class="bg-gradient-to-br from-indigo-600/20 to-purple-700/20 rounded-2xl p-3 md:p-5 mb-6 border border-indigo-500/50">
-                <h3 class="text-base md:text-lg font-bold text-white mb-3">🎯 CLV Tracker (Closing Line Value)</h3>
-                <p class="text-gray-300 text-xs md:text-sm mb-4">El CLV mide si apuestas antes de que la línea se mueva a tu favor. <strong class="text-yellow-400">CLV positivo = pensás como un sharp.</strong></p>
+            <div class="nio-card" style="margin-bottom: 24px; border-color: rgba(167, 139, 250, 0.12);">
+                <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px;">🎯 CLV Tracker</h3>
+                <p style="font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 16px;">Closing Line Value — <strong style="color: var(--gold);">CLV positivo = pensás como un sharp.</strong></p>
 
-                <div class="grid grid-cols-2 gap-2 md:gap-4 mb-4">
-                    <div class="bg-black/30 rounded-xl p-3 md:p-4 text-center">
-                        <p class="text-xl md:text-2xl font-black ${parseFloat(avgCLV) >= 0 ? 'text-green-400' : 'text-red-400'}">${avgCLV > 0 ? '+' : ''}${avgCLV} pts</p>
-                        <p class="text-gray-400 text-xs font-semibold">CLV Promedio</p>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
+                    <div class="nio-stat" style="padding: 14px;">
+                        <div class="nio-stat-value" style="font-size: 22px; color: ${parseFloat(avgCLV) >= 0 ? 'var(--emerald)' : 'var(--rose)'};">${avgCLV > 0 ? '+' : ''}${avgCLV} pts</div>
+                        <div class="nio-stat-label">CLV Promedio</div>
                     </div>
-                    <div class="bg-black/30 rounded-xl p-3 md:p-4 text-center">
-                        <p class="text-xl md:text-2xl font-black text-cyan-400">${picksWithCLV.length}</p>
-                        <p class="text-gray-400 text-xs font-semibold">Picks con CLV</p>
+                    <div class="nio-stat" style="padding: 14px;">
+                        <div class="nio-stat-value text-cyan" style="font-size: 22px;">${picksWithCLV.length}</div>
+                        <div class="nio-stat-label">Picks con CLV</div>
                     </div>
                 </div>
 
-                <div class="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/30">
-                    <p class="text-yellow-400 text-xs">💡 <strong>Tip:</strong> En "Mis Picks" puedes agregar la línea de cierre a cada pick para calcular tu CLV.</p>
+                <div style="background: rgba(255, 215, 0, 0.04); border-radius: 10px; padding: 12px 14px; border: 1px solid rgba(255, 215, 0, 0.1);">
+                    <p style="color: var(--gold); font-size: 12px;">💡 <strong>Tip:</strong> En "Mis Picks" puedes agregar la línea de cierre a cada pick para calcular tu CLV.</p>
                 </div>
             </div>
 
             <!-- RENDIMIENTO POR EQUIPO -->
-            <div class="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-3 md:p-5 mb-6 border border-gray-700">
-                <h3 class="text-base md:text-lg font-bold text-white mb-4">🏀 Rendimiento por Equipo</h3>
+            <div class="nio-card" style="margin-bottom: 24px;">
+                <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 16px;">🏀 Rendimiento por Equipo</h3>
                 ${teamStatsHtml}
             </div>
 
             <!-- ANÁLISIS POR PERÍODO -->
-            <div class="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-2xl p-3 md:p-5 mb-6 border border-purple-500/50">
-                <h3 class="text-base md:text-lg font-bold text-white mb-4">📊 Rendimiento por Período</h3>
-                <div class="grid grid-cols-3 gap-2 md:gap-3">
+            <div class="nio-card" style="margin-bottom: 24px; border-color: rgba(167, 139, 250, 0.12);">
+                <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 16px;">📊 Rendimiento por Período</h3>
+                <div class="nio-grid" style="grid-template-columns: repeat(3, 1fr); gap: 12px;">
                     ${['1Q', '1H', 'FULL'].map(p => {
             const data = quarterAnalysis[p];
             const total = data.wins + data.losses;
             const wr = total > 0 ? ((data.wins / total) * 100).toFixed(0) : '-';
             const wrNum = total > 0 ? (data.wins / total) * 100 : 0;
-            const colors = { '1Q': 'yellow', '1H': 'pink', 'FULL': 'green' };
-            const color = colors[p];
             return `
-                            <div class="bg-${color}-500/10 rounded-xl p-3 md:p-4 text-center border border-${color}-500/30">
-                                <p class="text-${color}-400 font-bold text-lg md:text-xl">${p}</p>
-                                <p class="text-white font-bold text-sm md:text-base">${data.wins}W-${data.losses}L</p>
-                                <p class="text-base md:text-lg font-black ${total > 0 && wrNum >= 50 ? 'text-green-400' : total > 0 ? 'text-red-400' : 'text-gray-500'}">${wr}%</p>
-                                <p class="text-xs md:text-sm font-semibold ${data.profit >= 0 ? 'text-green-400' : 'text-red-400'}">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</p>
+                            <div class="nio-stat" style="border-color: rgba(255, 215, 0, 0.1);">
+                                <div style="font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--gold); margin-bottom: 4px;">${p}</div>
+                                <div style="font-size: 13px; font-weight: 700; color: #fff;">${data.wins}W-${data.losses}L</div>
+                                <div class="nio-stat-value" style="font-size: 22px; color: ${total > 0 && wrNum >= 50 ? 'var(--emerald)' : total > 0 ? 'var(--rose)' : 'rgba(255,255,255,0.3)'};">${wr}%</div>
+                                <div style="font-size: 12px; font-weight: 700; font-family: var(--font-mono); color: ${data.profit >= 0 ? 'var(--emerald)' : 'var(--rose)'};">${data.profit >= 0 ? '+' : ''}${data.profit.toFixed(2)}u</div>
                             </div>
                         `;
         }).join('')}
@@ -4496,15 +4515,15 @@ function renderDashboard() {
             </div>
 
             <!-- ANÁLISIS DE PATRONES PERSONALES -->
-            <div class="bg-gradient-to-br from-emerald-600/20 to-teal-700/20 rounded-2xl p-3 md:p-5 mb-6 border border-emerald-500/50">
-                <h3 class="text-base md:text-lg font-bold text-white mb-3">📊 Análisis de Patrones Personales</h3>
-                <p class="text-gray-300 text-xs md:text-sm mb-4">Análisis de tus picks históricos para identificar tus fortalezas y áreas de mejora.</p>
+            <div class="nio-card" style="margin-bottom: 24px; border-color: rgba(52, 211, 153, 0.12);">
+                <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 8px;">📊 Análisis de Patrones</h3>
+                <p style="font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 16px;">Análisis de tus picks históricos para identificar tus fortalezas y áreas de mejora.</p>
 
-                <div class="bg-black/30 rounded-xl p-3 md:p-4">
-                    <div class="grid grid-cols-2 gap-3 md:gap-4 mb-4">
-                        <div class="text-center">
-                            <p class="text-emerald-400 font-bold text-sm md:text-lg">Lo que analizo:</p>
-                            <ul class="text-gray-300 text-xs text-left mt-2 space-y-1">
+                <div style="background: rgba(255,255,255,0.02); border-radius: 12px; padding: 16px; border: 1px solid rgba(255,255,255,0.04);">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <p style="color: var(--emerald); font-weight: 800; font-size: 14px; margin-bottom: 8px;">Lo que analizo:</p>
+                            <ul style="color: rgba(255,255,255,0.6); font-size: 12px; list-style: none; padding: 0; line-height: 1.8;">
                                 <li>• Períodos más rentables</li>
                                 <li>• OVER vs UNDER performance</li>
                                 <li>• Equipos donde aciertas más</li>
@@ -4512,28 +4531,28 @@ function renderDashboard() {
                                 <li>• ROI por tipo de apuesta</li>
                             </ul>
                         </div>
-                        <div class="text-center">
-                            <p class="text-emerald-400 font-bold text-sm md:text-lg">Datos:</p>
-                            <p class="text-3xl md:text-4xl mt-2 font-black text-white">${picks.length}</p>
-                            <p class="text-gray-400 text-xs mt-1">picks analizados</p>
+                        <div style="text-align: center;">
+                            <p style="color: var(--emerald); font-weight: 800; font-size: 14px; margin-bottom: 8px;">Datos:</p>
+                            <div style="font-size: 40px; font-weight: 800; font-family: var(--font-mono); color: #fff;">${picks.length}</div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px;">picks analizados</div>
                         </div>
                     </div>
                     ${picks.length >= 10 ? `
-                        <div class="bg-emerald-500/20 rounded-lg p-3 border border-emerald-500/30">
-                            <p class="text-emerald-400 text-xs md:text-sm text-center">✅ Suficientes datos. Revisa las secciones anteriores para ver tus patrones.</p>
+                        <div style="background: rgba(52, 211, 153, 0.08); border-radius: 10px; padding: 10px 14px; border: 1px solid rgba(52, 211, 153, 0.15);">
+                            <p style="color: var(--emerald); font-size: 12px; text-align: center;">✅ Suficientes datos. Revisa las secciones anteriores para ver tus patrones.</p>
                         </div>
                     ` : `
-                        <div class="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/30">
-                            <p class="text-yellow-400 text-xs text-center">📊 Registra al menos 10 picks para obtener análisis más precisos.</p>
+                        <div style="background: rgba(255, 215, 0, 0.04); border-radius: 10px; padding: 10px 14px; border: 1px solid rgba(255, 215, 0, 0.1);">
+                            <p style="color: var(--gold); font-size: 12px; text-align: center;">📊 Registra al menos 10 picks para obtener análisis más precisos.</p>
                         </div>
                     `}
                 </div>
             </div>
 
             <!-- CRÉDITOS -->
-            <div class="bg-white/5 rounded-xl p-4 text-center">
-                <p class="text-gray-400 text-xs">NioSports Pro v2.0 - Modelo Predictivo Avanzado</p>
-                <p class="text-gray-500 text-xs mt-1">Backtesting, B2B, PACE, Calibración, CLV Tracker</p>
+            <div style="background: rgba(255,255,255,0.02); border-radius: 12px; padding: 16px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+                <p style="color: rgba(255,255,255,0.35); font-size: 12px;">NioSports Pro v2.0 - Modelo Predictivo Avanzado</p>
+                <p style="color: rgba(255,255,255,0.2); font-size: 11px; margin-top: 4px;">Backtesting, B2B, PACE, Calibración, CLV Tracker</p>
             </div>
 
             <!-- BACKTESTING & CALIBRACIÓN -->
@@ -4541,53 +4560,53 @@ function renderDashboard() {
                 const backtest = getBacktestStats();
                 if (!backtest || backtest.totalPicks < 5) {
                     return `
-                    <div class="bg-gradient-to-br from-amber-600/20 to-orange-700/20 rounded-2xl p-5 mt-6 border border-amber-500/50">
-                        <h3 class="text-lg font-bold text-white mb-3">🔬 Backtesting & Calibración</h3>
-                        <p class="text-amber-300 text-sm text-center py-6">
+                    <div class="nio-card" style="margin-top: 24px; border-color: rgba(255, 215, 0, 0.12);">
+                        <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 12px;">🔬 Backtesting & Calibración</h3>
+                        <p style="color: var(--amber); font-size: 14px; text-align: center; padding: 24px 0;">
                             Necesitas al menos 5 picks con resultado registrado para ver el análisis de backtesting.<br>
-                            <span class="text-xs text-gray-400 mt-2 block">Usa el botón "📊 Resultado" en cada pick para registrar el total real del partido.</span>
+                            <span style="font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 8px; display: block;">Usa el botón "📊 Resultado" en cada pick para registrar el total real del partido.</span>
                         </p>
                     </div>`;
                 }
 
                 return `
-                <div class="bg-gradient-to-br from-amber-600/20 to-orange-700/20 rounded-2xl p-5 mt-6 border border-amber-500/50">
-                    <h3 class="text-lg font-bold text-white mb-4">🔬 Backtesting & Calibración del Modelo</h3>
+                <div class="nio-card" style="margin-top: 24px; border-color: rgba(255, 215, 0, 0.12);">
+                    <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 16px;">🔬 Backtesting & Calibración del Modelo</h3>
 
                     <!-- Resumen de Precisión -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                        <div class="bg-white/10 rounded-xl p-3 text-center">
-                            <p class="text-2xl font-black ${parseFloat(backtest.overallHitRate) >= 52.38 ? 'text-green-400' : 'text-red-400'}">${backtest.overallHitRate}%</p>
-                            <p class="text-xs text-gray-300">Hit Rate Real</p>
-                            <p class="text-xs ${parseFloat(backtest.overallHitRate) >= 52.38 ? 'text-green-500' : 'text-red-500'}">${parseFloat(backtest.overallHitRate) >= 52.38 ? '✓ Rentable' : '✗ < 52.38%'}</p>
+                    <div class="nio-grid nio-grid-4 nio-stagger" style="margin-bottom: 16px;">
+                        <div class="nio-stat" style="padding: 14px;">
+                            <div class="nio-stat-value" style="font-size: 22px; color: ${parseFloat(backtest.overallHitRate) >= 52.38 ? 'var(--emerald)' : 'var(--rose)'};">${backtest.overallHitRate}%</div>
+                            <div class="nio-stat-label">Hit Rate Real</div>
+                            <div style="font-size: 11px; color: ${parseFloat(backtest.overallHitRate) >= 52.38 ? 'var(--emerald)' : 'var(--rose)'}; margin-top: 2px;">${parseFloat(backtest.overallHitRate) >= 52.38 ? '✓ Rentable' : '✗ < 52.38%'}</div>
                         </div>
-                        <div class="bg-white/10 rounded-xl p-3 text-center">
-                            <p class="text-2xl font-black text-cyan-400">${backtest.avgModelError || '-'}</p>
-                            <p class="text-xs text-gray-300">Error Promedio</p>
-                            <p class="text-xs text-gray-500">pts vs real</p>
+                        <div class="nio-stat" style="padding: 14px;">
+                            <div class="nio-stat-value text-cyan" style="font-size: 22px;">${backtest.avgModelError || '-'}</div>
+                            <div class="nio-stat-label">Error Promedio</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px;">pts vs real</div>
                         </div>
-                        <div class="bg-white/10 rounded-xl p-3 text-center">
-                            <p class="text-2xl font-black ${parseFloat(backtest.roi) >= 0 ? 'text-green-400' : 'text-red-400'}">${backtest.roi}%</p>
-                            <p class="text-xs text-gray-300">ROI</p>
-                            <p class="text-xs text-gray-500">${backtest.totalPicks} picks</p>
+                        <div class="nio-stat" style="padding: 14px;">
+                            <div class="nio-stat-value" style="font-size: 22px; color: ${parseFloat(backtest.roi) >= 0 ? 'var(--emerald)' : 'var(--rose)'};">${backtest.roi}%</div>
+                            <div class="nio-stat-label">ROI</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px;">${backtest.totalPicks} picks</div>
                         </div>
-                        <div class="bg-white/10 rounded-xl p-3 text-center">
-                            <p class="text-2xl font-black text-yellow-400">${backtest.totalWins}/${backtest.totalWins + backtest.totalLosses}</p>
-                            <p class="text-xs text-gray-300">Win/Total</p>
-                            <p class="text-xs text-gray-500">${backtest.totalPushes} pushes</p>
+                        <div class="nio-stat" style="padding: 14px;">
+                            <div class="nio-stat-value text-gold" style="font-size: 22px;">${backtest.totalWins}/${backtest.totalWins + backtest.totalLosses}</div>
+                            <div class="nio-stat-label">Win/Total</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px;">${backtest.totalPushes} pushes</div>
                         </div>
                     </div>
 
                     <!-- Hit Rate por Período -->
-                    <div class="bg-black/20 rounded-xl p-4 mb-4">
-                        <h4 class="text-white font-bold mb-3">📊 Precisión por Período</h4>
-                        <div class="grid grid-cols-3 gap-2">
+                    <div style="background: rgba(255,255,255,0.02); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.04);">
+                        <h4 style="font-weight: 800; color: #fff; margin-bottom: 12px; font-size: 15px;">📊 Precisión por Período</h4>
+                        <div class="nio-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;">
                             ${backtest.byPeriod.filter(p => p.wins + p.losses > 0).map(p => `
-                                <div class="bg-white/5 rounded-lg p-3 text-center">
-                                    <p class="text-white font-bold">${p.period}</p>
-                                    <p class="text-2xl font-black ${parseFloat(p.hitRate) >= 52.38 ? 'text-green-400' : parseFloat(p.hitRate) >= 45 ? 'text-yellow-400' : 'text-red-400'}">${p.hitRate}%</p>
-                                    <p class="text-xs text-gray-400">${p.wins}W - ${p.losses}L</p>
-                                    ${p.avgError !== '-' ? `<p class="text-xs text-cyan-400">±${p.avgError} pts error</p>` : ''}
+                                <div class="nio-stat" style="padding: 12px;">
+                                    <div style="font-weight: 800; color: #fff; font-size: 14px;">${p.period}</div>
+                                    <div class="nio-stat-value" style="font-size: 22px; color: ${parseFloat(p.hitRate) >= 52.38 ? 'var(--emerald)' : parseFloat(p.hitRate) >= 45 ? 'var(--amber)' : 'var(--rose)'};">${p.hitRate}%</div>
+                                    <div style="font-size: 11px; color: rgba(255,255,255,0.4);">${p.wins}W - ${p.losses}L</div>
+                                    ${p.avgError !== '-' ? `<div style="font-size: 11px; color: var(--cyan);">±${p.avgError} pts error</div>` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -4595,33 +4614,33 @@ function renderDashboard() {
 
                     <!-- Gráfico de Calibración -->
                     ${backtest.calibration.length >= 2 ? `
-                    <div class="bg-black/20 rounded-xl p-4 mb-4">
-                        <h4 class="text-white font-bold mb-3">🎯 Calibración del Modelo</h4>
-                        <p class="text-xs text-gray-400 mb-3">Cuando el modelo dice X%, ¿acierta X%? Una línea diagonal perfecta = modelo bien calibrado.</p>
-                        <div class="space-y-2">
+                    <div style="background: rgba(255,255,255,0.02); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.04);">
+                        <h4 style="font-weight: 800; color: #fff; margin-bottom: 12px; font-size: 15px;">🎯 Calibración del Modelo</h4>
+                        <p style="font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 12px;">Cuando el modelo dice X%, ¿acierta X%? Una línea diagonal perfecta = modelo bien calibrado.</p>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
                             ${backtest.calibration.map(c => {
                     const diff = c.actualHitRate - c.avgPredicted;
                     const isCalibrated = Math.abs(diff) < 10;
                     return `
-                                <div class="flex items-center gap-3">
-                                    <span class="text-white text-sm w-16">${c.range}%</span>
-                                    <div class="flex-1 bg-gray-700 rounded-full h-4 relative">
-                                        <div class="absolute h-4 rounded-full ${isCalibrated ? 'bg-green-500' : diff > 0 ? 'bg-blue-500' : 'bg-red-500'}" style="width: ${Math.min(100, c.actualHitRate)}%"></div>
-                                        <div class="absolute h-4 w-1 bg-yellow-400" style="left: ${c.avgPredicted}%"></div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="color: #fff; font-size: 13px; width: 48px; font-family: var(--font-mono);">${c.range}%</span>
+                                    <div style="flex: 1; background: rgba(255,255,255,0.06); border-radius: 50px; height: 16px; position: relative; overflow: hidden;">
+                                        <div style="position: absolute; height: 16px; border-radius: 50px; background: ${isCalibrated ? 'var(--emerald)' : diff > 0 ? 'var(--cyan)' : 'var(--rose)'}; width: ${Math.min(100, c.actualHitRate)}%;"></div>
+                                        <div style="position: absolute; height: 16px; width: 2px; background: var(--gold); left: ${c.avgPredicted}%;"></div>
                                     </div>
-                                    <span class="text-xs ${isCalibrated ? 'text-green-400' : diff > 0 ? 'text-blue-400' : 'text-red-400'} w-20 text-right">
+                                    <span style="font-size: 11px; color: ${isCalibrated ? 'var(--emerald)' : diff > 0 ? 'var(--cyan)' : 'var(--rose)'}; width: 80px; text-align: right; font-family: var(--font-mono);">
                                         Real: ${c.actualHitRate.toFixed(0)}% (${c.count})
                                     </span>
                                 </div>`;
                 }).join('')}
                         </div>
-                        <p class="text-xs text-gray-500 mt-2 text-center">🟡 = Predicción | Barra = Hit Rate Real | (n) = muestra</p>
+                        <p style="font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 8px; text-align: center;">🟡 = Predicción | Barra = Hit Rate Real | (n) = muestra</p>
                     </div>
-                    ` : '<p class="text-gray-400 text-xs text-center mb-4">Necesitas más picks por rango de probabilidad para ver calibración</p>'}
+                    ` : '<p style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-bottom: 16px;">Necesitas más picks por rango de probabilidad para ver calibración</p>'}
 
                     <!-- Botón Exportar -->
-                    <div class="flex justify-center">
-                        <button onclick="exportPicksToCSV()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+                    <div style="display: flex; justify-content: center;">
+                        <button onclick="exportPicksToCSV()" class="nio-btn nio-btn-success">
                             📥 Exportar a CSV
                         </button>
                     </div>
@@ -4632,11 +4651,12 @@ function renderDashboard() {
     } catch (error) {
         logger.error('Error en renderDashboard:', error);
         return `
-            <div class="p-4 max-w-4xl mx-auto">
-                <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg mb-4">← Volver</button>
-                <div class="bg-red-500/20 border border-red-500 rounded-xl p-6 text-center">
-                    <p class="text-red-400 text-xl mb-2">⚠️ Error al cargar Dashboard</p>
-                    <p class="text-gray-300 text-sm">${error.message}</p>
+            <div class="nio-section">
+                <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="nio-back">← Volver</button>
+                <div class="nio-card" style="text-align: center; border-color: rgba(244, 63, 94, 0.2);">
+                    <span style="font-size: 48px; display: block; margin-bottom: 16px;">⚠️</span>
+                    <p style="color: var(--rose); font-size: 18px; font-weight: 800; margin-bottom: 8px;">Error al cargar Dashboard</p>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 14px;">${error.message}</p>
                 </div>
             </div>
         `;
@@ -4898,31 +4918,31 @@ function renderTotals() {
     const lT = s.lQ1 + s.lQ2 + s.lQ3 + s.lQ4 + s.lOT1 + s.lOT2 + s.lOT3;
     const aT = s.aQ1 + s.aQ2 + s.aQ3 + s.aQ4 + s.aOT1 + s.aOT2 + s.aOT3;
     const hadOT = s.lOT1 > 0 || s.aOT1 > 0;
-    let win = 'Empate', wc = 'text-gray-400';
-    if (lT > aT) { win = ingestLocalTeam; wc = 'text-cyan-400'; }
-    else if (aT > lT) { win = away; wc = 'text-orange-400'; }
+    let win = 'Empate', wc = 'color: rgba(255,255,255,0.5)';
+    if (lT > aT) { win = ingestLocalTeam; wc = 'color: var(--cyan)'; }
+    else if (aT > lT) { win = away; wc = 'color: var(--amber)'; }
 
     return `
-        <div class="border-t border-slate-600 pt-4 mt-4">
-            <h3 class="text-white font-bold text-center mb-3">📊 TOTALES CALCULADOS</h3>
-            <div id="totalsDisplay" class="grid grid-cols-3 gap-4">
-                <div class="bg-yellow-500/20 rounded-lg p-3 text-center">
-                    <p class="text-gray-400 text-xs">1er Tiempo</p>
-                    <p class="text-cyan-400 font-bold">${ingestLocalTeam}: ${lH}</p>
-                    <p class="text-orange-400 font-bold">${away}: ${aH}</p>
-                    <p class="text-yellow-400 font-black text-xl mt-1">Total: ${lH + aH}</p>
-                </div>
-                <div class="bg-purple-500/20 rounded-lg p-3 text-center">
-                    <p class="text-gray-400 text-xs">Tiempo Completo${hadOT ? ' + OT' : ''}</p>
-                    <p class="text-cyan-400 font-bold">${ingestLocalTeam}: ${lT}</p>
-                    <p class="text-orange-400 font-bold">${away}: ${aT}</p>
-                    <p class="text-purple-400 font-black text-xl mt-1">Total: ${lT + aT}</p>
-                </div>
-                <div class="bg-green-500/20 rounded-lg p-3 text-center">
-                    <p class="text-gray-400 text-xs">Ganador${hadOT ? ' (OT)' : ''}</p>
-                    <p class="text-3xl font-black ${wc}">${win}</p>
-                    <p class="text-white font-bold">${lT}-${aT}</p>
-                </div>
+        <div class="nio-divider"></div>
+        <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #fff; text-align: center; margin-bottom: 16px;">📊 TOTALES CALCULADOS</h3>
+        <div id="totalsDisplay" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+            <div class="nio-stat" style="border-color: rgba(255, 215, 0, 0.15);">
+                <div class="nio-stat-label" style="margin-bottom: 10px;">1er Tiempo</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--cyan); margin-bottom: 4px;">${ingestLocalTeam}: ${lH}</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--amber); margin-bottom: 8px;">${away}: ${aH}</div>
+                <div class="nio-stat-value text-gold" style="font-size: 24px;">${lH + aH}</div>
+            </div>
+            <div class="nio-stat" style="border-color: rgba(167, 139, 250, 0.15);">
+                <div class="nio-stat-label" style="margin-bottom: 10px;">Full${hadOT ? ' + OT' : ''}</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--cyan); margin-bottom: 4px;">${ingestLocalTeam}: ${lT}</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--amber); margin-bottom: 8px;">${away}: ${aT}</div>
+                <div class="nio-stat-value text-violet" style="font-size: 24px;">${lT + aT}</div>
+            </div>
+            <div class="nio-stat" style="border-color: rgba(52, 211, 153, 0.15);">
+                <div class="nio-stat-label" style="margin-bottom: 10px;">Ganador${hadOT ? '' : ''}</div>
+                ${hadOT ? '<span class="nio-badge nio-badge-warning" style="margin-bottom: 8px; font-size: 10px;">⏱️ OT</span>' : ''}
+                <div style="font-size: 24px; font-weight: 800; font-family: var(--font-display); ${wc};">${win}</div>
+                <div style="font-size: 16px; font-weight: 800; font-family: var(--font-mono); color: #fff; margin-top: 4px;">${lT}−${aT}</div>
             </div>
         </div>
     `;
@@ -4945,82 +4965,86 @@ function renderMisPicks() {
     const resolved = allPicks.filter(p => p.status !== 'pending');
 
     return `
-        <div class="max-w-6xl mx-auto px-4 py-8">
-            <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="flex items-center gap-2 text-gold hover:text-gold-vivid mb-6 transition-all">
+        <div class="nio-section">
+            <button onclick="navigateTo('home')" aria-label="Ir al inicio" class="nio-back">
                 ← Volver al Home
             </button>
             
-            <h1 class="text-4xl font-bold text-white mb-2" style="font-family: var(--font-display);">
-                📋 Mis Picks
-            </h1>
-            <p class="text-gray-400 mb-8">Todas tus jugadas en un solo lugar</p>
+            <div class="nio-header">
+                <div class="nio-header-icon">📋</div>
+                <div class="nio-header-content">
+                    <h1 class="nio-header-title">Mis Picks</h1>
+                    <p class="nio-header-subtitle">Todas tus jugadas en un solo lugar</p>
+                </div>
+            </div>
             
-            <!-- Tabs -->
-            <div class="flex gap-4 mb-6 border-b border-white/10">
-                <button onclick="filterMisPicks('all')" class="px-4 py-2 text-gold border-b-2 border-gold font-medium">
+            <!-- Filter Chips -->
+            <div style="display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
+                <button onclick="filterMisPicks('all')" class="nio-btn nio-btn-gold nio-btn-sm" style="border-radius: 50px;">
                     Todos (${allPicks.length})
                 </button>
-                <button onclick="filterMisPicks('pending')" class="px-4 py-2 text-gray-400 hover:text-white transition-all">
-                    Pendientes (${pending.length})
+                <button onclick="filterMisPicks('pending')" class="nio-btn nio-btn-ghost nio-btn-sm" style="border-radius: 50px;">
+                    ⏳ Pendientes (${pending.length})
                 </button>
-                <button onclick="filterMisPicks('resolved')" class="px-4 py-2 text-gray-400 hover:text-white transition-all">
-                    Resueltos (${resolved.length})
+                <button onclick="filterMisPicks('resolved')" class="nio-btn nio-btn-ghost nio-btn-sm" style="border-radius: 50px;">
+                    ✅ Resueltos (${resolved.length})
                 </button>
             </div>
             
             <!-- Picks List -->
-            <div class="space-y-4" id="misPicksList">
+            <div style="display: flex; flex-direction: column; gap: 16px;" id="misPicksList">
                 ${allPicks.length === 0 ? `
-                    <div class="glass-card p-12 rounded-2xl text-center">
-                        <div class="text-6xl mb-4">📊</div>
-                        <h3 class="text-2xl font-bold text-white mb-2">No tienes picks aún</h3>
-                        <p class="text-gray-400 mb-6">Empieza a usar el sistema para trackear tus jugadas</p>
-                        <button onclick="navigateTo('totales')" class="btn-primary">
+                    <div class="nio-card" style="padding: 48px 24px; text-align: center;">
+                        <span class="nio-empty-icon">📊</span>
+                        <h3 class="nio-empty-title">No tienes picks aún</h3>
+                        <p class="nio-empty-desc" style="margin-bottom: 24px;">Empieza a usar el sistema para trackear tus jugadas</p>
+                        <button onclick="navigateTo('totales')" class="nio-btn nio-btn-gold">
                             Crear mi primer pick
                         </button>
                     </div>
                 ` : allPicks.map(pick => `
-                    <div class="glass-card p-5 rounded-xl hover:scale-[1.01] transition-all">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center gap-3">
-                                <span class="badge ${pick.type === 'AI' ? 'badge-info' : pick.type === 'Totales' ? 'badge-warning' : 'badge-success'}">
+                    <div class="nio-card" style="padding: 20px; transition: all 0.3s ease;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="nio-badge ${pick.type === 'AI' ? 'nio-badge-info' : pick.type === 'Totales' ? 'nio-badge-warning' : 'nio-badge-success'}">
                                     ${pick.type}
                                 </span>
                                 ${pick.status === 'pending' ?
-            '<span class="pending-badge">Pendiente</span>' :
+            '<span class="nio-badge nio-badge-warning"><span class="nio-badge-dot"></span> Pendiente</span>' :
             pick.status === 'win' ?
-                '<span class="win-badge">✅ WIN</span>' :
+                '<span class="nio-badge nio-badge-success">✅ WIN</span>' :
                 pick.status === 'loss' ?
-                    '<span class="loss-badge">❌ LOSS</span>' :
-                    '<span class="pending-badge">↔️ PUSH</span>'
+                    '<span class="nio-badge nio-badge-danger">❌ LOSS</span>' :
+                    '<span class="nio-badge nio-badge-info">↔️ PUSH</span>'
         }
                             </div>
-                            <div class="text-sm text-gray-500">
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.35);">
                                 ${new Date(pick.createdAt).toLocaleDateString()}
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <div class="text-lg font-bold text-white">
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 17px; font-weight: 800; color: #fff; font-family: var(--font-display);">
                                 ${pick.local || 'N/A'} vs ${pick.away || 'N/A'}
                             </div>
-                            <div class="text-sm text-gray-400">
-                                ${pick.period} • ${pick.betType} ${pick.line}
-                                ${pick.prediction ? ` • Predicción: ${pick.prediction}` : ''}
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.45); margin-top: 4px;">
+                                <span class="nio-chip">${pick.period}</span>
+                                <span style="margin-left: 6px;">${pick.betType} ${pick.line}</span>
+                                ${pick.prediction ? `<span style="margin-left: 6px;">• Predicción: <strong style="color: var(--gold);">${pick.prediction}</strong></span>` : ''}
                             </div>
                         </div>
                         
                         ${pick.status === 'pending' ? `
-                            <div class="flex gap-2">
-                                <input type="number" step="0.5" placeholder="Resultado real" class="input-field flex-1 !py-2 text-sm" id="result_${pick.id}">
-                                <button onclick="updatePickStatus('${pick.id}', '${pick.type}')" class="btn-secondary !py-2 !px-4">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="number" step="0.5" placeholder="Resultado real" class="input-field" style="flex: 1; padding: 8px 12px; font-size: 14px;" id="result_${pick.id}">
+                                <button onclick="updatePickStatus('${pick.id}', '${pick.type}')" class="nio-btn nio-btn-gold nio-btn-sm">
                                     Actualizar
                                 </button>
                             </div>
                         ` : pick.actualResult ? `
-                            <div class="bg-white/5 rounded-lg p-3 text-sm">
-                                <span class="text-gray-400">Resultado Real:</span>
-                                <span class="text-white font-bold ml-2">${pick.actualResult}</span>
+                            <div style="background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between;">
+                                <span style="font-size: 13px; color: rgba(255,255,255,0.45);">Resultado Real:</span>
+                                <span style="font-size: 15px; font-weight: 800; color: #fff; font-family: var(--font-mono);">${pick.actualResult}</span>
                             </div>
                         ` : ''}
                     </div>
