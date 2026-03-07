@@ -2963,9 +2963,9 @@ function resolveBacktestPick(pickId) {
 // ═══════════════════════════════════════════════════════════════════
 
 function renderHome() {
-    const totalPicks = Object.keys({ ...USER_PICKS_TOTALES, ...USER_PICKS_AI }).length;
     const bankroll = USER_BANKROLL.current || 0;
     const initial = USER_BANKROLL.initial || 0;
+    const profit = bankroll - initial;
     const profitPercent = initial > 0 ? ((profit / initial) * 100).toFixed(1) : '0.0';
 
     // Stats de picks
