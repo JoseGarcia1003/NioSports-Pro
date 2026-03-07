@@ -47,6 +47,8 @@
     <!-- Firebase Initialization (ejecuta en paralelo con Telemetry) -->
     <script src="/scripts/firebase-init.js"></script>
 
+    <script src="/scripts/utils.js"></script>
+    
     <!-- Utilidades fundamentales (DEBE cargar antes de main.js) -->
     <script src="/scripts/utils.js"></script>
 
@@ -108,6 +110,9 @@
     <!-- Skeleton Screens CSS (UX Premium) -->
     <link rel="stylesheet" href="/styles/skeletons.css">
 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles/nio-fix.css">
+    
     <!-- Toast Notification System (carga temprano) -->
     <link rel="stylesheet" href="/styles/toast.css">
     <link rel="stylesheet" href="/styles/integration-phase4a.css">
@@ -2894,7 +2899,7 @@
                 <button onclick="showRegister()" class="btn-secondary w-full">Crear una cuenta nueva</button>
                 <button onclick="loginWithGoogle()"
                     class="btn-secondary w-full mt-4 flex items-center justify-center gap-3">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
                         <path fill="currentColor"
                             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853"
