@@ -1,0 +1,528 @@
+/* ═══════════════════════════════════════════════════════════════
+   NioSports Pro — CRITICAL UI FIX v1.0
+   Coloca este archivo en /styles/nio-fix.css
+   Y en index.html agregar ANTES de </head>:
+   <link rel="stylesheet" href="/styles/nio-fix.css">
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════ AUTH SCREEN FIXES ═══════════════ */
+
+/* Auth screens: cubrir TODO el viewport, impedir scroll hacia el contenido */
+.auth-container {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+    padding: 1rem !important;
+    overflow-y: auto !important;
+    background: linear-gradient(180deg, #030711 0%, #050b18 50%, #0a1628 100%) !important;
+}
+
+/* Auth box: compacto, cabe en pantalla */
+.auth-box {
+    max-width: 420px !important;
+    width: 100% !important;
+    background: rgba(13, 31, 60, 0.75) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 215, 0, 0.15) !important;
+    border-top: 1px solid rgba(255, 215, 0, 0.3) !important;
+    border-radius: 20px !important;
+    padding: 2rem 2rem !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 215, 0, 0.06) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+}
+
+.auth-box::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important; left: 0 !important; right: 0 !important;
+    height: 1px !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.5), transparent) !important;
+    z-index: 1 !important;
+}
+
+/* Logo más pequeño */
+.auth-logo {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: contain !important;
+    margin: 0 auto 1rem !important;
+    display: block !important;
+    border-radius: 16px !important;
+    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.3)) !important;
+}
+
+/* Títulos auth compactos */
+.auth-title {
+    text-align: center !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #fbbf24 !important;
+    margin-bottom: 0.25rem !important;
+    font-family: 'Bricolage Grotesque', sans-serif !important;
+}
+
+.auth-subtitle {
+    text-align: center !important;
+    font-size: 0.875rem !important;
+    color: rgba(226, 232, 240, 0.6) !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* Input fields mejorados */
+.input-field {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    background: rgba(5, 11, 24, 0.8) !important;
+    border: 1px solid rgba(255, 215, 0, 0.15) !important;
+    border-radius: 12px !important;
+    color: #fff !important;
+    font-size: 0.9rem !important;
+    font-family: 'DM Sans', sans-serif !important;
+    transition: all 0.3s ease !important;
+    outline: none !important;
+}
+
+.input-field:focus {
+    border-color: #fbbf24 !important;
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15) !important;
+}
+
+.input-field::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Botón primario (Iniciar Sesión) */
+.btn-primary {
+    width: 100% !important;
+    padding: 0.8rem 1.5rem !important;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    border: none !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    font-family: 'DM Sans', sans-serif !important;
+    letter-spacing: 0.02em !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3) !important;
+}
+
+/* Botón secundario */
+.btn-secondary {
+    width: 100% !important;
+    padding: 0.7rem 1.5rem !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #e2e8f0 !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    font-family: 'DM Sans', sans-serif !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 215, 0, 0.3) !important;
+}
+
+/* FIX CRÍTICO: Google SVG icon — forzar tamaño */
+.btn-secondary svg {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Remover el div .glass que rompe el layout (si Tailwind no carga) */
+.auth-box .glass {
+    all: unset !important;
+    display: block !important;
+}
+
+/* ═══════════════ NAVEGACIÓN PREMIUM ═══════════════ */
+
+.nav-revolution {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
+    background: rgba(5, 11, 24, 0.85) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.08) !important;
+    padding: 0 1.5rem !important;
+    height: 64px !important;
+}
+
+.nav-inner {
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 100% !important;
+}
+
+.nav-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    text-decoration: none !important;
+}
+
+.nav-brand img {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+}
+
+.nav-links {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+}
+
+.nav-link {
+    color: rgba(226, 232, 240, 0.7) !important;
+    text-decoration: none !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: #fbbf24 !important;
+    background: rgba(251, 191, 36, 0.08) !important;
+}
+
+/* ═══════════════ MAIN APP CONTAINER ═══════════════ */
+
+#mainApp {
+    padding-top: 80px !important;
+    min-height: 100vh !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* ═══════════════ VIEW PANELS ═══════════════ */
+
+.view-panel {
+    display: none !important;
+    padding: 1.5rem !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    animation: fadeInView 0.3s ease !important;
+}
+
+.view-panel.active {
+    display: block !important;
+}
+
+@keyframes fadeInView {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════ CARDS Y SECCIONES INTERNAS ═══════════════ */
+
+.nio-section {
+    padding: 1rem 0 !important;
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+}
+
+.nio-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    margin-bottom: 2rem !important;
+}
+
+.nio-header-icon {
+    font-size: 2.5rem !important;
+}
+
+.nio-header-title {
+    font-size: clamp(1.5rem, 4vw, 2.25rem) !important;
+    font-weight: 800 !important;
+    color: #fff !important;
+    font-family: 'Bricolage Grotesque', sans-serif !important;
+    line-height: 1.2 !important;
+}
+
+.nio-header-subtitle {
+    color: rgba(226, 232, 240, 0.5) !important;
+    font-size: 0.95rem !important;
+    margin-top: 0.25rem !important;
+}
+
+/* Grid de stats */
+.nio-grid {
+    display: grid !important;
+    gap: 1rem !important;
+}
+
+.nio-grid-4 {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+}
+
+.nio-grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+}
+
+.nio-grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)) !important;
+}
+
+/* Stat cards */
+.nio-stat {
+    background: rgba(13, 31, 60, 0.5) !important;
+    border: 1px solid rgba(255, 215, 0, 0.08) !important;
+    border-radius: 16px !important;
+    padding: 1.25rem !important;
+    text-align: center !important;
+    transition: all 0.3s ease !important;
+}
+
+.nio-stat:hover {
+    border-color: rgba(255, 215, 0, 0.2) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+.nio-stat-icon {
+    font-size: 1.5rem !important;
+    display: block !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.nio-stat-value {
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    color: #fff !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    line-height: 1.2 !important;
+}
+
+.nio-stat-label {
+    font-size: 0.8rem !important;
+    color: rgba(226, 232, 240, 0.5) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    margin-top: 0.25rem !important;
+}
+
+/* Colores de stat */
+.text-gold { color: #fbbf24 !important; }
+.text-emerald { color: #34d399 !important; }
+.text-rose { color: #f43f5e !important; }
+.text-cyan { color: #22d3ee !important; }
+.text-violet { color: #a78bfa !important; }
+
+/* ═══════════════ CARD PREMIUM (genérica) ═══════════════ */
+
+.nio-card {
+    background: rgba(13, 31, 60, 0.5) !important;
+    border: 1px solid rgba(255, 215, 0, 0.08) !important;
+    border-radius: 16px !important;
+    padding: 1.5rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.nio-card:hover {
+    border-color: rgba(255, 215, 0, 0.15) !important;
+}
+
+.nio-card-title {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    margin-bottom: 1rem !important;
+    font-family: 'Bricolage Grotesque', sans-serif !important;
+}
+
+/* ═══════════════ CHIP / BADGE ═══════════════ */
+
+.nio-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    padding: 0.35rem 0.8rem !important;
+    border-radius: 100px !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    border: 1px solid rgba(255, 215, 0, 0.15) !important;
+    color: rgba(251, 191, 36, 0.7) !important;
+}
+
+/* ═══════════════ FIREBASE STATUS BAR ═══════════════ */
+
+#firebase-status, .firebase-status {
+    position: fixed !important;
+    bottom: 1rem !important;
+    left: 1rem !important;
+    z-index: 999 !important;
+    padding: 0.4rem 0.8rem !important;
+    border-radius: 8px !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    background: rgba(13, 31, 60, 0.9) !important;
+    border: 1px solid rgba(255, 215, 0, 0.15) !important;
+    color: #34d399 !important;
+    backdrop-filter: blur(8px) !important;
+}
+
+/* ═══════════════ DARK MODE TOGGLE ═══════════════ */
+
+.theme-toggle {
+    position: fixed !important;
+    bottom: 1rem !important;
+    right: 1rem !important;
+    z-index: 999 !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    background: rgba(13, 31, 60, 0.9) !important;
+    border: 1px solid rgba(255, 215, 0, 0.15) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    font-size: 1.2rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.theme-toggle:hover {
+    border-color: rgba(255, 215, 0, 0.4) !important;
+    transform: scale(1.1) !important;
+}
+
+/* ═══════════════ SELECTS PREMIUM ═══════════════ */
+
+select, .select-premium {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background: rgba(13, 27, 42, 0.95) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 215, 0, 0.2) !important;
+    border-radius: 10px !important;
+    padding: 0.6rem 2.5rem 0.6rem 0.8rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    outline: none !important;
+    font-family: 'DM Sans', sans-serif !important;
+}
+
+select:hover, .select-premium:hover {
+    border-color: rgba(255, 215, 0, 0.4) !important;
+}
+
+/* ═══════════════ TOTALES CALCULATOR VIEW ═══════════════ */
+
+#view-totals h2, #view-totals h3,
+#view-picks h2, #view-picks h3 {
+    color: #fff !important;
+    font-family: 'Bricolage Grotesque', sans-serif !important;
+}
+
+/* ═══════════════ LANDING PAGE — OCULTAR CUANDO HAY AUTH ═══════════════ */
+
+/* La landing solo se muestra cuando el auth se oculta */
+#landingPage, .landing-section {
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+/* Cuando auth está visible, body no permite scroll */
+body:has(#loginScreen[style*="display: flex"]),
+body:has(#loginScreen:not([style*="display: none"])),
+body:has(#registerScreen[style*="display: flex"]),
+body:has(#forgotPasswordScreen[style*="display: flex"]) {
+    overflow: hidden !important;
+}
+
+/* ═══════════════ MOBILE RESPONSIVE ═══════════════ */
+
+@media (max-width: 768px) {
+    .auth-box {
+        padding: 1.5rem !important;
+        margin: 0.5rem !important;
+        max-height: 95vh !important;
+    }
+
+    .auth-logo {
+        width: 60px !important;
+        height: 60px !important;
+        margin-bottom: 0.75rem !important;
+    }
+
+    .auth-title {
+        font-size: 1.25rem !important;
+    }
+
+    .nav-links {
+        display: none !important;
+    }
+
+    .nav-revolution {
+        height: 56px !important;
+    }
+
+    #mainApp {
+        padding-top: 72px !important;
+    }
+
+    .view-panel {
+        padding: 1rem 0.75rem !important;
+    }
+
+    .nio-grid-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .nio-stat-value {
+        font-size: 1.25rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .nio-grid-4 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .auth-box {
+        padding: 1.25rem !important;
+        border-radius: 16px !important;
+    }
+}
