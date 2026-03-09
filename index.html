@@ -2838,20 +2838,28 @@
 </head>
 
 <body>
-    <!-- 🚨 FIX CRÍTICO: Ocultar auth screens INMEDIATAMENTE -->
+    <!-- 🚨 FIX CRÍTICO: Ocultar TODAS las pantallas hasta que JS decida -->
     <script>
         (function(){
-            var ids = ['loginScreen','registerScreen','forgotPasswordScreen'];
-            function hide(){
-                ids.forEach(function(id){
+            var authIds = ['loginScreen','registerScreen','forgotPasswordScreen'];
+            var appIds = ['mainApp','mainNav'];
+            function hideAll(){
+                authIds.concat(appIds).forEach(function(id){
                     var el = document.getElementById(id);
                     if(el) el.style.cssText = 'display:none!important;';
                 });
             }
-            hide();
-            document.addEventListener('DOMContentLoaded', hide);
-            setTimeout(hide, 50);
-            setTimeout(hide, 200);
+            hideAll();
+            document.addEventListener('DOMContentLoaded', hideAll);
+            setTimeout(hideAll, 50);
+            setTimeout(hideAll, 200);
+            // Exponer función para que main.js pueda mostrar login
+            window.__forceShowLogin = function(){
+                authIds.forEach(function(id){
+                    var el = document.getElementById(id);
+                    if(el) el.style.cssText = (id==='loginScreen') ? 'display:flex!important;' : 'display:none!important;';
+                });
+            };
         })();
     </script>
     
