@@ -512,29 +512,42 @@ function onUserLoggedIn(user) {
     if (refreshBtn) refreshBtn.style.display = '';
 }
 
-// Cargar datos del usuario
-let USER_PICKS_TOTALES = {};
-let USER_PICKS_AI = {};
-let USER_PICKS_BACKTESTING = {};
+// Cargar datos del usuario - Variables globales para acceso en todo el scope
+window.USER_PICKS_TOTALES = window.USER_PICKS_TOTALES || {};
+window.USER_PICKS_AI = window.USER_PICKS_AI || {};
+window.USER_PICKS_BACKTESTING = window.USER_PICKS_BACKTESTING || {};
+let USER_PICKS_TOTALES = window.USER_PICKS_TOTALES;
+let USER_PICKS_AI = window.USER_PICKS_AI;
+let USER_PICKS_BACKTESTING = window.USER_PICKS_BACKTESTING;
+
 function loadUserData() {
     if (!userId) {
+        logger.warn('⚠️ loadUserData llamado sin userId');
         return;
     }
 
-    database.ref(`users/${userId}/picks_totales`).on('value', (s) => {
-        USER_PICKS_TOTALES = s.val() || {};
-    });
-    database.ref(`users/${userId}/picks_ai`).on('value', (s) => {
-        USER_PICKS_AI = s.val() || {};
-    });
+    try {
+        database.ref(`users/${userId}/picks_totales`).on('value', (s) => {
+            USER_PICKS_TOTALES = s.val() || {};
+            window.USER_PICKS_TOTALES = USER_PICKS_TOTALES;
+        });
+        database.ref(`users/${userId}/picks_ai`).on('value', (s) => {
+            USER_PICKS_AI = s.val() || {};
+            window.USER_PICKS_AI = USER_PICKS_AI;
+        });
 
-    database.ref(`users/${userId}/picks_backtesting`).on('value', (s) => {
-        USER_PICKS_BACKTESTING = s.val() || {};
-    });
+        database.ref(`users/${userId}/picks_backtesting`).on('value', (s) => {
+            USER_PICKS_BACKTESTING = s.val() || {};
+            window.USER_PICKS_BACKTESTING = USER_PICKS_BACKTESTING;
+        });
 
-    database.ref(`users/${userId}/bankroll`).on('value', (s) => {
-        USER_BANKROLL = s.val() || { current: 0, initial: 0, history: [] };
-    });
+        database.ref(`users/${userId}/bankroll`).on('value', (s) => {
+            USER_BANKROLL = s.val() || { current: 0, initial: 0, history: [] };
+            window.USER_BANKROLL = USER_BANKROLL;
+        });
+    } catch (error) {
+        logger.error('❌ Error en loadUserData:', error);
+    }
 }
 
 // Logout
@@ -2739,27 +2752,49 @@ function render() {
     // 🛡️ FIN DEL ESCUDO DE SEGURIDAD 🛡️
 
     const app = document.getElementById('app');
-    
-    // Rutas de la aplicación
-    if (currentView === 'home') app.innerHTML = renderHome();
-    else if (currentView === 'aipicks') app.innerHTML = renderAIPicks();
-    else if (currentView === 'backtesting') app.innerHTML = renderBacktesting();
-    else if (currentView === 'tendencia' || currentView === 'totales') app.innerHTML = renderTendencia();
-    else if (currentView === 'ingesta') app.innerHTML = renderIngesta();
-    else if (currentView === 'picks') app.innerHTML = renderPicks();
-    else if (currentView === 'mispicks') app.innerHTML = renderMisPicks();
-    else if (currentView === 'bestPicks') app.innerHTML = renderBestPicks();
-    else if (currentView === 'dashboard') app.innerHTML = renderDashboard();
-    else if (currentView === 'bankroll') {
-        app.innerHTML = renderBankrollView();
-        setTimeout(() => createBankrollChart(), 100);
+    if (!app) {
+        console.error('[render] Elemento #app no encontrado');
+        return;
     }
     
-    attachEvents();
+    try {
+        // Rutas de la aplicación con manejo de errores
+        if (currentView === 'home') app.innerHTML = renderHome();
+        else if (currentView === 'aipicks') app.innerHTML = renderAIPicks();
+        else if (currentView === 'backtesting') app.innerHTML = renderBacktesting();
+        else if (currentView === 'tendencia' || currentView === 'totales') app.innerHTML = renderTendencia();
+        else if (currentView === 'ingesta') app.innerHTML = renderIngesta();
+        else if (currentView === 'picks') app.innerHTML = renderPicks();
+        else if (currentView === 'mispicks') app.innerHTML = renderMisPicks();
+        else if (currentView === 'bestPicks') app.innerHTML = renderBestPicks();
+        else if (currentView === 'dashboard') app.innerHTML = renderDashboard();
+        else if (currentView === 'bankroll') {
+            app.innerHTML = renderBankrollView();
+            setTimeout(() => createBankrollChart(), 100);
+        }
+        else {
+            // Fallback para vistas desconocidas
+            app.innerHTML = renderHome();
+        }
+        
+        attachEvents();
 
-    // Inicializar gráficos si estamos en dashboard
-    if (currentView === 'dashboard') {
-        setTimeout(() => initDashboardCharts(), 100);
+        // Inicializar gráficos si estamos en dashboard
+        if (currentView === 'dashboard') {
+            setTimeout(() => initDashboardCharts(), 100);
+        }
+    } catch (error) {
+        console.error('[render] Error renderizando vista:', error);
+        app.innerHTML = `
+            <div class="nio-section" style="max-width: 600px; text-align: center; padding: 60px 20px;">
+                <div style="font-size: 64px; margin-bottom: 24px;">⚠️</div>
+                <h2 style="color: #fff; font-size: 24px; margin-bottom: 12px;">Error de Carga</h2>
+                <p style="color: rgba(255,255,255,0.6); margin-bottom: 24px;">Hubo un problema al cargar la vista. Por favor recarga la página.</p>
+                <button onclick="location.reload()" class="nio-btn nio-btn-gold" style="padding: 12px 32px;">
+                    Recargar Página
+                </button>
+            </div>
+        `;
     }
 }
 
@@ -2813,7 +2848,9 @@ function addAIPickToTracking(pickId) {
 // ═══════════════════════════════════════════════════════════════════
 
 function renderBacktesting() {
-    const picks = Object.values(USER_PICKS_BACKTESTING);
+    // Guard clause para datos de usuario
+    const backtestData = (typeof USER_PICKS_BACKTESTING !== 'undefined') ? USER_PICKS_BACKTESTING : {};
+    const picks = Object.values(backtestData);
     const resolved = picks.filter(p => p.status !== 'pending');
     const pending = picks.filter(p => p.status === 'pending');
 
@@ -2963,14 +3000,33 @@ function resolveBacktestPick(pickId) {
 // ═══════════════════════════════════════════════════════════════════
 
 function renderHome() {
-    const totalPicks = Object.keys({ ...USER_PICKS_TOTALES, ...USER_PICKS_AI }).length;
-    const bankroll = USER_BANKROLL.current || 0;
-    const initial = USER_BANKROLL.initial || 0;
+    // 🛡️ GUARD CLAUSE: Prevenir errores si no hay usuario autenticado
+    if (!currentUser || !userId) {
+        return `
+            <div class="nio-section" style="max-width: 600px; text-align: center; padding: 60px 20px;">
+                <div style="font-size: 64px; margin-bottom: 24px;">🔐</div>
+                <h2 style="color: #fff; font-size: 24px; margin-bottom: 12px;">Sesión Requerida</h2>
+                <p style="color: rgba(255,255,255,0.6); margin-bottom: 24px;">Inicia sesión para acceder a tu centro de comando NBA</p>
+                <button onclick="showLogin()" class="nio-btn nio-btn-gold" style="padding: 12px 32px;">
+                    Iniciar Sesión
+                </button>
+            </div>
+        `;
+    }
+
+    // 🛡️ Asegurar que las variables existan con valores por defecto
+    const picksTotal = (typeof USER_PICKS_TOTALES !== 'undefined') ? USER_PICKS_TOTALES : {};
+    const picksAI = (typeof USER_PICKS_AI !== 'undefined') ? USER_PICKS_AI : {};
+    const picksBacktest = (typeof USER_PICKS_BACKTESTING !== 'undefined') ? USER_PICKS_BACKTESTING : {};
+    
+    const totalPicks = Object.keys({ ...picksTotal, ...picksAI }).length;
+    const bankroll = (USER_BANKROLL && USER_BANKROLL.current) || 0;
+    const initial = (USER_BANKROLL && USER_BANKROLL.initial) || 0;
     const profit = bankroll - initial;
     const profitPercent = initial > 0 ? ((profit / initial) * 100).toFixed(1) : '0.0';
 
     // Stats de picks
-    const allPicks = [...Object.values(USER_PICKS_TOTALES), ...Object.values(USER_PICKS_AI), ...Object.values(USER_PICKS_BACKTESTING)];
+    const allPicks = [...Object.values(picksTotal), ...Object.values(picksAI), ...Object.values(picksBacktest)];
     const resolved = allPicks.filter(p => p.status && p.status !== 'pending');
     const wins = resolved.filter(p => p.status === 'win').length;
     const losses = resolved.filter(p => p.status === 'loss').length;
@@ -5015,11 +5071,16 @@ function renderTotals() {
 // MÓDULO: MIS PICKS (Unificado v4.0)
 // ═══════════════════════════════════════════════════════════════════
 function renderMisPicks() {
+    // Guard clauses para datos de usuario
+    const picksTotal = (typeof USER_PICKS_TOTALES !== 'undefined') ? USER_PICKS_TOTALES : {};
+    const picksAI = (typeof USER_PICKS_AI !== 'undefined') ? USER_PICKS_AI : {};
+    const picksBacktest = (typeof USER_PICKS_BACKTESTING !== 'undefined') ? USER_PICKS_BACKTESTING : {};
+    
     const allPicks = [
-        ...Object.values(USER_PICKS_TOTALES).map(p => ({ ...p, type: 'Totales' })),
-        ...Object.values(USER_PICKS_AI).map(p => ({ ...p, type: 'AI' })),
-        ...Object.values(USER_PICKS_BACKTESTING).map(p => ({ ...p, type: 'Backtesting' }))
-    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        ...Object.values(picksTotal).map(p => ({ ...p, type: 'Totales' })),
+        ...Object.values(picksAI).map(p => ({ ...p, type: 'AI' })),
+        ...Object.values(picksBacktest).map(p => ({ ...p, type: 'Backtesting' }))
+    ].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
     const pending = allPicks.filter(p => p.status === 'pending');
     const resolved = allPicks.filter(p => p.status !== 'pending');
@@ -5404,7 +5465,11 @@ function generateAIPicks() {
     }));
 
     showNotification('success', '¡Listo!', `${AI_PICKS_TODAY.length} AI Picks generados`);
-    if (typeof render === 'function') render();
+    
+    // Solo renderizar si hay usuario autenticado y la app está visible
+    if (typeof render === 'function' && currentUser && userId) {
+        render();
+    }
 }
 
 function loadAIPicks() {
