@@ -4,6 +4,23 @@
 // corrección de errores de inicialización.
 // ═══════════════════════════════════════════════════════════════
 
+// 🚨 FIX CRÍTICO: Ocultar TODAS las pantallas de auth inmediatamente
+// Esto previene que CSS cacheado muestre pantalla incorrecta
+(function() {
+    function hideAuthScreens() {
+        ['loginScreen', 'registerScreen', 'forgotPasswordScreen'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+    }
+    // Ejecutar inmediatamente si DOM ya está listo
+    if (document.readyState !== 'loading') {
+        hideAuthScreens();
+    } else {
+        document.addEventListener('DOMContentLoaded', hideAuthScreens);
+    }
+})();
+
 // ── VARIABLES GLOBALES DE VISTA (BLINDADAS) ──
 window.currentView = window.currentView || 'home';
 var currentView = window.currentView;
@@ -372,6 +389,18 @@ async function safeHardLogout(message = 'Sesión cerrada por seguridad.') {
 function initAuthListeners() {
     if (window.__NS_AUTH_LISTENERS_READY__) return;
     window.__NS_AUTH_LISTENERS_READY__ = true;
+    
+    // 🚨 FIX DE EMERGENCIA: Forzar estado correcto de pantallas de auth
+    // Esto soluciona problemas de cache/SW que muestran pantalla incorrecta
+    (function forceAuthScreensHidden() {
+        const screens = ['loginScreen', 'registerScreen', 'forgotPasswordScreen'];
+        screens.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        logger.log('🔒 Pantallas de auth reseteadas');
+    })();
+    
     // Sincronizar referencias locales desde window (asignadas por firebase-init.js)
     if (!_auth) _auth = window.auth;
     if (!_database) _database = window.database;
@@ -420,9 +449,19 @@ function showLogin() {
     const mainApp = document.getElementById('mainApp');
     const mainNav = document.getElementById('mainNav');
 
-    if (loginScreen) loginScreen.style.display = 'flex';
-    if (registerScreen) registerScreen.style.display = 'none';
-    if (forgotScreen) forgotScreen.style.display = 'none';
+    // Usar clases para compatibilidad con !important CSS
+    if (loginScreen) {
+        loginScreen.classList.add('auth-visible');
+        loginScreen.style.cssText = 'display: flex !important;';
+    }
+    if (registerScreen) {
+        registerScreen.classList.remove('auth-visible');
+        registerScreen.style.cssText = 'display: none !important;';
+    }
+    if (forgotScreen) {
+        forgotScreen.classList.remove('auth-visible');
+        forgotScreen.style.cssText = 'display: none !important;';
+    }
     if (mainApp) mainApp.style.display = 'none';
     if (mainNav) mainNav.style.display = 'none';
 
@@ -436,9 +475,18 @@ function showRegister() {
     const mainApp = document.getElementById('mainApp');
     const mainNav = document.getElementById('mainNav');
 
-    if (loginScreen) loginScreen.style.display = 'none';
-    if (registerScreen) registerScreen.style.display = 'flex';
-    if (forgotScreen) forgotScreen.style.display = 'none';
+    if (loginScreen) {
+        loginScreen.classList.remove('auth-visible');
+        loginScreen.style.cssText = 'display: none !important;';
+    }
+    if (registerScreen) {
+        registerScreen.classList.add('auth-visible');
+        registerScreen.style.cssText = 'display: flex !important;';
+    }
+    if (forgotScreen) {
+        forgotScreen.classList.remove('auth-visible');
+        forgotScreen.style.cssText = 'display: none !important;';
+    }
     if (mainApp) mainApp.style.display = 'none';
     if (mainNav) mainNav.style.display = 'none';
 
@@ -452,9 +500,18 @@ function showForgotPassword() {
     const mainApp = document.getElementById('mainApp');
     const mainNav = document.getElementById('mainNav');
 
-    if (loginScreen) loginScreen.style.display = 'none';
-    if (registerScreen) registerScreen.style.display = 'none';
-    if (forgotScreen) forgotScreen.style.display = 'flex';
+    if (loginScreen) {
+        loginScreen.classList.remove('auth-visible');
+        loginScreen.style.cssText = 'display: none !important;';
+    }
+    if (registerScreen) {
+        registerScreen.classList.remove('auth-visible');
+        registerScreen.style.cssText = 'display: none !important;';
+    }
+    if (forgotScreen) {
+        forgotScreen.classList.add('auth-visible');
+        forgotScreen.style.cssText = 'display: flex !important;';
+    }
     if (mainApp) mainApp.style.display = 'none';
     if (mainNav) mainNav.style.display = 'none';
 
