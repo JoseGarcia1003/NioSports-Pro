@@ -2838,6 +2838,23 @@
 </head>
 
 <body>
+    <!-- 🚨 FIX CRÍTICO: Ocultar auth screens INMEDIATAMENTE -->
+    <script>
+        (function(){
+            var ids = ['loginScreen','registerScreen','forgotPasswordScreen'];
+            function hide(){
+                ids.forEach(function(id){
+                    var el = document.getElementById(id);
+                    if(el) el.style.cssText = 'display:none!important;';
+                });
+            }
+            hide();
+            document.addEventListener('DOMContentLoaded', hide);
+            setTimeout(hide, 50);
+            setTimeout(hide, 200);
+        })();
+    </script>
+    
     <!-- Skip to main content -->
     <a href="#main-content" class="skip-link"
         style="position:absolute;left:-9999px;z-index:999;padding:1em;background:#FFD700;color:#000;text-decoration:none;font-weight:bold;"
