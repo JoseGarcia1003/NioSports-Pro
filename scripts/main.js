@@ -449,23 +449,17 @@ function showLogin() {
     const mainApp = document.getElementById('mainApp');
     const mainNav = document.getElementById('mainNav');
 
-    // Usar clases para compatibilidad con !important CSS
-    if (loginScreen) {
-        loginScreen.classList.add('auth-visible');
-        loginScreen.style.cssText = 'display: flex !important;';
-    }
-    if (registerScreen) {
-        registerScreen.classList.remove('auth-visible');
-        registerScreen.style.cssText = 'display: none !important;';
-    }
-    if (forgotScreen) {
-        forgotScreen.classList.remove('auth-visible');
-        forgotScreen.style.cssText = 'display: none !important;';
-    }
-    if (mainApp) mainApp.style.display = 'none';
-    if (mainNav) mainNav.style.display = 'none';
+    // Ocultar app y nav
+    if (mainApp) mainApp.style.cssText = 'display: none !important;';
+    if (mainNav) mainNav.style.cssText = 'display: none !important;';
+    
+    // Mostrar SOLO login, ocultar otros auth screens
+    if (loginScreen) loginScreen.style.cssText = 'display: flex !important;';
+    if (registerScreen) registerScreen.style.cssText = 'display: none !important;';
+    if (forgotScreen) forgotScreen.style.cssText = 'display: none !important;';
 
     if (typeof hideLoading === 'function') hideLoading();
+    console.log('🔐 showLogin ejecutado');
 }
 
 function showRegister() {
@@ -475,20 +469,11 @@ function showRegister() {
     const mainApp = document.getElementById('mainApp');
     const mainNav = document.getElementById('mainNav');
 
-    if (loginScreen) {
-        loginScreen.classList.remove('auth-visible');
-        loginScreen.style.cssText = 'display: none !important;';
-    }
-    if (registerScreen) {
-        registerScreen.classList.add('auth-visible');
-        registerScreen.style.cssText = 'display: flex !important;';
-    }
-    if (forgotScreen) {
-        forgotScreen.classList.remove('auth-visible');
-        forgotScreen.style.cssText = 'display: none !important;';
-    }
-    if (mainApp) mainApp.style.display = 'none';
-    if (mainNav) mainNav.style.display = 'none';
+    if (mainApp) mainApp.style.cssText = 'display: none !important;';
+    if (mainNav) mainNav.style.cssText = 'display: none !important;';
+    if (loginScreen) loginScreen.style.cssText = 'display: none !important;';
+    if (registerScreen) registerScreen.style.cssText = 'display: flex !important;';
+    if (forgotScreen) forgotScreen.style.cssText = 'display: none !important;';
 
     if (typeof hideLoading === 'function') hideLoading();
 }
@@ -500,26 +485,19 @@ function showForgotPassword() {
     const mainApp = document.getElementById('mainApp');
     const mainNav = document.getElementById('mainNav');
 
-    if (loginScreen) {
-        loginScreen.classList.remove('auth-visible');
-        loginScreen.style.cssText = 'display: none !important;';
-    }
-    if (registerScreen) {
-        registerScreen.classList.remove('auth-visible');
-        registerScreen.style.cssText = 'display: none !important;';
-    }
-    if (forgotScreen) {
-        forgotScreen.classList.add('auth-visible');
-        forgotScreen.style.cssText = 'display: flex !important;';
-    }
-    if (mainApp) mainApp.style.display = 'none';
-    if (mainNav) mainNav.style.display = 'none';
+    if (mainApp) mainApp.style.cssText = 'display: none !important;';
+    if (mainNav) mainNav.style.cssText = 'display: none !important;';
+    if (loginScreen) loginScreen.style.cssText = 'display: none !important;';
+    if (registerScreen) registerScreen.style.cssText = 'display: none !important;';
+    if (forgotScreen) forgotScreen.style.cssText = 'display: flex !important;';
 
     if (typeof hideLoading === 'function') hideLoading();
 }
 
 // Cuando el usuario se loguea exitosamente
 function onUserLoggedIn(user) {
+    console.log('✅ onUserLoggedIn ejecutado para:', user.email);
+    
     // Cargar perfil del usuario
     database.ref(`users/${user.uid}/profile`).once('value').then((snapshot) => {
         const profile = snapshot.val();
@@ -537,18 +515,18 @@ function onUserLoggedIn(user) {
         logger.error('❌ Error cargando perfil:', err);
     });
 
-    // Ocultar pantallas de auth y mostrar app
+    // Ocultar pantallas de auth y mostrar app (con !important)
     const loginScreen = document.getElementById('loginScreen');
     const registerScreen = document.getElementById('registerScreen');
     const forgotScreen = document.getElementById('forgotPasswordScreen');
     const mainApp = document.getElementById('mainApp');
     const mainNav = document.getElementById('mainNav');
 
-    if (loginScreen) loginScreen.style.display = 'none';
-    if (registerScreen) registerScreen.style.display = 'none';
-    if (forgotScreen) forgotScreen.style.display = 'none';
-    if (mainApp) mainApp.style.display = 'block';
-    if (mainNav) mainNav.style.display = 'flex';
+    if (loginScreen) loginScreen.style.cssText = 'display: none !important;';
+    if (registerScreen) registerScreen.style.cssText = 'display: none !important;';
+    if (forgotScreen) forgotScreen.style.cssText = 'display: none !important;';
+    if (mainApp) mainApp.style.cssText = 'display: block !important; padding-top: 80px;';
+    if (mainNav) mainNav.style.cssText = 'display: flex !important;';
 
     // Cargar datos del usuario
     loadUserData();
