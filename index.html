@@ -47,8 +47,6 @@
     <!-- Firebase Initialization (ejecuta en paralelo con Telemetry) -->
     <script src="/scripts/firebase-init.js"></script>
 
-    <script src="/scripts/utils.js"></script>
-    
     <!-- Utilidades fundamentales (DEBE cargar antes de main.js) -->
     <script src="/scripts/utils.js"></script>
 
@@ -110,7 +108,6 @@
     <!-- Skeleton Screens CSS (UX Premium) -->
     <link rel="stylesheet" href="/styles/skeletons.css">
 
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/styles/nio-fix.css">
     
     <!-- Toast Notification System (carga temprano) -->
@@ -1463,8 +1460,9 @@
 
         /* ═══════════════════════════════════════════════════════════
            AUTH SYSTEM STYLES - NIOSPORTS PRO v4.0
-           (Definición principal en sección posterior)
            ═══════════════════════════════════════════════════════ */
+
+        /* auth-container: Definición principal consolidada más abajo (línea ~2702) */
 
         .auth-box {
             max-width: 450px;
@@ -2675,7 +2673,7 @@
         }
 
         /* ═══════════ AUTHENTICATION SCREENS ═══════════ */
-        /* Estado base: OCULTO. Se muestra vía JS con display:flex */
+        /* DEFINICIÓN PRINCIPAL - Estado base: OCULTO */
         .auth-container {
             display: none;
             align-items: center;
