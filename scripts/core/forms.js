@@ -71,7 +71,7 @@
         const email = document.getElementById('registerEmail')?.value?.trim();
         const username = document.getElementById('registerUsername')?.value?.trim();
         const password = document.getElementById('registerPassword')?.value;
-        const confirmPassword = document.getElementById('registerConfirmPassword')?.value;
+        const confirmPassword = document.getElementById('registerPasswordConfirm')?.value;
 
         // Validaciones
         if (!email || !username || !password || !confirmPassword) {
