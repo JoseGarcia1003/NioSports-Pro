@@ -1,23 +1,73 @@
 // ═══════════════════════════════════════════════════════════════
-// NioSports Pro v3.0 - main.js
-// Extraído y reorganizado desde index.html para modularidad y
-// corrección de errores de inicialización.
+// NioSports Pro v4.0 - main.js (Refactorizado Fase 2+3)
+// Sistema Predictivo NBA - Versión Optimizada
 // ═══════════════════════════════════════════════════════════════
 
-// 🚨 FIX CRÍTICO: Ocultar TODAS las pantallas de auth inmediatamente
-// Esto previene que CSS cacheado muestre pantalla incorrecta
+// ═══════════════════════════════════════════════════════════════
+// 🔧 SISTEMA DE LOGGING PROFESIONAL (Fase 3)
+// En producción: Solo errores críticos
+// En desarrollo: Logs completos
+// ═══════════════════════════════════════════════════════════════
+const NioLogger = (function() {
+    const isDev = window.location.hostname === 'localhost' || 
+                  window.location.hostname === '127.0.0.1' ||
+                  window.location.search.includes('debug=true');
+    
+    const styles = {
+        info: 'color: #22d3ee; font-weight: bold;',
+        success: 'color: #10b981; font-weight: bold;',
+        warn: 'color: #f59e0b; font-weight: bold;',
+        error: 'color: #ef4444; font-weight: bold;',
+        debug: 'color: #a78bfa;'
+    };
+    
+    return {
+        log: function(...args) {
+            if (isDev) console.log('%c[NIO]', styles.info, ...args);
+        },
+        info: function(...args) {
+            if (isDev) console.info('%c[NIO]', styles.info, ...args);
+        },
+        success: function(...args) {
+            if (isDev) console.log('%c[NIO] ✅', styles.success, ...args);
+        },
+        warn: function(...args) {
+            console.warn('%c[NIO] ⚠️', styles.warn, ...args);
+        },
+        error: function(...args) {
+            console.error('%c[NIO] ❌', styles.error, ...args);
+        },
+        debug: function(...args) {
+            if (isDev) console.log('%c[NIO] 🔍', styles.debug, ...args);
+        },
+        group: function(label) {
+            if (isDev) console.group(label);
+        },
+        groupEnd: function() {
+            if (isDev) console.groupEnd();
+        },
+        isDev: isDev
+    };
+})();
+
+// Alias global para compatibilidad
+const logger = NioLogger;
+window.logger = NioLogger;
+
+// ═══════════════════════════════════════════════════════════════
+// 🚨 FIX CRÍTICO: Ocultar TODAS las pantallas inmediatamente
+// ═══════════════════════════════════════════════════════════════
 (function() {
-    function hideAuthScreens() {
-        ['loginScreen', 'registerScreen', 'forgotPasswordScreen'].forEach(function(id) {
+    function hideAllScreens() {
+        ['loginScreen', 'registerScreen', 'forgotPasswordScreen', 'mainApp', 'mainNav'].forEach(function(id) {
             var el = document.getElementById(id);
-            if (el) el.style.display = 'none';
+            if (el) el.style.cssText = 'display:none!important;';
         });
     }
-    // Ejecutar inmediatamente si DOM ya está listo
     if (document.readyState !== 'loading') {
-        hideAuthScreens();
+        hideAllScreens();
     } else {
-        document.addEventListener('DOMContentLoaded', hideAuthScreens);
+        document.addEventListener('DOMContentLoaded', hideAllScreens);
     }
 })();
 
@@ -5571,15 +5621,234 @@ if (typeof window.loadTeamStatsFromAPI !== 'function') {
     };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 🎯 INICIALIZACIÓN PRINCIPAL (Fase 2 - Consolidado)
+// Un solo punto de entrada para evitar race conditions
+// ═══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
-    // Cargar VALUE_PICKS desde localStorage
-    loadValuePicksFromStorage();
-    // Primero cargar estadísticas desde API (no requiere auth)
-    await loadTeamStatsFromAPI();
-    // Cargar AI Picks desde cache local
-    loadAIPicks();
-    logger.log('✅ NioSports Pro v4.0 - Datos públicos cargados. Esperando autenticación...');
+    logger.group('🚀 NioSports Pro v4.0 - Inicialización');
+    
+    try {
+        // 1. Cargar VALUE_PICKS desde localStorage
+        if (typeof loadValuePicksFromStorage === 'function') {
+            loadValuePicksFromStorage();
+            logger.log('✅ VALUE_PICKS cargados');
+        }
+        
+        // 2. Cargar estadísticas desde API (no requiere auth)
+        if (typeof loadTeamStatsFromAPI === 'function') {
+            await loadTeamStatsFromAPI();
+            logger.log('✅ Team Stats cargados');
+        }
+        
+        // 3. Cargar AI Picks desde cache local
+        if (typeof loadAIPicks === 'function') {
+            loadAIPicks();
+            logger.log('✅ AI Picks cargados');
+        }
+        
+        // 4. Configurar formularios de autenticación
+        setupAuthForms();
+        
+        logger.success('Datos públicos cargados. Esperando autenticación...');
+        
+    } catch (error) {
+        logger.error('Error en inicialización:', error);
+    }
+    
+    logger.groupEnd();
 });
+
+// ═══════════════════════════════════════════════════════════════
+// 🔐 CONFIGURACIÓN DE FORMULARIOS DE AUTH (Fase 2 - Extraído)
+// ═══════════════════════════════════════════════════════════════
+function setupAuthForms() {
+    logger.log('🎬 Configurando formularios de autenticación...');
+
+    // ══════════ LOGIN FORM ══════════
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLoginSubmit);
+        logger.log('✅ Login form configurado');
+    }
+
+    // ══════════ REGISTER FORM ══════════
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegisterSubmit);
+        logger.log('✅ Register form configurado');
+    }
+
+    // ══════════ FORGOT PASSWORD FORM ══════════
+    const forgotForm = document.getElementById('forgotPasswordForm');
+    if (forgotForm) {
+        forgotForm.addEventListener('submit', handleForgotSubmit);
+        logger.log('✅ Forgot form configurado');
+    }
+    
+    logger.log('✅ Formularios de auth configurados');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 🔐 HANDLERS DE FORMULARIOS (Fase 2 - Con manejo de errores)
+// ═══════════════════════════════════════════════════════════════
+async function handleLoginSubmit(e) {
+    e.preventDefault();
+    
+    const emailOrUsername = document.getElementById('loginEmailOrUsername')?.value?.trim();
+    const password = document.getElementById('loginPassword')?.value;
+
+    if (!emailOrUsername || !password) {
+        showNotification('error', 'Error', 'Por favor completa todos los campos');
+        if (typeof toastWarning === 'function') toastWarning('Completa todos los campos');
+        return;
+    }
+
+    try {
+        let email = emailOrUsername;
+
+        // Si no contiene @, es un username
+        if (!emailOrUsername.includes('@')) {
+            logger.log('🔍 Buscando username...');
+            const uid = await usernameIndexGetUid(emailOrUsername);
+
+            if (uid) {
+                const userRef = await database.ref(`users/${uid}/profile`).once('value');
+                const userProfile = userRef.val();
+
+                if (userProfile?.email) {
+                    email = userProfile.email;
+                } else {
+                    throw new Error('Usuario no encontrado');
+                }
+            } else {
+                throw new Error('Usuario no encontrado');
+            }
+        }
+
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        await bindSession(userCredential.user);
+
+        logger.success('Login exitoso:', userCredential.user.email);
+        showNotification('success', '¡Bienvenido!', 'Sesión iniciada correctamente');
+        if (typeof toastSuccess === 'function') toastSuccess('¡Login exitoso!');
+
+    } catch (error) {
+        logger.error('Error en login:', error);
+        
+        let errorMsg = 'Error al iniciar sesión';
+        if (error.code === 'auth/user-not-found') errorMsg = 'Usuario no encontrado';
+        else if (error.code === 'auth/wrong-password') errorMsg = 'Contraseña incorrecta';
+        else if (error.code === 'auth/invalid-email') errorMsg = 'Email inválido';
+        else if (error.code === 'auth/too-many-requests') errorMsg = 'Demasiados intentos. Espera un momento.';
+        else if (error.message?.includes('Usuario no encontrado')) errorMsg = 'Usuario no existe';
+
+        showNotification('error', 'Error de Login', errorMsg);
+        if (typeof toastError === 'function') toastError(errorMsg);
+    }
+}
+
+async function handleRegisterSubmit(e) {
+    e.preventDefault();
+
+    const email = document.getElementById('registerEmail')?.value?.trim();
+    const username = document.getElementById('registerUsername')?.value?.trim();
+    const password = document.getElementById('registerPassword')?.value;
+    const confirmPassword = document.getElementById('registerConfirmPassword')?.value;
+
+    // Validaciones
+    if (!email || !username || !password || !confirmPassword) {
+        showNotification('error', 'Error', 'Completa todos los campos');
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        showNotification('error', 'Error', 'Las contraseñas no coinciden');
+        return;
+    }
+
+    if (password.length < 6) {
+        showNotification('error', 'Error', 'La contraseña debe tener al menos 6 caracteres');
+        return;
+    }
+
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+        showNotification('error', 'Error', 'Username inválido (3-20 caracteres, solo letras, números y _)');
+        return;
+    }
+
+    try {
+        // Verificar si username ya existe
+        const existingUid = await usernameIndexGetUid(username);
+        if (existingUid) {
+            showNotification('error', 'Error', 'Ese nombre de usuario ya está en uso');
+            return;
+        }
+
+        // Crear usuario
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        // Guardar perfil
+        await database.ref(`users/${user.uid}/profile`).set({
+            email: email,
+            username: username,
+            displayName: username,
+            createdAt: new Date().toISOString()
+        });
+
+        // Reservar username
+        await usernameIndexReserve(user.uid, username);
+
+        // Inicializar bankroll
+        await database.ref(`users/${user.uid}/bankroll`).set({
+            current: 1000,
+            initial: 1000,
+            history: []
+        });
+
+        await bindSession(user);
+
+        logger.success('Registro exitoso:', email);
+        showNotification('success', '¡Cuenta creada!', 'Bienvenido a NioSports Pro');
+        if (typeof toastSuccess === 'function') toastSuccess('¡Registro exitoso!');
+
+    } catch (error) {
+        logger.error('Error en registro:', error);
+
+        let errorMsg = 'Error al crear cuenta';
+        if (error.code === 'auth/email-already-in-use') errorMsg = 'Ese email ya está registrado';
+        else if (error.code === 'auth/invalid-email') errorMsg = 'Email inválido';
+        else if (error.code === 'auth/weak-password') errorMsg = 'Contraseña muy débil';
+
+        showNotification('error', 'Error de Registro', errorMsg);
+        if (typeof toastError === 'function') toastError(errorMsg);
+    }
+}
+
+async function handleForgotSubmit(e) {
+    e.preventDefault();
+
+    const email = document.getElementById('forgotEmail')?.value?.trim();
+
+    if (!email) {
+        showNotification('error', 'Error', 'Ingresa tu email');
+        return;
+    }
+
+    try {
+        await auth.sendPasswordResetEmail(email);
+        logger.success('Email de recuperación enviado');
+        showNotification('success', 'Email enviado', 'Revisa tu bandeja de entrada');
+        if (typeof toastSuccess === 'function') toastSuccess('Email enviado');
+        setTimeout(() => showLogin(), 2000);
+        
+    } catch (error) {
+        logger.error('Error recuperando contraseña:', error);
+        showNotification('error', 'Error', 'No se pudo enviar el email');
+        if (typeof toastError === 'function') toastError(error.message);
+    }
+}
 
 
 
@@ -5886,288 +6155,6 @@ async function usernameIndexReserve(uid, username) {
     await database.ref(`usernamesIndex/${key}`).set(uid);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    logger.log('🎬 DOM Cargado, configurando event listeners...');
-
-    // ══════════ LOGIN FORM ══════════
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        logger.log('✅ Formulario de login encontrado');
-
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            logger.log('');
-            logger.log('═══════════════════════════════════════════');
-            logger.log('🔐 INTENTANDO LOGIN...');
-            logger.log('═══════════════════════════════════════════');
-
-            const emailOrUsername = document.getElementById('loginEmailOrUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
-
-            logger.log('📝 Datos ingresados:');
-            logger.log('  - Email/Username:', emailOrUsername);
-            logger.log('  - Password:', password ? '****** (' + password.length + ' caracteres)' : 'VACÍO');
-
-            if (!emailOrUsername || !password) {
-                logger.error('❌ Campos vacíos');
-                showNotification('error', 'Error', 'Por favor completa todos los campos');
-                toastWarning('Completa todos los campos', { title: 'Validación' });
-                return;
-            }
-
-            try {
-                let email = emailOrUsername;
-
-                // Si no contiene @, es un username, buscar el email
-                if (!emailOrUsername.includes('@')) {
-                    logger.log('🔍 Detectado username, buscando UID en índice...');
-                    const uid = await usernameIndexGetUid(emailOrUsername);
-
-                    if (uid) {
-                        logger.log('✅ Username encontrado, UID:', uid);
-
-                        const userRef = await database.ref(`users/${uid}/profile`).once('value');
-                        const userProfile = userRef.val();
-
-                        logger.log('👤 Perfil:', userProfile);
-
-                        if (userProfile && userProfile.email) {
-                            email = userProfile.email;
-                            logger.log('✅ Email encontrado:', email);
-                        } else {
-                            throw new Error('Usuario no encontrado en la base de datos');
-                        }
-                    } else {
-                        logger.error('❌ Username no encontrado en índice');
-                        throw new Error('Usuario no encontrado');
-                    }
-                }
-
-                logger.log('🔐 Intentando autenticar con Firebase...');
-                logger.log('  - Email:', email);
-
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                await bindSession(userCredential.user);
-
-                logger.log('✅✅✅ LOGIN EXITOSO ✅✅✅');
-                logger.log('👤 Usuario:', userCredential.user.email);
-                logger.log('🆔 UID:', userCredential.user.uid);
-
-                showNotification('success', '¡Bienvenido!', 'Sesión iniciada correctamente');
-                toastSuccess('¡Login exitoso!', { title: 'Bienvenido' });
-
-            } catch (error) {
-                logger.error('═══════════════════════════════════════════');
-                logger.error('❌ ERROR EN LOGIN');
-                logger.error('═══════════════════════════════════════════');
-                logger.error('Código:', error.code);
-                logger.error('Mensaje:', error.message);
-                logger.error('Stack:', error.stack);
-                logger.error('═══════════════════════════════════════════');
-
-                let errorMsg = 'Error al iniciar sesión';
-
-                if (error.code === 'auth/user-not-found') {
-                    errorMsg = 'Usuario no encontrado. Verifica tus credenciales.';
-                } else if (error.code === 'auth/wrong-password') {
-                    errorMsg = 'Contraseña incorrecta. Intenta nuevamente.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMsg = 'Email inválido';
-                } else if (error.code === 'auth/too-many-requests') {
-                    errorMsg = 'Demasiados intentos. Espera un momento.';
-                } else if (error.message.includes('Usuario no encontrado')) {
-                    errorMsg = 'Usuario no existe. Verifica el username o email.';
-                }
-
-                showNotification('error', 'Error de Login', errorMsg);
-                toastError(errorMsg, { title: 'Error' });
-            }
-        });
-    } else {
-        logger.error('❌ Formulario de login NO encontrado');
-    }
-
-    // ══════════ REGISTER FORM ══════════
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) {
-        logger.log('✅ Formulario de registro encontrado');
-
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            logger.log('');
-            logger.log('═══════════════════════════════════════════');
-            logger.log('📝 INTENTANDO REGISTRO...');
-            logger.log('═══════════════════════════════════════════');
-
-            const username = document.getElementById('registerUsername').value.trim();
-            const email = document.getElementById('registerEmail').value.trim();
-            const password = document.getElementById('registerPassword').value;
-            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
-
-            logger.log('📝 Datos ingresados:');
-            logger.log('  - Username:', username);
-            logger.log('  - Email:', email);
-            logger.log('  - Password:', password ? '****** (' + password.length + ' caracteres)' : 'VACÍO');
-            logger.log('  - Confirmación:', passwordConfirm ? '****** (' + passwordConfirm.length + ' caracteres)' : 'VACÍO');
-
-            // Validaciones
-            if (!username || !email || !password || !passwordConfirm) {
-                logger.error('❌ Campos vacíos');
-                showNotification('error', 'Error', 'Por favor completa todos los campos');
-                toastWarning('Completa todos los campos', { title: 'Validación' });
-                return;
-            }
-
-            if (password !== passwordConfirm) {
-                logger.error('❌ Contraseñas no coinciden');
-                showNotification('error', 'Error', 'Las contraseñas no coinciden');
-                toastError('Las contraseñas no coinciden', { title: 'Registro' });
-                return;
-            }
-
-            if (password.length < 6) {
-                logger.error('❌ Contraseña muy corta');
-                showNotification('error', 'Error', 'La contraseña debe tener mínimo 6 caracteres');
-                toastError('La contraseña debe tener mínimo 6 caracteres', { title: 'Registro' });
-                return;
-            }
-
-            if (username.length < 3) {
-                logger.error('❌ Username muy corto');
-                showNotification('error', 'Error', 'El username debe tener mínimo 3 caracteres');
-                toastError('El username debe tener mínimo 3 caracteres', { title: 'Registro' });
-                return;
-            }
-
-            try {
-                logger.log('🔍 Verificando si username ya existe...');
-
-                const usernameExists = await usernameIndexIsTaken(username);
-
-                if (usernameExists) {
-                    logger.error('❌ Username ya existe:', username);
-                    showNotification('error', 'Username ocupado', 'Este username ya está en uso. Elige otro.');
-                    toastError('Username ya existe. Elige otro.', { title: 'Registro' });
-                    return;
-                }
-
-                logger.log('✅ Username disponible');
-                logger.log('🔐 Creando cuenta en Firebase Auth...');
-
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-
-                logger.log('✅ Cuenta creada en Auth');
-                logger.log('  - Email:', user.email);
-                logger.log('  - UID:', user.uid);
-
-                logger.log('💾 Guardando perfil en database...');
-
-                await database.ref(`users/${user.uid}/profile`).set({
-                    username: username,
-                    email: email,
-                    createdAt: new Date().toISOString(),
-                    displayName: username
-                });
-
-                logger.log('✅ Perfil guardado');
-
-                logger.log('💾 Registrando username...');
-
-                await usernameIndexReserve(user.uid, username);
-
-                logger.log('✅ Username registrado');
-
-                logger.log('💾 Inicializando bankroll...');
-
-                await database.ref(`users/${user.uid}/bankroll`).set({
-                    current: 0,
-                    initial: 0,
-                    history: []
-                });
-
-                logger.log('✅ Bankroll inicializado');
-
-                logger.log('');
-                logger.log('═══════════════════════════════════════════');
-                logger.log('✅✅✅ REGISTRO COMPLETADO ✅✅✅');
-                logger.log('═══════════════════════════════════════════');
-                logger.log('👤 Usuario:', username);
-                logger.log('📧 Email:', email);
-                logger.log('🆔 UID:', user.uid);
-                logger.log('═══════════════════════════════════════════');
-
-                showNotification('success', '¡Cuenta creada!', 'Bienvenido a NioSports Pro');
-                toastSuccess('¡Cuenta creada! Bienvenido ' + username, { title: 'Registro' });
-
-                // El onAuthStateChanged se encargará de mostrar la app
-
-            } catch (error) {
-                logger.error('═══════════════════════════════════════════');
-                logger.error('❌ ERROR EN REGISTRO');
-                logger.error('═══════════════════════════════════════════');
-                logger.error('Código:', error.code);
-                logger.error('Mensaje:', error.message);
-                logger.error('Stack:', error.stack);
-                logger.error('═══════════════════════════════════════════');
-
-                let errorMsg = 'Error al crear la cuenta';
-
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMsg = 'Este email ya está registrado. Intenta hacer login.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMsg = 'Email inválido';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMsg = 'Contraseña muy débil';
-                } else if (error.code === 'auth/network-request-failed') {
-                    errorMsg = 'Error de conexión. Verifica tu internet.';
-                }
-
-                showNotification('error', 'Error de Registro', errorMsg);
-                toastError(errorMsg, { title: 'Error' });
-            }
-        });
-    } else {
-        logger.error('❌ Formulario de registro NO encontrado');
-    }
-
-    // ══════════ FORGOT PASSWORD FORM ══════════
-    const forgotForm = document.getElementById('forgotPasswordForm');
-    if (forgotForm) {
-        logger.log('✅ Formulario de recuperación encontrado');
-
-        forgotForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            logger.log('📧 Intentando recuperar contraseña...');
-
-            const email = document.getElementById('forgotEmail').value.trim();
-
-            logger.log('  - Email:', email);
-
-            if (!email) {
-                showNotification('error', 'Error', 'Ingresa tu email');
-                toastWarning('Ingresa tu email', { title: 'Recuperación' });
-                return;
-            }
-
-            try {
-                await auth.sendPasswordResetEmail(email);
-                logger.log('✅ Email de recuperación enviado');
-                showNotification('success', 'Email enviado', 'Revisa tu bandeja de entrada');
-                toastSuccess('Email de recuperación enviado. Revisa tu correo.', { title: 'Recuperación' });
-                setTimeout(() => showLogin(), 2000);
-            } catch (error) {
-                logger.error('❌ Error:', error);
-                showNotification('error', 'Error', 'No se pudo enviar el email');
-                toastError(error.message, { title: 'Error' });
-            }
-        });
-    } else {
-        logger.error('❌ Formulario de recuperación NO encontrado');
-    }
-
-    logger.log('✅ Event listeners configurados correctamente');
-});
 
 
 
