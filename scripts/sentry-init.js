@@ -36,7 +36,7 @@
   Sentry.init({
     // ⚠️ IMPORTANTE: reemplaza con tu DSN real de sentry.io
     // Lo encuentras en: sentry.io → Settings → Projects → [tu proyecto] → Client Keys
-    dsn: 'YOUR_SENTRY_DSN',
+    dsn: 'https://99b12c1dacf18f5416aecbf452d4ac6a@o4510870707765248.ingest.us.sentry.io/4510870715760640',
 
     environment,
 
