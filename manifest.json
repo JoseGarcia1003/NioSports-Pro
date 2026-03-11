@@ -1,7 +1,7 @@
 {
   "name": "NioSports Pro - AI Sports Betting",
   "short_name": "NioSports",
-  "description": "Sistema predictivo NBA con análisis estadístico profesional de totales. Motor de análisis deportivo para el mercado hispano.",
+  "description": "Sistema predictivo NBA con análisis estadístico profesional de totales. Motor IA con factores contextuales, analytics profesionales y gestión de bankroll en tiempo real.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0f1e",
