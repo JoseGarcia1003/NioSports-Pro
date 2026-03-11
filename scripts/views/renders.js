@@ -1310,14 +1310,27 @@ function renderPicks() {
             clvDisplay = `<span class="font-semibold ${clvClass} text-xs">CLV: ${parseFloat(clv) >= 0 ? '+' : ''}${clv}</span>`;
         }
 
+        // ── Sanitizar todos los campos de usuario antes de interpolar en HTML ──
+        // nsSafe() elimina cualquier HTML/JS malicioso. nsSafeId() restringe
+        // los IDs usados en atributos onclick a solo caracteres alfanuméricos.
+        const safeLocalTeam  = typeof nsSafe === 'function' ? nsSafe(pick.localTeam)  : (pick.localTeam  || '');
+        const safeAwayTeam   = typeof nsSafe === 'function' ? nsSafe(pick.awayTeam)   : (pick.awayTeam   || '');
+        const safeLine       = typeof nsSafeNumber === 'function' ? nsSafeNumber(pick.line, pick.line) : (pick.line || '');
+        const safeOdds       = typeof nsSafeNumber === 'function' ? nsSafeNumber(pick.odds, pick.odds) : (pick.odds || '');
+        const safeEv         = typeof nsSafeNumber === 'function' ? nsSafeNumber(pick.ev, pick.ev)     : (pick.ev   || '');
+        const safeId         = typeof nsSafeId === 'function' ? nsSafeId(pick.id) : (pick.id || '');
+        const safePeriod     = typeof nsSafe === 'function' ? nsSafe(pick.period)   : (pick.period   || '');
+        const safeBetType    = typeof nsSafe === 'function' ? nsSafe(pick.betType)  : (pick.betType  || '');
+        const safeActualTotal = pick.actualTotal ? (typeof nsSafeNumber === 'function' ? nsSafeNumber(pick.actualTotal, '') : pick.actualTotal) : '';
+
         picksHtml += `
             <div class="pick-card bg-white/5 rounded-xl p-3 md:p-4 mb-3 border ${pick.isCombo ? 'border-amber-500/50' : 'border-white/10'}">
                 <!-- Header: Equipos + Status -->
                 <div class="flex justify-between items-start mb-2">
                     <div class="flex-1 min-w-0 pr-2">
                         ${pick.isCombo ? '<span class="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full mb-1 inline-block font-bold">🔥 BET BUILDER</span>' : ''}
-                        <p class="text-white font-bold text-sm md:text-base truncate">${pick.localTeam} vs ${pick.awayTeam}</p>
-                        <p class="text-gray-200 text-xs md:text-sm font-semibold">${pick.isCombo ? pick.line : `${pick.period} ${pick.betType} ${pick.line}`}</p>
+                        <p class="text-white font-bold text-sm md:text-base truncate">${safeLocalTeam} vs ${safeAwayTeam}</p>
+                        <p class="text-gray-200 text-xs md:text-sm font-semibold">${pick.isCombo ? safeLine : `${safePeriod} ${safeBetType} ${safeLine}`}</p>
                     </div>
                     <span class="${statusClass} px-2 md:px-3 py-1 rounded-full text-white text-xs md:text-sm font-bold flex-shrink-0">${statusIcon}</span>
                 </div>
@@ -1325,25 +1338,25 @@ function renderPicks() {
                 <!-- Stats Row: Fecha, Odds, Prob, EV, CLV - GRID para móviles -->
                 <div class="grid grid-cols-2 md:flex md:flex-wrap gap-2 md:gap-3 text-xs md:text-sm mb-2">
                     <span class="text-gray-300 font-medium">📅 ${date}</span>
-                    ${pick.odds ? `<span class="text-yellow-300 font-semibold">@${pick.odds}</span>` : ''}
+                    ${safeOdds ? `<span class="text-yellow-300 font-semibold">@${safeOdds}</span>` : ''}
                     <span class="text-purple-300 font-semibold">${pick.probability}% prob</span>
-                    ${pick.ev ? `<span class="font-semibold ${parseFloat(pick.ev) >= 0 ? 'text-green-400' : 'text-red-400'}">EV: ${parseFloat(pick.ev) >= 0 ? '+' : ''}${pick.ev}%</span>` : ''}
+                    ${safeEv !== '' ? `<span class="font-semibold ${parseFloat(safeEv) >= 0 ? 'text-green-400' : 'text-red-400'}">EV: ${parseFloat(safeEv) >= 0 ? '+' : ''}${safeEv}%</span>` : ''}
                     ${clvDisplay}
                 </div>
 
                 <!-- Action Buttons -->
                 <div class="flex justify-end gap-2 items-center border-t border-white/10 pt-2">
                     ${pick.status === 'pending' ? `
-                        <button onclick="registerActualResult('${pick.id}')" class="text-amber-400 hover:text-amber-300 text-xs bg-amber-500/20 px-2 py-1 rounded" title="Registrar resultado real">📊 Resultado</button>
-                        <button onclick="updatePickResult('${pick.id}', 'win')" class="text-green-400 hover:text-green-300 text-lg p-1" title="Marcar ganado">✓</button>
-                        <button onclick="updatePickResult('${pick.id}', 'loss')" class="text-red-400 hover:text-red-300 text-lg p-1" title="Marcar perdido">✗</button>
-                        <button onclick="updatePickResult('${pick.id}', 'push')" class="text-gray-400 hover:text-gray-300 text-sm p-1" title="Push">↔️</button>
+                        <button onclick="registerActualResult('${safeId}')" class="text-amber-400 hover:text-amber-300 text-xs bg-amber-500/20 px-2 py-1 rounded" title="Registrar resultado real">📊 Resultado</button>
+                        <button onclick="updatePickResult('${safeId}', 'win')" class="text-green-400 hover:text-green-300 text-lg p-1" title="Marcar ganado">✓</button>
+                        <button onclick="updatePickResult('${safeId}', 'loss')" class="text-red-400 hover:text-red-300 text-lg p-1" title="Marcar perdido">✗</button>
+                        <button onclick="updatePickResult('${safeId}', 'push')" class="text-gray-400 hover:text-gray-300 text-sm p-1" title="Push">↔️</button>
                     ` : `
-                        ${pick.actualTotal ? `<span class="text-xs text-cyan-400 mr-2">Real: ${pick.actualTotal} pts</span>` : ''}
+                        ${safeActualTotal ? `<span class="text-xs text-cyan-400 mr-2">Real: ${safeActualTotal} pts</span>` : ''}
                         ${pick.modelError !== null && pick.modelError !== undefined ? `<span class="text-xs text-gray-400">Error: ±${pick.modelError.toFixed(1)}</span>` : ''}
                     `}
-                    ${!pick.isCombo && !pick.closingLine && pick.status !== 'pending' ? `<button onclick="addClosingLine('${pick.id}', '${pick.line}')" class="text-cyan-400 hover:text-cyan-300 text-xs bg-cyan-500/20 px-2 py-1 rounded" title="Agregar línea de cierre">+CLV</button>` : ''}
-                    <button onclick="deletePick('${pick.id}')" class="text-gray-500 hover:text-red-400 text-lg p-1">🗑️</button>
+                    ${!pick.isCombo && !pick.closingLine && pick.status !== 'pending' ? `<button onclick="addClosingLine('${safeId}', '${safeLine}')" class="text-cyan-400 hover:text-cyan-300 text-xs bg-cyan-500/20 px-2 py-1 rounded" title="Agregar línea de cierre">+CLV</button>` : ''}
+                    <button onclick="deletePick('${safeId}')" class="text-gray-500 hover:text-red-400 text-lg p-1">🗑️</button>
                 </div>
             </div>
         `;
@@ -1492,16 +1505,26 @@ function renderBestPicks() {
             const evClass = pick.ev && parseFloat(pick.ev) >= 10 ? 'text-green-400' : pick.ev && parseFloat(pick.ev) >= 0 ? 'text-lime-400' : 'text-yellow-400';
             const periodColor = pick.period === '1Q' ? 'yellow' : pick.period === '1H' ? 'pink' : 'green';
 
+            // Sanitizar campos que vienen de datos externos o del usuario
+            const safeLocal  = typeof nsSafe === 'function' ? nsSafe(pick.local)   : (pick.local  || '');
+            const safeAway   = typeof nsSafe === 'function' ? nsSafe(pick.away)    : (pick.away   || '');
+            const safePeriod = typeof nsSafe === 'function' ? nsSafe(pick.period)  : (pick.period || '');
+            const safeBetType= typeof nsSafe === 'function' ? nsSafe(pick.betType) : (pick.betType|| '');
+            const safeTrend  = typeof nsSafe === 'function' ? nsSafe(pick.trend)   : (pick.trend  || '');
+            const safeLine   = typeof nsSafeNumber === 'function' ? nsSafeNumber(pick.line, pick.line) : (pick.line || '');
+            const safeEv     = typeof nsSafeNumber === 'function' ? nsSafeNumber(pick.ev,   pick.ev)   : (pick.ev   || '');
+            const safeId     = typeof nsSafeId === 'function' ? nsSafeId(pick.id) : (pick.id || '');
+
             picksHtml += `
                 <div class="value-pick bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl p-4 mb-3 border ${index === 0 ? 'border-yellow-500 border-2' : 'border-purple-500/30'}">
                     ${index === 0 ? '<div class="text-yellow-400 text-xs font-bold mb-2">🥇 PICK MÁS RECIENTE</div>' : ''}
 
                     <div class="flex justify-between items-start mb-3">
                         <div>
-                            <p class="text-white font-bold text-lg">${pick.local} vs ${pick.away}</p>
+                            <p class="text-white font-bold text-lg">${safeLocal} vs ${safeAway}</p>
                             <div class="flex items-center gap-2 mt-1">
-                                <span class="bg-${periodColor}-500/30 text-${periodColor}-400 text-xs px-2 py-1 rounded font-bold">${pick.period}</span>
-                                <span class="text-purple-300 font-semibold">${pick.betType} ${pick.line}</span>
+                                <span class="bg-${periodColor}-500/30 text-${periodColor}-400 text-xs px-2 py-1 rounded font-bold">${safePeriod}</span>
+                                <span class="text-purple-300 font-semibold">${safeBetType} ${safeLine}</span>
                             </div>
                         </div>
                         <div class="text-right">
@@ -1514,28 +1537,28 @@ function renderBestPicks() {
                         <div class="grid grid-cols-3 gap-2 text-center text-sm">
                             <div>
                                 <p class="text-gray-400 text-xs">Tendencia</p>
-                                <p class="text-white font-bold">${pick.trend}</p>
+                                <p class="text-white font-bold">${safeTrend}</p>
                             </div>
                             <div>
                                 <p class="text-gray-400 text-xs">Línea</p>
-                                <p class="text-white font-bold">${pick.line}</p>
+                                <p class="text-white font-bold">${safeLine}</p>
                             </div>
                             <div>
                                 <p class="text-gray-400 text-xs">EV</p>
-                                <p class="font-bold ${evClass}">${pick.ev ? (parseFloat(pick.ev) >= 0 ? '+' : '') + pick.ev + '%' : '-'}</p>
+                                <p class="font-bold ${evClass}">${safeEv !== '' ? (parseFloat(safeEv) >= 0 ? '+' : '') + safeEv + '%' : '-'}</p>
                             </div>
                         </div>
                         <p class="text-gray-500 text-xs mt-2 text-center">⏱️ Detectado ${timeAgo}</p>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2">
-                        <button onclick="analyzeFromValuePick('${pick.id}')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-bold">
+                        <button onclick="analyzeFromValuePick('${safeId}')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-bold">
                             📊 Analizar
                         </button>
-                        <button onclick="registerFromValuePick('${pick.id}')" class="bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-bold">
+                        <button onclick="registerFromValuePick('${safeId}')" class="bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-bold">
                             ✅ Registrar
                         </button>
-                        <button onclick="removeValuePick('${pick.id}')" class="bg-red-600/50 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-bold">
+                        <button onclick="removeValuePick('${safeId}')" class="bg-red-600/50 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-bold">
                             🗑️ Descartar
                         </button>
                     </div>
@@ -2784,6 +2807,24 @@ if (typeof window.loadTeamStatsFromAPI !== 'function') {
                 '/data/nba-stats/nba-stats.json',
                 '/data/nba-stats/teams.json'
             ];
+            for (const url of candidates) {
+                try {
+                    const r = await fetch(url);
+                    if (!r.ok) continue;
+                    const data = await r.json();
+                    if (data && data.teams) {
+                        window.TEAM_STATS = data.teams;
+                        return window.TEAM_STATS;
+                    }
+                } catch (_) { /* intentar siguiente candidato */ }
+            }
+            return window.TEAM_STATS || {};
+        } catch (err) {
+            console.warn('[renders] loadTeamStatsFromAPI error:', err);
+            return window.TEAM_STATS || {};
+        }
+    };
+}
 
     // Exportar funciones
     window.render = render;
