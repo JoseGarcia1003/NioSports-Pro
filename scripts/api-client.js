@@ -1,8 +1,14 @@
 // scripts/api-client.js
 // Cliente profesional para consumir BallDontLie API vía proxy seguro
 // ════════════════════════════════════════════════════════════════
+// CORRECCIONES v1.1:
+//  - isRateLimited() renombrado a isTokenExpired() con lógica correcta
+//  - hasValidToken() añadido con semántica positiva clara
+//  - isRateLimited() reimplementado para rastrear respuestas 429 reales
+//  - lastRateLimitedAt + rateLimitCooldown para gestión de cooldown post-429
+// ════════════════════════════════════════════════════════════════
 
-console.log('🏀 API Client v1.0 cargando...');
+console.log('🏀 API Client v1.1 cargando...');
 
 class BallDontLieClient {
   constructor() {
@@ -11,8 +17,13 @@ class BallDontLieClient {
     this.tokenExpiry = 0;
     this.cache = new Map();
     this.cacheTTL = 5 * 60 * 1000; // 5 minutos
+
     this.retryAttempts = 3;
-    this.retryDelay = 1000; // 1 segundo
+    this.retryDelay = 1000; // 1 segundo base para exponential backoff
+
+    // Rastreo de rate limiting REAL (respuestas 429 del servidor)
+    this.lastRateLimitedAt = 0;
+    this.rateLimitCooldown = 60 * 1000; // 60 segundos de cooldown tras un 429
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -20,21 +31,21 @@ class BallDontLieClient {
   // ════════════════════════════════════════════════════════════════
 
   async ensureToken() {
-    if (this.token && Date.now() < this.tokenExpiry) {
-      return; // Token válido
-    }
+    // Solo pide token nuevo si el actual ha expirado
+    if (this.hasValidToken()) return;
 
     try {
       console.log('[API] 🔐 Obteniendo nuevo token del proxy...');
       const res = await fetch(`${this.proxy}?init=1`);
-      
+
       if (!res.ok) {
         throw new Error(`Token fetch failed: ${res.status}`);
       }
 
       const data = await res.json();
       this.token = data.token;
-      this.tokenExpiry = Date.now() + data.expiresInMs - 60000; // 1 min buffer
+      // 1 minuto de margen para evitar usar un token que expira mientras viaja la petición
+      this.tokenExpiry = Date.now() + data.expiresInMs - 60_000;
       console.log('[API] ✅ Token obtenido, expira en', Math.round(data.expiresInMs / 1000), 'segundos');
     } catch (error) {
       console.error('[API] ❌ Error obteniendo token:', error);
@@ -43,11 +54,61 @@ class BallDontLieClient {
   }
 
   // ════════════════════════════════════════════════════════════════
+  // TOKEN & RATE LIMIT STATUS — SEMÁNTICA CORREGIDA
+  // ════════════════════════════════════════════════════════════════
+
+  /**
+   * true si el token actual es válido (aún no ha expirado).
+   * Semántica positiva: "tengo token → puedo hacer requests".
+   */
+  hasValidToken() {
+    return this.token !== null && Date.now() < this.tokenExpiry;
+  }
+
+  /**
+   * true si el token ha expirado y necesita renovarse.
+   * CORRECCIÓN: antes se llamaba isRateLimited(), nombre incorrecto
+   * porque expiración de token y rate limiting son conceptos distintos.
+   */
+  isTokenExpired() {
+    return Date.now() >= this.tokenExpiry;
+  }
+
+  /**
+   * true SOLO si el servidor respondió con 429 recientemente
+   * y el período de cooldown aún no terminó.
+   * Esta es la implementación correcta de "estoy rate limited".
+   */
+  isRateLimited() {
+    if (this.lastRateLimitedAt === 0) return false;
+    return Date.now() - this.lastRateLimitedAt < this.rateLimitCooldown;
+  }
+
+  /** Tiempo restante (ms) del cooldown de rate limiting. 0 si no hay cooldown activo. */
+  getRateLimitCooldownRemaining() {
+    if (!this.isRateLimited()) return 0;
+    return this.rateLimitCooldown - (Date.now() - this.lastRateLimitedAt);
+  }
+
+  /** Tiempo restante (ms) hasta que el token expire. 0 si ya expiró. */
+  getTokenTimeRemaining() {
+    return Math.max(0, this.tokenExpiry - Date.now());
+  }
+
+  // ════════════════════════════════════════════════════════════════
   // REQUEST WITH RETRY & CACHE
   // ════════════════════════════════════════════════════════════════
 
   async request(endpoint, cacheKey = null, attempt = 1) {
-    // Check cache first
+    // Bloquear si estamos en cooldown de rate limiting activo
+    if (this.isRateLimited()) {
+      const remaining = Math.ceil(this.getRateLimitCooldownRemaining() / 1000);
+      const msg = `Rate limit activo. Espera ${remaining}s antes de reintentar.`;
+      console.warn('[API] 🚫', msg);
+      throw new Error(msg);
+    }
+
+    // Servir desde caché si el dato es reciente
     if (cacheKey && this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey);
       if (Date.now() < cached.expiry) {
@@ -61,7 +122,7 @@ class BallDontLieClient {
 
     try {
       console.log(`[API] 📡 Request (attempt ${attempt}):`, endpoint);
-      
+
       const res = await fetch(
         `${this.proxy}?endpoint=${encodeURIComponent(endpoint)}`,
         {
@@ -74,19 +135,24 @@ class BallDontLieClient {
       );
 
       if (!res.ok) {
-        if (res.status === 429 && attempt < this.retryAttempts) {
-          // Rate limited, retry with backoff
-          const delay = this.retryDelay * Math.pow(2, attempt - 1);
-          console.warn(`[API] ⏳ Rate limited, retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return this.request(endpoint, cacheKey, attempt + 1);
+        if (res.status === 429) {
+          // Registrar el momento exacto del 429 para el cooldown
+          this.lastRateLimitedAt = Date.now();
+          console.warn('[API] 🚫 Rate limit (429). Cooldown de', this.rateLimitCooldown / 1000, 's activado');
+
+          if (attempt < this.retryAttempts) {
+            const delay = this.retryDelay * Math.pow(2, attempt - 1);
+            console.warn(`[API] ⏳ Reintentando en ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return this.request(endpoint, cacheKey, attempt + 1);
+          }
         }
         throw new Error(`API Error: ${res.status} ${res.statusText}`);
       }
 
       const data = await res.json();
 
-      // Cache successful result
+      // Guardar en caché el resultado exitoso
       if (cacheKey) {
         this.cache.set(cacheKey, {
           data,
@@ -100,20 +166,19 @@ class BallDontLieClient {
 
     } catch (error) {
       console.error('[API] ❌ Request failed:', endpoint, error);
-      
-      // Retry on network errors
+
+      // Reintentar solo en errores de red, no en errores HTTP
       if (attempt < this.retryAttempts && error.message.includes('fetch')) {
         const delay = this.retryDelay * Math.pow(2, attempt - 1);
-        console.log(`[API] 🔄 Network error, retrying in ${delay}ms...`);
+        console.log(`[API] 🔄 Error de red, reintentando en ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         return this.request(endpoint, cacheKey, attempt + 1);
       }
-      
-      // Show user-friendly error
+
       if (typeof window.toastError === 'function') {
         window.toastError('Error cargando datos. Reintentando...');
       }
-      
+
       throw error;
     }
   }
@@ -166,18 +231,6 @@ class BallDontLieClient {
       totalSize: JSON.stringify(Array.from(this.cache.values())).length
     };
   }
-
-  // ════════════════════════════════════════════════════════════════
-  // HELPERS
-  // ════════════════════════════════════════════════════════════════
-
-  isRateLimited() {
-    return this.tokenExpiry - Date.now() < 0;
-  }
-
-  getTokenTimeRemaining() {
-    return Math.max(0, this.tokenExpiry - Date.now());
-  }
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -192,11 +245,8 @@ if (document.readyState === 'loading') {
     try {
       await window.apiClient.ensureToken();
       console.log('[API] ✅ Cliente inicializado y listo');
-      
-      // Token listo (sin notificación al usuario - es interno)
     } catch (error) {
       console.error('[API] ❌ Error inicializando cliente:', error);
-      
       if (typeof window.toastError === 'function') {
         window.toastError('Error conectando a sistema NBA');
       }
@@ -204,10 +254,7 @@ if (document.readyState === 'loading') {
   });
 } else {
   window.apiClient.ensureToken()
-    .then(() => {
-      console.log('[API] ✅ Cliente inicializado y listo');
-      // Token listo (sin notificación al usuario - es interno)
-    })
+    .then(() => console.log('[API] ✅ Cliente inicializado y listo'))
     .catch(error => {
       console.error('[API] ❌ Error inicializando:', error);
       if (typeof window.toastError === 'function') {
@@ -216,4 +263,4 @@ if (document.readyState === 'loading') {
     });
 }
 
-console.log('✅ API Client v1.0 cargado');
+console.log('✅ API Client v1.1 cargado');
