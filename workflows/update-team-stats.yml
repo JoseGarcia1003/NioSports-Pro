@@ -1,0 +1,191 @@
+name: Actualizar Estadísticas de Equipos NBA
+
+# ─────────────────────────────────────────────────────────────────
+# Se ejecuta todos los días a las 8 AM UTC (3 AM Ecuador)
+# También puede lanzarse manualmente desde la pestaña Actions
+# ─────────────────────────────────────────────────────────────────
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Forzar actualización aunque no haya cambios'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  update-team-stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ── 1. Checkout del repositorio ──────────────────────────────
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── 2. Configurar Python ─────────────────────────────────────
+      - name: 🐍 Python Setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # ── 3. Instalar dependencias ─────────────────────────────────
+      - name: 📦 Instalar Dependencias
+        run: pip install requests --break-system-packages
+
+      # ── 4. Actualizar estadísticas via BallDontLie API ───────────
+      - name: 📊 Actualizar Stats de Equipos NBA
+        env:
+          BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+        run: |
+          python3 << 'EOF'
+          import requests
+          import json
+          import os
+          import sys
+          from datetime import datetime, timezone
+
+          API_KEY = os.environ.get("BALLDONTLIE_API_KEY", "")
+          HEADERS = {"Authorization": API_KEY} if API_KEY else {}
+
+          print("📊 Iniciando actualización de estadísticas NBA...")
+
+          # ── Obtener todos los equipos ────────────────────────────
+          try:
+              r = requests.get("https://api.balldontlie.io/v1/teams", headers=HEADERS, timeout=15)
+              r.raise_for_status()
+              teams_raw = r.json().get("data", [])
+              print(f"✅ {len(teams_raw)} equipos obtenidos de la API")
+          except Exception as e:
+              print(f"❌ Error obteniendo equipos: {e}")
+              sys.exit(1)
+
+          # Mapa de abreviaturas → nombre corto para el JSON
+          ABBR_TO_KEY = {
+              "ATL": "Hawks",    "BOS": "Celtics",  "BKN": "Nets",
+              "CHA": "Hornets",  "CHI": "Bulls",    "CLE": "Cavaliers",
+              "DAL": "Mavericks","DEN": "Nuggets",  "DET": "Pistons",
+              "GSW": "Warriors", "HOU": "Rockets",  "IND": "Pacers",
+              "LAC": "Clippers", "LAL": "Lakers",   "MEM": "Grizzlies",
+              "MIA": "Heat",     "MIL": "Bucks",    "MIN": "Timberwolves",
+              "NOP": "Pelicans", "NYK": "Knicks",   "OKC": "Thunder",
+              "ORL": "Magic",    "PHI": "76ers",    "PHX": "Suns",
+              "POR": "Trail Blazers","SAC": "Kings", "SAS": "Spurs",
+              "TOR": "Raptors",  "UTA": "Jazz",     "WAS": "Wizards"
+          }
+
+          # ── Leer el JSON existente para preservar stats detalladas ─
+          existing_path = "data/nba-stats.json"
+          existing_data = {}
+          try:
+              with open(existing_path, "r") as f:
+                  existing_data = json.load(f)
+              print(f"📁 JSON existente leído: {len(existing_data.get('teams', {}))} equipos")
+          except Exception:
+              print("⚠️ No se pudo leer el JSON existente, se creará uno nuevo")
+
+          # ── Construir estructura de equipos actualizada ───────────
+          teams_out = {}
+          for team in teams_raw:
+              abbr = team.get("abbreviation", "")
+              key  = ABBR_TO_KEY.get(abbr)
+              if not key:
+                  continue
+
+              # Preservar stats detalladas del JSON existente si existen
+              existing_team = existing_data.get("teams", {}).get(key, {})
+              teams_out[key] = {
+                  **existing_team,              # Preservar todo lo existente
+                  "id":         team["id"],
+                  "full_name":  team["full_name"],
+                  "abbreviation": abbr,
+                  "city":       team.get("city", ""),
+                  "conference": team.get("conference", ""),
+                  "division":   team.get("division", ""),
+                  "_updated":   datetime.now(timezone.utc).isoformat()
+              }
+
+          # ── Preservar leagueAverages del existente ────────────────
+          league_avgs = existing_data.get("leagueAverages", {
+              "full": 224.5, "half": 111.8, "q1": 56.2,
+              "pace": 99.1,  "season": "2024-25"
+          })
+
+          # ── Escribir el JSON actualizado ─────────────────────────
+          output = {
+              "teams":          teams_out,
+              "leagueAverages": league_avgs,
+              "meta": {
+                  "lastUpdated":  datetime.now(timezone.utc).isoformat(),
+                  "source":       "BallDontLie API v1 + cached team stats",
+                  "teamsCount":   len(teams_out),
+                  "season":       "2024-25",
+                  "autoUpdated":  True
+              }
+          }
+
+          os.makedirs("data", exist_ok=True)
+          with open(existing_path, "w") as f:
+              json.dump(output, f, indent=2, ensure_ascii=False)
+
+          print(f"✅ data/nba-stats.json actualizado con {len(teams_out)} equipos")
+          print(f"   Última actualización: {output['meta']['lastUpdated']}")
+          EOF
+
+      # ── 5. Verificar que el JSON es válido ───────────────────────
+      - name: 🔍 Validar JSON generado
+        run: |
+          python3 -c "
+          import json, sys
+          try:
+              with open('data/nba-stats.json') as f:
+                  d = json.load(f)
+              teams = len(d.get('teams', {}))
+              print(f'✅ JSON válido: {teams} equipos, meta={d.get(\"meta\", {})}')
+              if teams < 25:
+                  print('⚠️ ADVERTENCIA: menos de 25 equipos en el JSON')
+                  sys.exit(1)
+          except Exception as e:
+              print(f'❌ JSON inválido: {e}')
+              sys.exit(1)
+          "
+
+      # ── 6. Commit y push solo si hubo cambios ───────────────────
+      - name: 💾 Commit y Push
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "GitHub Actions [NioSports]"
+          git add data/nba-stats.json
+          if git diff --staged --quiet; then
+            echo "ℹ️ Sin cambios en nba-stats.json, no se hace commit"
+          else
+            git commit -m "🏀 Stats NBA actualizadas — $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+            echo "✅ Push completado"
+          fi
+
+      # ── 7. Resumen final ─────────────────────────────────────────
+      - name: 📋 Resumen
+        if: always()
+        run: |
+          echo "════════════════════════════════════"
+          echo "✅ Workflow completado"
+          echo "🕐 Hora UTC: $(date -u)"
+          echo "📁 Estado del JSON:"
+          python3 -c "
+          import json
+          try:
+              with open('data/nba-stats.json') as f:
+                  d = json.load(f)
+              meta = d.get('meta', {})
+              print(f'   Equipos: {len(d.get(\"teams\", {}))}')
+              print(f'   Actualizado: {meta.get(\"lastUpdated\", \"N/A\")}')
+              print(f'   Fuente: {meta.get(\"source\", \"N/A\")}')
+          except:
+              print('   No se pudo leer el JSON')
+          "
+          echo "════════════════════════════════════"
