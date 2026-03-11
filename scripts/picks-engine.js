@@ -60,6 +60,12 @@ class PicksEngine {
 
     // Datos de demostración (cuando API o JSON no disponibles)
     this.demoStats = this._buildDemoStats();
+
+    // ── ESTADO DE FUENTE DE DATOS ─────────────────────────────────
+    // Estos flags se actualizan durante la carga para que la UI pueda
+    // mostrar un indicador honesto de si los datos son reales o estimados.
+    this.usingDemoStats = false;   // true cuando se cargó demoStats en lugar de nba-stats.json
+    this.usingDemoGames = false;   // true cuando no hay juegos reales de la API hoy
   }
 
   // ── DEMO STATS (fallback cuando no hay JSON) ──────────────────
@@ -110,12 +116,18 @@ class PicksEngine {
       this.teamStats     = data.teams;
       this.leagueAverages = data.leagueAverages;
       this.statsLoaded   = true;
+      this.usingDemoStats = false;
       console.log(`[Picks] ✅ Stats cargadas: ${Object.keys(this.teamStats).length} equipos`);
+      // Notificar a la UI que los datos son reales
+      this._dispatchDataSourceEvent('real-stats');
     } catch (err) {
       console.warn('[Picks] ⚠️ nba-stats.json no disponible, usando datos integrados:', err.message);
-      this.teamStats     = this.demoStats.teams;
+      this.teamStats      = this.demoStats.teams;
       this.leagueAverages = this.demoStats.leagueAverages;
-      this.statsLoaded   = true;
+      this.statsLoaded    = true;
+      this.usingDemoStats = true;
+      // Notificar a la UI para mostrar el banner de advertencia
+      this._dispatchDataSourceEvent('demo-stats');
     }
   }
 
@@ -149,6 +161,11 @@ class PicksEngine {
     if (!games.length) {
       console.log('[Picks] 🎭 Usando juegos de demostración');
       games = this._buildDemoGames();
+      this.usingDemoGames = true;
+      this._dispatchDataSourceEvent('demo-games');
+    } else {
+      this.usingDemoGames = false;
+      this._dispatchDataSourceEvent('real-games');
     }
 
     const analyses = await Promise.all(
@@ -491,6 +508,42 @@ class PicksEngine {
       hasRealData: true,
       timestamp:   Date.now()
     };
+  }
+
+  // ── ESTADO DE FUENTE DE DATOS ─────────────────────────────────
+
+  /**
+   * Devuelve true si alguno de los datos activos es demo/estimación.
+   * La UI puede llamar este método para decidir si mostrar el banner.
+   */
+  isUsingDemoData() {
+    return this.usingDemoStats || this.usingDemoGames;
+  }
+
+  /**
+   * Emite un CustomEvent en window para que cualquier parte de la UI
+   * pueda reaccionar al cambio de fuente de datos sin acoplamiento directo.
+   *
+   * @param {'real-stats'|'demo-stats'|'real-games'|'demo-games'} type
+   */
+  _dispatchDataSourceEvent(type) {
+    const isDemo = type.startsWith('demo');
+    window.dispatchEvent(new CustomEvent('ns:data-source-changed', {
+      detail: {
+        type,
+        isDemo,
+        usingDemoStats: this.usingDemoStats,
+        usingDemoGames: this.usingDemoGames,
+        // Bandera combinada: true si CUALQUIER fuente es estimada
+        anyDemoActive: this.isUsingDemoData(),
+        timestamp: Date.now()
+      }
+    }));
+    if (isDemo) {
+      console.warn(`[Picks] ⚠️ Fuente de datos: ${type} — El banner de datos estimados debe mostrarse`);
+    } else {
+      console.log(`[Picks] ✅ Fuente de datos: ${type} — Datos reales activos`);
+    }
   }
 
   // ── UTILIDADES ─────────────────────────────────────────────────
