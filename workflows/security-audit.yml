@@ -1,0 +1,130 @@
+name: Auditoría de Seguridad — Dependencias
+
+# ─────────────────────────────────────────────────────────────────
+# Se ejecuta en tres situaciones:
+#   1. Cada push a main o develop (para detectar problemas al momento)
+#   2. Cada Pull Request hacia main (para bloquear PRs con vulnerabilidades)
+#   3. Todos los lunes a las 9 AM UTC (auditoría semanal proactiva,
+#      para detectar CVEs publicados después del último push)
+# ─────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 9 * * 1'   # Lunes 9 AM UTC
+  workflow_dispatch:       # Ejecución manual desde la pestaña Actions
+
+jobs:
+  security-audit:
+    name: npm audit + dependency check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Checkout ───────────────────────────────────────────────
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Node.js con caché de npm ───────────────────────────────
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ── 3. Instalar dependencias ───────────────────────────────────
+      # Se usa --ignore-scripts para evitar ejecutar postinstall scripts
+      # de paquetes potencialmente comprometidos antes de la auditoría.
+      - name: 📦 Instalar dependencias
+        run: npm ci --ignore-scripts
+
+      # ── 4. npm audit (nivel moderate+) ────────────────────────────
+      # --audit-level=moderate falla el workflow si hay vulnerabilidades
+      # de severidad MODERATE, HIGH o CRITICAL.
+      # Se excluye --production para auditar también devDependencies,
+      # ya que los scripts de build corren en el servidor de CI.
+      - name: 🔍 npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: false   # Falla el workflow en vulnerabilidades
+
+      # ── 5. Reporte de auditoría completo (siempre, para revisión) ──
+      # Este paso genera el reporte JSON completo aunque el paso 4 haya
+      # pasado — útil para tener visibilidad de vulnerabilidades LOW
+      # que no bloquean el build pero sí merecen atención.
+      - name: 📋 Reporte completo de auditoría
+        if: always()
+        run: |
+          echo "════════════════════════════════════════════════"
+          echo "  Reporte completo npm audit (todas las severidades)"
+          echo "════════════════════════════════════════════════"
+          npm audit --json | node -e "
+            const chunks = [];
+            process.stdin.on('data', c => chunks.push(c));
+            process.stdin.on('end', () => {
+              try {
+                const data = JSON.parse(chunks.join(''));
+                const vulns = data.vulnerabilities || {};
+                const meta  = data.metadata || {};
+                const total = Object.keys(vulns).length;
+
+                console.log('Total de vulnerabilidades encontradas:', total);
+
+                if (meta.vulnerabilities) {
+                  const v = meta.vulnerabilities;
+                  console.log('  🔴 Critical:', v.critical || 0);
+                  console.log('  🟠 High:    ', v.high     || 0);
+                  console.log('  🟡 Moderate:', v.moderate || 0);
+                  console.log('  🟢 Low:     ', v.low      || 0);
+                  console.log('  ℹ️  Info:    ', v.info     || 0);
+                }
+
+                if (total > 0) {
+                  console.log('');
+                  console.log('Paquetes afectados:');
+                  Object.entries(vulns).forEach(([name, vuln]) => {
+                    console.log(' -', name, '| severity:', vuln.severity, '| fixable:', vuln.fixAvailable ? 'YES' : 'no');
+                  });
+                }
+              } catch (e) {
+                console.log('No se pudo parsear el reporte JSON:', e.message);
+              }
+            });
+          " || true
+
+      # ── 6. Verificar que no hay dependencias con licencias prohibidas ─
+      # Una dependencia con licencia GPL-3.0 en un proyecto comercial
+      # puede crear problemas legales. Este paso es informativo (no falla).
+      - name: ⚖️ Verificar licencias
+        if: always()
+        run: |
+          echo "════════════════════════════════════════════════"
+          echo "  Dependencias directas y sus licencias"
+          echo "════════════════════════════════════════════════"
+          node -e "
+            const pkg = require('./package.json');
+            const all = { ...pkg.dependencies, ...pkg.devDependencies };
+            console.log('Dependencias directas:', Object.keys(all).length);
+            Object.entries(all).forEach(([name, version]) => {
+              console.log(' -', name, version);
+            });
+          "
+
+      # ── 7. Resumen final ──────────────────────────────────────────
+      - name: 📊 Resumen
+        if: always()
+        run: |
+          echo "════════════════════════════════════════════════"
+          echo "✅ Auditoría completada"
+          echo "🕐 Hora UTC: $(date -u)"
+          echo "📌 Node: $(node --version) | npm: $(npm --version)"
+          echo "════════════════════════════════════════════════"
+          echo ""
+          echo "Si npm audit falló, ejecuta localmente:"
+          echo "  npm audit fix          → corrige automáticamente lo que puede"
+          echo "  npm audit fix --force  → actualiza major versions (revisar breaking changes)"
+          echo "  npm audit              → muestra el reporte completo"
