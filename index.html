@@ -28,9 +28,17 @@
     <!-- OBSERVABILIDAD & TELEMETRY -->
     <!-- ═══════════════════════════════════════════════════════════ -->
 
-    <!-- Sentry — Observabilidad en producción -->
+    <!-- Sentry CDN — Observabilidad en producción -->
     <script src="https://browser.sentry-cdn.com/7.119.0/bundle.min.js" crossorigin="anonymous"></script>
     <script src="/scripts/sentry-init.js"></script>
+
+    <!-- DOMPurify — Sanitización contra XSS (DEBE cargar antes de renders.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.5/purify.min.js" crossorigin="anonymous"></script>
+    <script src="/scripts/sanitize.js"></script>
+
+    <!-- Indicador de fuente de datos (banner demo/real) -->
+    <script src="/scripts/data-source-indicator.js" defer></script>
+
 
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!-- FIREBASE -->
