@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NioSports Pro v3.0 REVOLUTION | El Sistema NBA #1</title>
     <meta name="description"
-        content="Sistema predictivo NBA con análisis estadístico profesional de totales. Motor IA con factores contextuales, analytics profesionales y gestión de bankroll en tiempo real.">
+        content="El sistema predictivo NBA más avanzado del mercado. Motor IA con 47 factores contextuales, analytics profesionales y gestión de bankroll en tiempo real.">
     <meta name="theme-color" content="#fbbf24">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -72,19 +72,8 @@
     <script src="/scripts/database-updater.js"></script>
 
     <!-- UI Integration (conecta engines con UI) -->
-    <script>
-        // Fallback: asegura que exista window.DatabaseUpdater aunque /scripts/database-updater.js no cargue (404/CSP/cache)
-        (function () {
-            if (!window.DatabaseUpdater) {
-                window.DatabaseUpdater = {
-                    async updateDatabase() {
-                        throw new Error("DatabaseUpdater not ready");
-                    }
-                };
-                window.__ns_dbUpdaterFallback = true;
-            }
-        })();
-    </script>
+    <!-- Fallback externo: garantiza window.DatabaseUpdater si database-updater.js no cargó -->
+    <script src="/scripts/db-updater-fallback.js"></script>
 
 
     <script src="/scripts/ui-integration.js"></script>
@@ -2715,30 +2704,12 @@
 </head>
 
 <body>
-    <!-- 🚨 FIX CRÍTICO: Ocultar TODAS las pantallas hasta que JS decida -->
-    <script>
-        (function(){
-            var authIds = ['loginScreen','registerScreen','forgotPasswordScreen'];
-            var appIds = ['mainApp','mainNav'];
-            function hideAll(){
-                authIds.concat(appIds).forEach(function(id){
-                    var el = document.getElementById(id);
-                    if(el) el.style.cssText = 'display:none!important;';
-                });
-            }
-            hideAll();
-            document.addEventListener('DOMContentLoaded', hideAll);
-            setTimeout(hideAll, 50);
-            setTimeout(hideAll, 200);
-            // Exponer función para que main.js pueda mostrar login
-            window.__forceShowLogin = function(){
-                authIds.forEach(function(id){
-                    var el = document.getElementById(id);
-                    if(el) el.style.cssText = (id==='loginScreen') ? 'display:flex!important;' : 'display:none!important;';
-                });
-            };
-        })();
-    </script>
+    <!-- ═══════════════════════════════════════════════════════════
+         HIDE-UNTIL-READY: oculta todas las pantallas síncronamente
+         para evitar flash de contenido sin autenticar.
+         ⚠️  SIN defer ni async — debe ejecutarse bloqueando el parser.
+         ═══════════════════════════════════════════════════════════ -->
+    <script src="/scripts/hide-until-ready.js"></script>
     
     <!-- Skip to main content -->
     <a href="#main-content" class="skip-link"
