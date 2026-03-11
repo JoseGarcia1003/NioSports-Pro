@@ -2,36 +2,70 @@
   "rules": {
     "users": {
       "$uid": {
-        ".read":  "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid",
-        "picks": {
-          "$pickId": {
-            ".validate": "newData.hasChildren(['localTeam', 'awayTeam', 'line', 'createdAt'])"
-          }
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid",
+
+        "h2h_games": {
+          "$gameId": { ".validate": "newData.hasChildren(['team1', 'team2', 'date'])" }
+        },
+        "picks_totales": {
+          "$pickId": { ".validate": "newData.hasChildren(['localTeam', 'awayTeam', 'betType', 'line'])" }
+        },
+        "picks_props": {
+          "$pickId": { ".validate": "newData.hasChildren(['player', 'stat', 'line', 'betType'])" }
+        },
+        "picks_ai": {
+          "$pickId": { ".validate": "newData.hasChildren(['type', 'prediction'])" }
+        },
+        "picks_backtesting": {
+          "$pickId": { ".validate": "newData.hasChildren(['betType', 'line'])" }
         },
         "bankroll": {
-          "balance": {
-            ".validate": "newData.isNumber() && newData.val() >= 0"
-          }
+          ".validate": "newData.hasChildren(['current', 'initial'])"
         },
         "profile": {
-          ".validate": "newData.hasChildren(['username'])"
+          ".validate": "newData.hasChildren(['email'])"
+        },
+        "picks": {
+          "$pickId": { ".validate": "newData.hasChildren(['betType', 'line'])" }
+        },
+        "mypicks": {
+          "$pickId": { ".validate": "newData.hasChildren(['betType'])" }
         }
       }
     },
-    "usernamesIndex": {
-      ".read": "auth != null",
-      "$username": {
-        ".write": "auth != null && (!data.exists() || data.val() === auth.uid)"
+
+    "backtests": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
       }
     },
+
+    "h2hCache": {
+      "$key": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+
+    "usernamesIndex": {
+      "$username": {
+        ".read": true,
+        ".write": "auth != null && !data.exists()",
+        ".validate": "newData.isString() && newData.val() == auth.uid && $username.matches(/^[a-z0-9_]{3,20}$/)"
+      }
+    },
+
     "usernamesByUid": {
       "$uid": {
-        ".read":  "auth != null",
-        ".write": "auth != null && auth.uid === $uid"
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid",
+        ".validate": "newData.isString() && newData.val().matches(/^[a-zA-Z0-9_]{3,20}$/)"
       }
     },
-    ".read":  false,
+
+    ".read": false,
     ".write": false
   }
 }
