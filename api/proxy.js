@@ -1,411 +1,358 @@
-// api/proxy.js — NioSports SaaS Proxy (WAF-light + adaptive RL)
-// - CORS dynamic allowlist (GitHub Pages + Vercel prod + previews)
-// - Signed challenge token (anti-bot light, non-invasive)
-// - Adaptive rate limiting: burst + sustained (IP + token + optional user)
-// - Safe endpoint allowlist
-// - CSP report endpoint support (POST /api/csp-report)
+// api/proxy.js — NioSports SaaS Proxy v2 (KV-backed rate limiting)
+// ════════════════════════════════════════════════════════════════
+// CAMBIO vs v1: el rate limiting anterior usaba global.__NS_STORE__
+// (Maps en memoria). En serverless cada instancia tiene memoria propia
+// — un atacante con N requests paralelos podía burlar el límite si
+// caían en N instancias distintas. La solución es Vercel KV (Redis
+// compartido entre TODAS las instancias del proxy).
+//
+// FALLBACK: si KV_REST_API_URL no está configurado (dev local),
+// el proxy usa el store en memoria. En producción siempre debe usarse KV.
+//
+// CONFIGURACIÓN en Vercel Dashboard:
+//   1. Storage → Create KV Database → conectar al proyecto
+//   2. Vercel inyecta KV_REST_API_URL y KV_REST_API_TOKEN automáticamente
+// ════════════════════════════════════════════════════════════════
 
-const API_BASE = "https://api.balldontlie.io/v1";
+import { kv } from "@vercel/kv";
 
-// Allow only these endpoint roots
+const API_BASE          = "https://api.balldontlie.io/v1";
 const ALLOWED_ENDPOINTS = ["/players", "/season_averages", "/stats", "/games"];
-
-// Allow Origins
-const ALLOWED_ORIGINS = [
+const ALLOWED_ORIGINS   = [
   "https://josegarcia1003.github.io",
   "https://nio-sports-pro.vercel.app",
 ];
-
-// Allow Vercel preview origins
 const VERCEL_PREVIEW_RE = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i;
 
-// -------------------- Adaptive Rate Limit (burst + sustained) --------------------
-// Burst (spikes)
-const BURST_CAPACITY = 25;
-const BURST_REFILL_MS = 10_000;
+const BURST_CAPACITY      = 25;
+const BURST_REFILL_MS     = 10_000;
 const BURST_REFILL_TOKENS = 25;
+const SUSTAINED_WINDOW_MS = 10 * 60_000;
+const SUSTAINED_MAX       = 180;
+const WINDOW_MS           = 60_000;
+const LIMITS = { ipOnlyPerMin: 10, ipPerMin: 60, tokenPerMin: 120 };
+const BAN_TTL_S   = 30;
+const BURST_TTL_S = 300;
 
-// Sustained (longer)
-const SUSTAINED_WINDOW_MS = 10 * 60_000; // 10 min
-const SUSTAINED_MAX = 180;               // per 10 min
-
-// Token/system limits
-const WINDOW_MS = 60_000; // legacy per-minute window for compatibility
-const LIMITS = {
-  ipOnlyPerMin: 10, // no token
-  ipPerMin: 60,     // with token
-  tokenPerMin: 120, // with token
-};
-
-function now() {
-  return Date.now();
+// ── Detección de entorno ──────────────────────────────────────────
+function isKvAvailable() {
+  return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 }
 
+function getMemStore() {
+  if (!global.__NS_MEM_STORE__) {
+    global.__NS_MEM_STORE__ = {
+      burst: new Map(), sustained: new Map(),
+      bans:  new Map(), ipHits:    new Map(), tokenHits: new Map(),
+    };
+  }
+  return global.__NS_MEM_STORE__;
+}
+
+// ── Utilidades de red ─────────────────────────────────────────────
 function getClientIp(req) {
   const xf = req.headers["x-forwarded-for"];
   if (!xf) return "unknown";
   return String(xf).split(",")[0].trim() || "unknown";
 }
 
-function routeWeight(endpointStr) {
-  // Heavier endpoints cost more
-  if (endpointStr.startsWith("/stats")) return 2;
-  return 1;
+function routeWeight(ep) {
+  return ep.startsWith("/stats") ? 2 : 1;
 }
 
-// Very cheap sanity bot filter (no invasive fingerprinting)
 function basicBotRisk(req) {
-  const ua = String(req.headers["user-agent"] || "");
+  const ua = String(req.headers["user-agent"]      || "");
   const al = String(req.headers["accept-language"] || "");
-  const acc = String(req.headers["accept"] || "");
-  let score = 0;
-  if (!ua || ua.length < 8) score += 2;
-  if (!al) score += 1;
-  if (!acc) score += 1;
-  if (/curl|wget|python|httpclient|postman/i.test(ua)) score += 2;
-  return score; // 0..?
+  const ac = String(req.headers["accept"]          || "");
+  let s = 0;
+  if (!ua || ua.length < 8)                              s += 2;
+  if (!al)                                               s += 1;
+  if (!ac)                                               s += 1;
+  if (/curl|wget|python|httpclient|postman/i.test(ua))  s += 2;
+  return s;
 }
 
-// -------- In-memory stores (serverless best-effort) --------
-function getStore() {
-  if (!global.__NS_STORE__) {
-    global.__NS_STORE__ = {
-      ipHits: new Map(),       // ip -> [timestamps] (legacy/min)
-      tokenHits: new Map(),    // tokenId -> [timestamps] (legacy/min)
+// ════════════════════════════════════════════════════════════════
+// CAPA DE RATE LIMITING
+// Cada función tiene implementación KV (producción) + memoria (dev).
+// ════════════════════════════════════════════════════════════════
 
-      burst: new Map(),        // key -> { tokens, last }
-      sustained: new Map(),    // key -> [timestamps]
-      bans: new Map(),         // key -> untilMs
-    };
-  }
-  return global.__NS_STORE__;
-}
-
-function prune(arr, t, windowMs) {
-  const cutoff = t - windowMs;
-  let i = 0;
-  while (i < arr.length && arr[i] < cutoff) i++;
-  if (i > 0) arr.splice(0, i);
-  return arr;
-}
-
-function takeHit(map, key, t) {
-  const arr = map.get(key) || [];
-  prune(arr, t, WINDOW_MS);
-  arr.push(t);
-  map.set(key, arr);
-  return arr.length;
-}
-
-function isBanned(store, key) {
+async function isBanned(key) {
+  if (isKvAvailable()) return !!(await kv.get(`ban:${key}`));
+  const store = getMemStore();
   const until = store.bans.get(key);
   if (!until) return false;
-  if (now() > until) {
-    store.bans.delete(key);
-    return false;
-  }
+  if (Date.now() > until) { store.bans.delete(key); return false; }
   return true;
 }
 
-function ban(store, key, ms) {
-  store.bans.set(key, now() + ms);
+async function banKey(key) {
+  if (isKvAvailable()) {
+    await kv.set(`ban:${key}`, 1, { ex: BAN_TTL_S });
+    return;
+  }
+  getMemStore().bans.set(key, Date.now() + BAN_TTL_S * 1000);
 }
 
-// Burst token bucket
-function allowBurst(store, key, weight) {
-  const t = now();
-  const entry = store.burst.get(key) || { tokens: BURST_CAPACITY, last: t };
-
-  const elapsed = t - entry.last;
-  if (elapsed > 0) {
-    const steps = Math.floor(elapsed / BURST_REFILL_MS);
+async function allowBurst(key, weight) {
+  if (isKvAvailable()) {
+    const storeKey = `burst:${key}`;
+    const t = Date.now();
+    let entry = await kv.get(storeKey);
+    if (!entry) entry = { tokens: BURST_CAPACITY, last: t };
+    const steps = Math.floor((t - entry.last) / BURST_REFILL_MS);
     if (steps > 0) {
       entry.tokens = Math.min(BURST_CAPACITY, entry.tokens + steps * BURST_REFILL_TOKENS);
-      entry.last += steps * BURST_REFILL_MS;
+      entry.last  += steps * BURST_REFILL_MS;
     }
+    const allowed = entry.tokens >= weight;
+    if (allowed) entry.tokens -= weight;
+    await kv.set(storeKey, entry, { ex: BURST_TTL_S });
+    return allowed;
   }
-
-  if (entry.tokens >= weight) {
-    entry.tokens -= weight;
-    store.burst.set(key, entry);
-    return true;
+  const store = getMemStore();
+  const t     = Date.now();
+  const entry = store.burst.get(key) || { tokens: BURST_CAPACITY, last: t };
+  const steps = Math.floor((t - entry.last) / BURST_REFILL_MS);
+  if (steps > 0) {
+    entry.tokens = Math.min(BURST_CAPACITY, entry.tokens + steps * BURST_REFILL_TOKENS);
+    entry.last  += steps * BURST_REFILL_MS;
   }
-
+  const allowed = entry.tokens >= weight;
+  if (allowed) entry.tokens -= weight;
   store.burst.set(key, entry);
-  return false;
+  return allowed;
 }
 
-// Sustained sliding window
-function allowSustained(store, key, weight) {
-  const t = now();
-  const arr = store.sustained.get(key) || [];
-  prune(arr, t, SUSTAINED_WINDOW_MS);
-
-  // push 'weight' times
-  for (let i = 0; i < weight; i++) arr.push(t);
-
+async function allowSustained(key, weight) {
+  if (isKvAvailable()) {
+    const winIdx  = Math.floor(Date.now() / SUSTAINED_WINDOW_MS);
+    const storeKey = `sust:${key}:${winIdx}`;
+    const count   = await kv.incrby(storeKey, weight);
+    if (count === weight) await kv.expire(storeKey, Math.ceil(SUSTAINED_WINDOW_MS / 1000) * 2);
+    return count <= SUSTAINED_MAX;
+  }
+  const store  = getMemStore();
+  const t      = Date.now();
+  const arr    = store.sustained.get(key) || [];
+  const cutoff = t - SUSTAINED_WINDOW_MS;
+  let i = 0;
+  while (i < arr.length && arr[i] < cutoff) i++;
+  if (i > 0) arr.splice(0, i);
+  for (let j = 0; j < weight; j++) arr.push(t);
   store.sustained.set(key, arr);
   return arr.length <= SUSTAINED_MAX;
 }
 
-// -------------------- Token (HMAC) --------------------
+async function takeHit(prefix, key) {
+  if (isKvAvailable()) {
+    const minIdx   = Math.floor(Date.now() / WINDOW_MS);
+    const storeKey = `${prefix}:min:${key}:${minIdx}`;
+    const count    = await kv.incr(storeKey);
+    if (count === 1) await kv.expire(storeKey, 120);
+    return count;
+  }
+  const store  = getMemStore();
+  const map    = prefix === 'ip' ? store.ipHits : store.tokenHits;
+  const t      = Date.now();
+  const arr    = map.get(key) || [];
+  const cutoff = t - WINDOW_MS;
+  let i = 0;
+  while (i < arr.length && arr[i] < cutoff) i++;
+  if (i > 0) arr.splice(0, i);
+  arr.push(t); map.set(key, arr);
+  return arr.length;
+}
+
+// ════════════════════════════════════════════════════════════════
+// HMAC / Token (sin cambios vs v1)
+// ════════════════════════════════════════════════════════════════
 async function hmacSHA256(secret, payload) {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
-    "raw",
-    enc.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
+    "raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
   );
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(payload));
-  const bytes = new Uint8Array(sig);
-  let str = "";
+  const bytes = new Uint8Array(sig); let str = "";
   for (const b of bytes) str += String.fromCharCode(b);
   return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function b64urlEncode(obj) {
-  const json = JSON.stringify(obj);
-  return btoa(unescape(encodeURIComponent(json)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+  return btoa(unescape(encodeURIComponent(JSON.stringify(obj))))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
-
 function b64urlDecode(str) {
   const s = str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4);
-  const json = decodeURIComponent(escape(atob(s)));
-  return JSON.parse(json);
+  return JSON.parse(decodeURIComponent(escape(atob(s))));
 }
-
 async function makeToken(secret, data) {
-  const header = b64urlEncode({ alg: "HS256", typ: "NSJWT" });
-  const payload = b64urlEncode(data);
-  const toSign = `${header}.${payload}`;
-  const sig = await hmacSHA256(secret, toSign);
-  return `${toSign}.${sig}`;
+  const h = b64urlEncode({ alg: "HS256", typ: "NSJWT" });
+  const p = b64urlEncode(data);
+  return `${h}.${p}.${await hmacSHA256(secret, `${h}.${p}`)}`;
 }
-
 async function verifyToken(secret, token) {
   const parts = String(token || "").split(".");
   if (parts.length !== 3) return { ok: false };
   const [h, p, sig] = parts;
-  const toSign = `${h}.${p}`;
-  const expected = await hmacSHA256(secret, toSign);
-  if (sig !== expected) return { ok: false };
-  const payload = b64urlDecode(p);
-  return { ok: true, payload };
+  if (sig !== await hmacSHA256(secret, `${h}.${p}`)) return { ok: false };
+  return { ok: true, payload: b64urlDecode(p) };
 }
 
-// -------------------- Headers --------------------
+// ── Headers / CORS ────────────────────────────────────────────────
 function setSecurityHeaders(res) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("X-Frame-Options", "DENY");
 }
-
 function setCors(req, res) {
   const origin = req.headers.origin;
   if (!origin) return;
-
-  const isAllowed = ALLOWED_ORIGINS.includes(origin) || VERCEL_PREVIEW_RE.test(origin);
-
-  if (isAllowed) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
+  if (ALLOWED_ORIGINS.includes(origin) || VERCEL_PREVIEW_RE.test(origin)) {
+    res.setHeader("Access-Control-Allow-Origin",  origin);
     res.setHeader("Vary", "Origin");
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-NS-Token, X-UID");
-    res.setHeader("Access-Control-Max-Age", "600");
+    res.setHeader("Access-Control-Max-Age",       "600");
   }
 }
-
-// -------- CSP report receiver --------
 async function readJsonBody(req) {
   const chunks = [];
   for await (const c of req) chunks.push(c);
   const raw = Buffer.concat(chunks).toString("utf-8");
   if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return { raw };
-  }
+  try { return JSON.parse(raw); } catch { return { raw }; }
 }
 
+// ════════════════════════════════════════════════════════════════
+// HANDLER PRINCIPAL
+// ════════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
   setSecurityHeaders(res);
   setCors(req, res);
-
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  // CSP report endpoint
+  // CSP report
   if (req.method === "POST" && req.url?.startsWith("/api/csp-report")) {
     const body = await readJsonBody(req);
-    const report = body?.["csp-report"] || body?.["report"] || body || {};
-    const violated = report["violated-directive"] || report["effective-directive"] || "unknown";
-    const blocked = report["blocked-uri"] || report["blockedURL"] || report["blocked-url"] || "unknown";
-    const doc = report["document-uri"] || report["documentURL"] || report["document-url"] || "unknown";
-    console.log("[CSP]", { violated, blocked, doc });
+    const r    = body?.["csp-report"] || body?.["report"] || body || {};
+    console.log("[CSP]", {
+      violated: r["violated-directive"] || r["effective-directive"] || "unknown",
+      blocked:  r["blocked-uri"]  || r["blockedURL"]  || "unknown",
+      doc:      r["document-uri"] || r["documentURL"] || "unknown",
+    });
     return res.status(204).end();
   }
 
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
-  const store = getStore();
-  const ip = getClientIp(req);
-  const ua = String(req.headers["user-agent"] || "");
-  const uid = String(req.headers["x-uid"] || "").trim(); // optional
+  const ip  = getClientIp(req);
+  const ua  = String(req.headers["user-agent"] || "");
+  const uid = String(req.headers["x-uid"] || "").trim();
 
-  // Basic bot sanity check
   if (!ua || ua.length < 8) return res.status(403).json({ error: "Forbidden" });
 
   const secret = process.env.NS_PROXY_SECRET || "";
-  if (!secret || secret.length < 32) {
+  if (!secret || secret.length < 32)
     return res.status(500).json({ error: "Server not configured: NS_PROXY_SECRET missing/weak" });
-  }
 
-  // 1) Token init endpoint: /api/proxy?init=1
+  // Token init
   if (req.query?.init === "1") {
-    const t = now();
+    const t = Date.now();
     const token = await makeToken(secret, {
-      v: 1,
-      jti: crypto.randomUUID(),
-      ip,
+      v: 1, jti: crypto.randomUUID(), ip,
       uaHash: (await hmacSHA256(secret, ua)).slice(0, 16),
-      iat: t,
-      exp: t + 10 * 60_000
+      iat: t, exp: t + 10 * 60_000
     });
-
     res.setHeader("Cache-Control", "no-store");
     return res.status(200).json({ token, expiresInMs: 10 * 60_000 });
   }
 
-  // 2) Validate signed token
+  // Validar token HMAC
   const nsToken = req.headers["x-ns-token"];
-  let tokenOk = false;
-  let tokenJti = null;
-
+  let tokenOk = false, tokenJti = null;
   if (nsToken) {
     const v = await verifyToken(secret, nsToken);
     if (v.ok) {
-      const p = v.payload || {};
-      const t = now();
+      const p      = v.payload || {};
       const uaHash = (await hmacSHA256(secret, ua)).slice(0, 16);
-
-      if (
-        typeof p.exp === "number" &&
-        t <= p.exp &&
-        p.ip === ip &&
-        p.uaHash === uaHash &&
-        typeof p.jti === "string"
-      ) {
-        tokenOk = true;
-        tokenJti = p.jti;
+      if (typeof p.exp === "number" && Date.now() <= p.exp &&
+          p.ip === ip && p.uaHash === uaHash && typeof p.jti === "string") {
+        tokenOk = true; tokenJti = p.jti;
       }
     }
   }
 
-  // 3) Build rate limit key (IP + token + optional user)
-  const key = tokenOk
+  // Clave compuesta de rate limit
+  const rlKey = tokenOk
     ? (uid ? `ip:${ip}|uid:${uid}|tok:${tokenJti}` : `ip:${ip}|tok:${tokenJti}`)
     : (uid ? `ip:${ip}|uid:${uid}` : `ip:${ip}`);
 
-  // 4) Adaptive RL (burst + sustained) with risk weight
   const endpointStr = String(req.query?.endpoint || "");
-  const wRoute = endpointStr ? routeWeight(endpointStr) : 1;
-  const risk = basicBotRisk(req);
-  const weight = Math.min(5, wRoute + Math.min(risk, 3));
+  const weight      = Math.min(5, routeWeight(endpointStr) + Math.min(basicBotRisk(req), 3));
 
-  if (isBanned(store, key)) {
-    res.setHeader("Retry-After", "30");
+  if (await isBanned(rlKey)) {
+    res.setHeader("Retry-After", String(BAN_TTL_S));
     return res.status(429).json({ error: "Too many requests. Cooldown active." });
   }
 
-  const okBurst = allowBurst(store, key, weight);
-  const okSust = allowSustained(store, key, weight);
-
+  const [okBurst, okSust] = await Promise.all([
+    allowBurst(rlKey, weight),
+    allowSustained(rlKey, weight),
+  ]);
   if (!okBurst || !okSust) {
-    ban(store, key, 30_000);
-    res.setHeader("Retry-After", "30");
+    await banKey(rlKey);
+    res.setHeader("Retry-After", String(BAN_TTL_S));
     return res.status(429).json({ error: "Rate limit exceeded" });
   }
 
-  // 5) Legacy per-minute limits (kept for compatibility)
-  const t = now();
-  const ipCount = takeHit(store.ipHits, ip, t);
-
+  const ipCount = await takeHit('ip', ip);
   if (!tokenOk && ipCount > LIMITS.ipOnlyPerMin) {
     res.setHeader("Retry-After", "60");
-    return res.status(429).json({
-      error: "Rate limit (no token). Call /api/proxy?init=1 and send X-NS-Token."
-    });
+    return res.status(429).json({ error: "Rate limit (no token). Call /api/proxy?init=1." });
   }
-
   if (tokenOk) {
     if (ipCount > LIMITS.ipPerMin) {
       res.setHeader("Retry-After", "60");
       return res.status(429).json({ error: "Rate limit (ip)." });
     }
-
-    const tokenCount = takeHit(store.tokenHits, tokenJti, t);
+    const tokenCount = await takeHit('tok', tokenJti);
     if (tokenCount > LIMITS.tokenPerMin) {
       res.setHeader("Retry-After", "60");
       return res.status(429).json({ error: "Rate limit (token)." });
     }
   }
 
-  // 6) Proxy call
   if (!endpointStr) return res.status(400).json({ error: "Missing endpoint parameter" });
-
-  if (!ALLOWED_ENDPOINTS.some((a) => endpointStr.startsWith(a))) {
+  if (!ALLOWED_ENDPOINTS.some((a) => endpointStr.startsWith(a)))
     return res.status(403).json({ error: "Endpoint not allowed" });
-  }
-
-  // Prevent SSRF tricks
-  if (endpointStr.includes("http://") || endpointStr.includes("https://")) {
+  if (endpointStr.includes("http://") || endpointStr.includes("https://"))
     return res.status(403).json({ error: "Invalid endpoint" });
-  }
 
   try {
     const rawKey = String(process.env.BALLDONTLIE_API_KEY || "").trim();
-    if (!rawKey) {
+    if (!rawKey)
       return res.status(500).json({
         error: "Server not configured: BALLDONTLIE_API_KEY missing",
-        hint: "Add BALLDONTLIE_API_KEY in Vercel project env vars (All Environments)."
+        hint:  "Add BALLDONTLIE_API_KEY in Vercel project env vars."
       });
-    }
 
-    // balldontlie expects: Authorization: Bearer <key>
     const authHeader = /^bearer\s+/i.test(rawKey) ? rawKey : `Bearer ${rawKey}`;
-
-    const upstream = await fetch(`${API_BASE}${endpointStr}`, {
-      headers: {
-        Authorization: authHeader,
-        Accept: "application/json",
-        "User-Agent": "NioSports-Pro-Proxy/1.0"
-      }
+    const upstream   = await fetch(`${API_BASE}${endpointStr}`, {
+      headers: { Authorization: authHeader, Accept: "application/json", "User-Agent": "NioSports-Pro-Proxy/2.0" }
     });
 
-    // Try JSON first; if it isn't JSON (HTML/text), return a clean error.
     const text = await upstream.text();
     let data = null;
-    try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      data = null;
-    }
+    try { data = text ? JSON.parse(text) : null; } catch { data = null; }
 
     res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
-
-    if (data === null) {
+    if (data === null)
       return res.status(upstream.status).json({
-        error: "Upstream returned invalid JSON",
-        upstreamStatus: upstream.status,
-        // keep it short so we don't leak anything sensitive
+        error:           "Upstream returned invalid JSON",
+        upstreamStatus:  upstream.status,
         upstreamSnippet: String(text || "").slice(0, 200)
       });
-    }
 
     return res.status(upstream.status).json(data);
   } catch {
