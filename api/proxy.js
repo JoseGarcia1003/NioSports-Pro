@@ -1,21 +1,32 @@
-// api/proxy.js — NioSports SaaS Proxy v2 (KV-backed rate limiting)
+// api/proxy.js — NioSports SaaS Proxy v2 (Upstash Redis rate limiting)
 // ════════════════════════════════════════════════════════════════
-// CAMBIO vs v1: el rate limiting anterior usaba global.__NS_STORE__
-// (Maps en memoria). En serverless cada instancia tiene memoria propia
-// — un atacante con N requests paralelos podía burlar el límite si
-// caían en N instancias distintas. La solución es Vercel KV (Redis
-// compartido entre TODAS las instancias del proxy).
+// @vercel/kv fue deprecado por Vercel — migrado a @upstash/redis,
+// que es el proveedor oficial recomendado desde Vercel Marketplace.
+// La API es compatible: get/set/incr/incrby/expire tienen la misma firma.
 //
-// FALLBACK: si KV_REST_API_URL no está configurado (dev local),
-// el proxy usa el store en memoria. En producción siempre debe usarse KV.
+// VARIABLES DE ENTORNO requeridas (auto-inyectadas al conectar Upstash):
+//   UPSTASH_REDIS_REST_URL
+//   UPSTASH_REDIS_REST_TOKEN
 //
-// CONFIGURACIÓN en Vercel Dashboard:
-//   1. Storage → Create KV Database → conectar al proyecto
-//   2. Vercel inyecta KV_REST_API_URL y KV_REST_API_TOKEN automáticamente
+// FALLBACK: si no están configuradas (dev local), usa Maps en memoria.
 // ════════════════════════════════════════════════════════════════
 
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 
+// Cliente Redis — inicialización lazy (solo si las vars están presentes)
+let _redis = null;
+function getRedis() {
+  if (_redis) return _redis;
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    _redis = new Redis({
+      url:   process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  }
+  return _redis; // null en dev local → usa fallback en memoria
+}
+
+// ── Configuración ─────────────────────────────────────────────────
 const API_BASE          = "https://api.balldontlie.io/v1";
 const ALLOWED_ENDPOINTS = ["/players", "/season_averages", "/stats", "/games"];
 const ALLOWED_ORIGINS   = [
@@ -34,11 +45,7 @@ const LIMITS = { ipOnlyPerMin: 10, ipPerMin: 60, tokenPerMin: 120 };
 const BAN_TTL_S   = 30;
 const BURST_TTL_S = 300;
 
-// ── Detección de entorno ──────────────────────────────────────────
-function isKvAvailable() {
-  return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
-}
-
+// ── Fallback en memoria (dev local sin Redis) ─────────────────────
 function getMemStore() {
   if (!global.__NS_MEM_STORE__) {
     global.__NS_MEM_STORE__ = {
@@ -49,36 +56,15 @@ function getMemStore() {
   return global.__NS_MEM_STORE__;
 }
 
-// ── Utilidades de red ─────────────────────────────────────────────
-function getClientIp(req) {
-  const xf = req.headers["x-forwarded-for"];
-  if (!xf) return "unknown";
-  return String(xf).split(",")[0].trim() || "unknown";
-}
-
-function routeWeight(ep) {
-  return ep.startsWith("/stats") ? 2 : 1;
-}
-
-function basicBotRisk(req) {
-  const ua = String(req.headers["user-agent"]      || "");
-  const al = String(req.headers["accept-language"] || "");
-  const ac = String(req.headers["accept"]          || "");
-  let s = 0;
-  if (!ua || ua.length < 8)                              s += 2;
-  if (!al)                                               s += 1;
-  if (!ac)                                               s += 1;
-  if (/curl|wget|python|httpclient|postman/i.test(ua))  s += 2;
-  return s;
-}
-
 // ════════════════════════════════════════════════════════════════
 // CAPA DE RATE LIMITING
-// Cada función tiene implementación KV (producción) + memoria (dev).
+// Cada función intenta Redis primero. Si getRedis() devuelve null,
+// cae al store en memoria — comportamiento transparente para el handler.
 // ════════════════════════════════════════════════════════════════
 
 async function isBanned(key) {
-  if (isKvAvailable()) return !!(await kv.get(`ban:${key}`));
+  const r = getRedis();
+  if (r) return !!(await r.get(`ban:${key}`));
   const store = getMemStore();
   const until = store.bans.get(key);
   if (!until) return false;
@@ -87,18 +73,17 @@ async function isBanned(key) {
 }
 
 async function banKey(key) {
-  if (isKvAvailable()) {
-    await kv.set(`ban:${key}`, 1, { ex: BAN_TTL_S });
-    return;
-  }
+  const r = getRedis();
+  if (r) { await r.set(`ban:${key}`, 1, { ex: BAN_TTL_S }); return; }
   getMemStore().bans.set(key, Date.now() + BAN_TTL_S * 1000);
 }
 
 async function allowBurst(key, weight) {
-  if (isKvAvailable()) {
+  const r = getRedis();
+  if (r) {
     const storeKey = `burst:${key}`;
     const t = Date.now();
-    let entry = await kv.get(storeKey);
+    let entry = await r.get(storeKey);
     if (!entry) entry = { tokens: BURST_CAPACITY, last: t };
     const steps = Math.floor((t - entry.last) / BURST_REFILL_MS);
     if (steps > 0) {
@@ -107,9 +92,10 @@ async function allowBurst(key, weight) {
     }
     const allowed = entry.tokens >= weight;
     if (allowed) entry.tokens -= weight;
-    await kv.set(storeKey, entry, { ex: BURST_TTL_S });
+    await r.set(storeKey, entry, { ex: BURST_TTL_S });
     return allowed;
   }
+  // Fallback memoria
   const store = getMemStore();
   const t     = Date.now();
   const entry = store.burst.get(key) || { tokens: BURST_CAPACITY, last: t };
@@ -125,13 +111,15 @@ async function allowBurst(key, weight) {
 }
 
 async function allowSustained(key, weight) {
-  if (isKvAvailable()) {
-    const winIdx  = Math.floor(Date.now() / SUSTAINED_WINDOW_MS);
+  const r = getRedis();
+  if (r) {
+    const winIdx   = Math.floor(Date.now() / SUSTAINED_WINDOW_MS);
     const storeKey = `sust:${key}:${winIdx}`;
-    const count   = await kv.incrby(storeKey, weight);
-    if (count === weight) await kv.expire(storeKey, Math.ceil(SUSTAINED_WINDOW_MS / 1000) * 2);
+    const count    = await r.incrby(storeKey, weight);
+    if (count === weight) await r.expire(storeKey, Math.ceil(SUSTAINED_WINDOW_MS / 1000) * 2);
     return count <= SUSTAINED_MAX;
   }
+  // Fallback memoria
   const store  = getMemStore();
   const t      = Date.now();
   const arr    = store.sustained.get(key) || [];
@@ -145,13 +133,15 @@ async function allowSustained(key, weight) {
 }
 
 async function takeHit(prefix, key) {
-  if (isKvAvailable()) {
+  const r = getRedis();
+  if (r) {
     const minIdx   = Math.floor(Date.now() / WINDOW_MS);
     const storeKey = `${prefix}:min:${key}:${minIdx}`;
-    const count    = await kv.incr(storeKey);
-    if (count === 1) await kv.expire(storeKey, 120);
+    const count    = await r.incr(storeKey);
+    if (count === 1) await r.expire(storeKey, 120);
     return count;
   }
+  // Fallback memoria
   const store  = getMemStore();
   const map    = prefix === 'ip' ? store.ipHits : store.tokenHits;
   const t      = Date.now();
@@ -165,7 +155,7 @@ async function takeHit(prefix, key) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// HMAC / Token (sin cambios vs v1)
+// HMAC / Token (sin cambios)
 // ════════════════════════════════════════════════════════════════
 async function hmacSHA256(secret, payload) {
   const enc = new TextEncoder();
@@ -177,7 +167,6 @@ async function hmacSHA256(secret, payload) {
   for (const b of bytes) str += String.fromCharCode(b);
   return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
-
 function b64urlEncode(obj) {
   return btoa(unescape(encodeURIComponent(JSON.stringify(obj))))
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
@@ -200,6 +189,23 @@ async function verifyToken(secret, token) {
 }
 
 // ── Headers / CORS ────────────────────────────────────────────────
+function getClientIp(req) {
+  const xf = req.headers["x-forwarded-for"];
+  if (!xf) return "unknown";
+  return String(xf).split(",")[0].trim() || "unknown";
+}
+function routeWeight(ep) { return ep.startsWith("/stats") ? 2 : 1; }
+function basicBotRisk(req) {
+  const ua = String(req.headers["user-agent"]      || "");
+  const al = String(req.headers["accept-language"] || "");
+  const ac = String(req.headers["accept"]          || "");
+  let s = 0;
+  if (!ua || ua.length < 8)                             s += 2;
+  if (!al)                                              s += 1;
+  if (!ac)                                              s += 1;
+  if (/curl|wget|python|httpclient|postman/i.test(ua)) s += 2;
+  return s;
+}
 function setSecurityHeaders(res) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -232,7 +238,7 @@ export default async function handler(req, res) {
   setCors(req, res);
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  // CSP report
+  // CSP report endpoint
   if (req.method === "POST" && req.url?.startsWith("/api/csp-report")) {
     const body = await readJsonBody(req);
     const r    = body?.["csp-report"] || body?.["report"] || body || {};
@@ -339,7 +345,7 @@ export default async function handler(req, res) {
 
     const authHeader = /^bearer\s+/i.test(rawKey) ? rawKey : `Bearer ${rawKey}`;
     const upstream   = await fetch(`${API_BASE}${endpointStr}`, {
-      headers: { Authorization: authHeader, Accept: "application/json", "User-Agent": "NioSports-Pro-Proxy/2.0" }
+      headers: { Authorization: authHeader, Accept: "application/json", "User-Agent": "NioSports-Pro-Proxy/2.1" }
     });
 
     const text = await upstream.text();
